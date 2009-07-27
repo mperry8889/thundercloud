@@ -1,0 +1,15 @@
+syntax: glob
+\*\~
+
+syntax: glob
+\*.pyc
+
+syntax: glob
+.DS_Store\*
+
+syntax: glob
+.\*.swp
+
+syntax: glob
+.\*.md5
+
