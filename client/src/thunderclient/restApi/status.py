@@ -1,12 +1,12 @@
-from twisted.web import resource
+from thunderclient.controller import Controller
 
 from util import RootNode
+from util import LeafNode
 
 class Root(RootNode):
     pass
 
-class Threads(resource.Resource):
-    isLeaf = True
+class Threads(LeafNode):
     def render_GET(self, request):
         return "1 billion threads"
         

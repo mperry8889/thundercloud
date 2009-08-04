@@ -3,6 +3,12 @@ max_concurrent = 10
 active = 0
 requests = 1
 completed_requests = 0
+from Queue import Queue
+from twisted.internet import reactor
+from twisted.python.util import println
+from twisted.web.client import getPage
+from time import sleep
+import sys
 
 def callbackToQueue(v, q, i):
     global completed_requests
