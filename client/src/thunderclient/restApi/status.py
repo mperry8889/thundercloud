@@ -1,7 +1,5 @@
-from thunderclient.controller import Controller
-
-from util import RootNode
-from util import LeafNode
+from nodes import RootNode
+from nodes import LeafNode
 
 class Root(RootNode):
     pass

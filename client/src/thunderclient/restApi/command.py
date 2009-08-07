@@ -1,7 +1,5 @@
-import logging as log
-
-from util import RootNode
-from util import LeafNode
+from nodes import RootNode
+from nodes import LeafNode
 
 from thunderclient.queue import ConnectionQueue
 

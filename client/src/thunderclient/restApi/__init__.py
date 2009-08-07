@@ -3,7 +3,8 @@ from twisted.web import resource
 
 from status import StatusApiTree
 from command import CommandApiTree
-from util import RootNode   
+
+from nodes import RootNode
 
 def createRestApi():
     """Create the REST API URL hierarchy"""

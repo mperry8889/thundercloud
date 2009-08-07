@@ -1,7 +1,6 @@
-from twisted.web import resource
-import simplejson as json
+from twisted.web.resource import Resource
 
-class RootNode(resource.Resource):
+class RootNode(Resource):
     isLeaf = False
     def render_GET(self, request):
         # should be application/json
@@ -11,7 +10,7 @@ class RootNode(resource.Resource):
             retVal += "%s\n" % item
         return retVal
 
-class LeafNode(resource.Resource):
+class LeafNode(Resource):
     isLeaf = True
     def render_GET(self, request):
         # should be application/json
