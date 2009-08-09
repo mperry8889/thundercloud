@@ -43,7 +43,7 @@ class _Orchestrator(object):
         except KeyError:
             pass
     
-    def jobStatus(self, jobId):
-        pass
+    def jobState(self, jobId):
+        return self.__jobs[jobId].state()
     
 Orchestrator = _Orchestrator()

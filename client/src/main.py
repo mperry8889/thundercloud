@@ -1,8 +1,8 @@
 from twisted.internet import reactor
 from thunderclient.restApi import createRestApi
 import logging as log
-import psyco
-psyco.full()
+#import psyco
+#psyco.full()
 
 log.basicConfig(level=log.DEBUG)
 

@@ -80,9 +80,9 @@ class JobNode(LeafNode):
         pass
     
     # status of a job in the system
-    def status(self, jobId, args):
+    def state(self, jobId, args):
         try:
-            return Orchestrator.jobStatus(jobId)
+            return Orchestrator.jobState(jobId)
         except:
             raise Http400
 
