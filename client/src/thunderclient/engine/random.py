@@ -1,6 +1,6 @@
 from zope.interface import implements
 
-from . import IEngineFactory
+from ..orchestrator.job import IJob
 
 class RandomEngine(object):
-    implements(IEngineFactory)
+    implements(IJob)

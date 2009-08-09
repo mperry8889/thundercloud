@@ -10,13 +10,18 @@ class Http404(Exception):
 
 class INode(Interface):
     def GET(self, request):
-        pass
+        """GET operation"""
     
     def POST(self, request):
-        pass
+        """POST operation"""
     
 class Node(Resource):
     implements(INode)
+    
+    # there's a bit of indirection here having child nodes implement
+    # POST and GET and not render_{POST,GET} -- but this is so that 
+    # derived classes don't have to deal with the content-types, headers,
+    # and details of json output
 
     def render_GET(self, request):
         try:

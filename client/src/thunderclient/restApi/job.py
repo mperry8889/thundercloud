@@ -6,32 +6,28 @@ from nodes import LeafNode
 from nodes import Http400, Http404
 
 from ..orchestrator import Orchestrator
+from ..orchestrator.job import IJob, JobSpec
+    
 
-class IJobNode(Interface):
-    """This interface specifies all the operations that a job object 
-    supports as per the REST API."""
-    def start(self, jobId, args):
-        pass
+# Handle requests sent to /job
+class Job(RootNode):
     
-    def pause(self):
-        pass
+    # return some summary information about the list of
+    # jobs in the system
+    def GET(self, request):
+        jobs = Orchestrator.listJobs()
+        return [{id: "/job/%s" % id} for id in jobs]
     
-    def resume(self):
-        pass
-
-    def stop(self):
-        pass
-    
-    def modify(self):
-        pass
-    
-    def status(self):
-        pass
+    # create a new job based on the given JSON job spec
+    def POST(self, request):
+        jobId = Orchestrator.createJob(None)
+        self.putChild("%d" % jobId, JobNode())
+        return jobId
 
 
 # Handle requests for /job/n[/operation] URLs
 class JobNode(LeafNode):
-    implements(IJobNode)
+    implements(IJob)
     
     # handle GET /job/n -- return a detailed status of the job
     def GET(self, request):
@@ -89,22 +85,6 @@ class JobNode(LeafNode):
             return Orchestrator.jobStatus(jobId)
         except:
             raise Http400
-    
-
-# Handle requests sent to /job
-class Job(RootNode):
-    
-    # return some summary information about the list of
-    # jobs in the system
-    def GET(self, request):
-        jobs = Orchestrator.listJobs()
-        return [{id: "/job/%s" % id} for id in jobs]
-    
-    # create a new job based on the given JSON job spec
-    def POST(self, request):
-        jobId = Orchestrator.createJob(None)
-        self.putChild("%d" % jobId, JobNode())
-        return jobId
 
 
 JobApiTree = Job()
