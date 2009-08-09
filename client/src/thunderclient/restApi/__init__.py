@@ -2,7 +2,7 @@ from twisted.web import server
 from twisted.web import resource
 
 from status import StatusApiTree
-from command import CommandApiTree
+from job import JobApiTree
 
 from nodes import RootNode
 
@@ -11,5 +11,5 @@ def createRestApi():
     siteRoot = RootNode()
     siteRoot.putChild("", RootNode())
     siteRoot.putChild("status", StatusApiTree)
-    siteRoot.putChild("command", CommandApiTree)
+    siteRoot.putChild("job", JobApiTree)
     return server.Site(siteRoot)

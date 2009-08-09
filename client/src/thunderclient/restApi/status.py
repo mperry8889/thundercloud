@@ -1,13 +1,18 @@
 from nodes import RootNode
 from nodes import LeafNode
 
-class Root(RootNode):
-    pass
+from ..orchestrator import Orchestrator
 
-class Threads(LeafNode):
-    def render_GET(self, request):
-        return "1 billion threads"
-        
-StatusApiTree = Root()
-StatusApiTree.putChild("", Root())
-StatusApiTree.putChild("threads", Threads())
+class HeartBeat(LeafNode):
+    def GET(self, request):
+        return True
+    
+class Jobs(LeafNode):
+    def GET(self, request):
+        return {"jobs": 0}
+    
+
+StatusApiTree = RootNode()
+StatusApiTree.putChild("", RootNode())
+StatusApiTree.putChild("heartbeat", HeartBeat())
+StatusApiTree.putChild("jobs", Jobs())

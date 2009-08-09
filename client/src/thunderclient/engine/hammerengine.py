@@ -1,12 +1,14 @@
-from Queue import Queue
-from twisted.internet import reactor
-from time import sleep
-import logging as log
+from zope.interface import implements
 
-from twisted.web.client import HTTPClientFactory
-from twisted.web.client import getPage
+from . import IEngineFactory
 
-class ConnectionQueue():
+class HammerEngine(object):
+    implements(IEngineFactory)
+    
+        
+
+
+class Engine(object):
     """State machine to manage a connection queue"""
     
     __queue = Queue()
@@ -18,7 +20,7 @@ class ConnectionQueue():
     __httpClientFactory = None
     
     
-    def __init__(self, maxClients=2, requests=10, url="http://unshift.net"):
+    def __init__(self, maxClients=50, requests=25000, url="http://192.168.1.100"):
         if maxClients < 0:
             raise ValueError("maxClients must be > 0")
         if requests < 0:
@@ -28,7 +30,7 @@ class ConnectionQueue():
 
         self.__maxClients = maxClients
         self.__requests = requests
-        self.__sleepDelay = 1000
+        self.__sleepDelay = 0
 #        self.__httpClientFactory = httpClientFactory
         
         for i in range(1, self.__requests+1):
@@ -41,6 +43,9 @@ class ConnectionQueue():
     
     def pause(self):
         self.__maxClients = 0
+    
+    def stop(self):
+        self.pause()
     
     
     def __callback(self, value, request):
@@ -70,7 +75,7 @@ class ConnectionQueue():
         request = self.__queue.get()
         
         sleep(self.__sleepDelay/1000)
-        deferred = getPage("http://unshift.net")
+        deferred = getPage("http://192.168.1.100", agent="thundercloud client request=%s" % request)
         deferred.addCallback(self.__callback, request) 
         deferred.addErrback(self.__errback, request)
         
