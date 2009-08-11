@@ -8,14 +8,15 @@ print client.getresponse().read()
 
 print "POST /job"
 client.request("POST", "/job")
+id = client.getresponse().read()
+print id
+
+print "GET /job/%s" % id
+client.request("GET", "/job/%s" % id)
 print client.getresponse().read()
 
-print "GET /job/0"
-client.request("GET", "/job/0")
-print client.getresponse().read()
-
-print "POST /job/0/start"
-client.request("POST", "/job/0/start")
+print "POST /job/%s/start" % id
+client.request("POST", "/job/%s/start" % id)
 print client.getresponse().read()
 
 #print "sleeping 5 seconds"

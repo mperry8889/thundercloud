@@ -95,7 +95,7 @@ class TrafficEngine(object):
     def _spinUpRequests(self):
         if self._state == JobState.RUNNING:
             # calculates client function at time t
-            clientFunctionResult = int(math.ceil(self._clientFunction(self._elapsedTime)))
+            clientFunctionResult = abs(int(math.ceil(self._clientFunction(self._elapsedTime))))
             
             # only add clients if clientFunc(t) calls for more clients than are
             # currently in the system.  this may not always be the case -- if a 
@@ -147,8 +147,7 @@ class TrafficEngine(object):
         self._state = JobState.PAUSED
     
     def resume(self):
-        self._state = JobState.RUNNING
-        
+        self._state = JobState.RUNNING        
         self._spinUpRequests()
     
     def stop(self):

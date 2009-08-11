@@ -18,7 +18,7 @@ from ..orchestrator.job import JobSpec, JobState, JobResults
 class HammerEngine(object):
     implements(IJob) #IEngine
 
-    _clientFunction = lambda self, t: 120
+    _clientFunction = lambda self, t: 10#t*math.sin(t)
     _transferLimit = None
     _duration = 60
 
@@ -28,6 +28,7 @@ class HammerEngine(object):
     
     _bytesTransferred = 0.0
     _iterations = 0
+    _errors = 0
     
     _state = JobState.NEW
     
@@ -39,8 +40,7 @@ class HammerEngine(object):
 #        self._duration = jobSpec.testDuration
 #        self._delay = jobSpec.delayBetweenRequests
         self._requests = {
-            "http://www.gaiasearch.com": {},
-            "http://unshift.net": {},
+            "http://192.168.1.100":{},
         }
         
         # dump the host/port/URLs to be fetched into a queue
@@ -54,7 +54,7 @@ class HammerEngine(object):
     def start(self):
         self._startTime = time.time()
         self._state = JobState.RUNNING
-        
+
         self._loop()
 
     # handy method to set up a Deferred and set up callbacks.  this needs to be
@@ -78,8 +78,12 @@ class HammerEngine(object):
             return
         
         if self._state == JobState.RUNNING:
-            numRequests = int(math.ceil(self._clientFunction(self._elapsedTime)))
-            timeBetween = 1.0/numRequests
+            numRequests = abs(int(math.ceil(self._clientFunction(self._elapsedTime))))
+            try:
+                timeBetween = 1.0/numRequests
+            except ZeroDivisionError:
+                reactor.callLater(0, self._loop)   # avoid recursing
+                return
             print "making %d requests at %f sec delay" % (numRequests, timeBetween)
             for i in range(0, numRequests):
                 request = self._httpClientRequestQueue.get()
@@ -94,9 +98,8 @@ class HammerEngine(object):
         self._elapsedTime = time.time() - self._startTime
     
     def errback(self, value):
-        self._clients = self._clients - 1
         self._elapsedTime = time.time() - self._startTime
-        print value
+        self._errors = self._errors + 1
         #self.dump()  
 
     def pause(self):
@@ -104,6 +107,7 @@ class HammerEngine(object):
     
     def resume(self):
         self._state = JobState.RUNNING
+        self._loop()
     
     def stop(self):
         self._endTime = time.time()
@@ -119,6 +123,7 @@ class HammerEngine(object):
     
     def dump(self):
         print "iterations: %s" % self._iterations
+        print "errors: %s" % self._errors
         print "elapsed time: %s" % self._elapsedTime
         print "bytes transferred: %s" % self._bytesTransferred
         print "state: %s" % self._state
