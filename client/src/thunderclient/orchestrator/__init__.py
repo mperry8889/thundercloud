@@ -1,4 +1,3 @@
-from job import Job
 from job import JobSpec
 from ..engine import EngineFactory
 

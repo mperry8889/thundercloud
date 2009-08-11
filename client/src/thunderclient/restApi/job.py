@@ -20,7 +20,7 @@ class Job(RootNode):
     
     # create a new job based on the given JSON job spec
     def POST(self, request):
-        jobId = Orchestrator.createJob(None)
+        jobId = Orchestrator.createJob(JobSpec())
         self.putChild("%d" % jobId, JobNode())
         return jobId
 
