@@ -1,4 +1,5 @@
 from job import JobSpec
+from job import JobState
 from ..engine import EngineFactory
 
 # Tracks and operates on jobs in the system, maintaining an instance
@@ -12,6 +13,20 @@ class _Orchestrator(object):
     
     def listJobs(self):
         return self.__jobs.keys()
+
+    def listJobsByState(self, state):
+        jobs = self.listJobs()
+        jobsInState = []
+        for job in jobs:
+            if self.__jobs[job].state == state:
+                jobsInState.append(job)
+        return jobsInState
+
+    def listActiveJobs(self):
+        return self.listJobsByState(JobState.RUNNING)
+
+    def listCompleteJobs(self):
+        return self.listJobsByState(JobState.COMPLETE)        
     
     def createJob(self, jobSpec, start=False):
         jobNo = self.__jobSeqNo
@@ -43,6 +58,6 @@ class _Orchestrator(object):
             pass
     
     def jobState(self, jobId):
-        return self.__jobs[jobId].state()
+        return self.__jobs[jobId].state
     
 Orchestrator = _Orchestrator()

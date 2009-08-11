@@ -9,9 +9,21 @@ from ..orchestrator import Orchestrator
 from ..orchestrator.job import IJob, JobSpec
     
 
+# List only active jobs, /job/active
+class ActiveJobs(RootNode):
+    def GET(self, request):
+        jobs = Orchestrator.listActiveJobs()
+        return [{id: "/job/%s" % id} for id in jobs]
+
+# List only inactive jobs, /job/inactive
+class CompleteJobs(RootNode):
+    def GET(self, request):
+        jobs = Orchestrator.listCompleteJobs()
+        return [{id: "/job/%s" % id} for id in jobs]
+
+
 # Handle requests sent to /job
-class Job(RootNode):
-    
+class Job(RootNode):    
     # return some summary information about the list of
     # jobs in the system
     def GET(self, request):
@@ -87,5 +99,15 @@ class JobNode(LeafNode):
             raise Http400
 
 
+    # remove job from the system
+    def remove(self, jobId, args):
+        try:
+            Orchestrator.removeJob(jobId)
+            return True
+        except:
+            raise Http400
+
 JobApiTree = Job()
 JobApiTree.putChild("", Job())
+JobApiTree.putChild("active", ActiveJobs())
+JobApiTree.putChild("complete", CompleteJobs())
