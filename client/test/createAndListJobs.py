@@ -19,15 +19,15 @@ print "POST /job/%s/start" % id
 client.request("POST", "/job/%s/start" % id)
 print client.getresponse().read()
 
-#print "sleeping 5 seconds"
-#time.sleep(5)
-#print "POST /job/0/pause"
+print "sleeping 5 seconds"
+time.sleep(5)
+print "POST /job/0/pause"
 #client.request("POST", "/job/0/pause")
 #print client.getresponse().read()
 
-#print "sleeping 2 seconds"
-#time.sleep(2)
-#print "POST /job/0/resume"
+print "sleeping 2 seconds"
+time.sleep(2)
+print "POST /job/0/resume"
 #client.request("POST", "/job/0/resume")
 #print client.getresponse().read()
 
@@ -35,8 +35,8 @@ print "GET /job/active"
 client.request("GET", "/job/active")
 print client.getresponse().read()
 
-print "sleeping 3 seconds"
-time.sleep(3)
+print "sleeping 60 seconds"
+time.sleep(60)
 print "POST /job/%s/stop" % id
 client.request("POST", "/job/%s/stop" % id)
 print client.getresponse().read()

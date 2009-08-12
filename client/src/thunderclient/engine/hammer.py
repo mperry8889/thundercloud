@@ -17,6 +17,10 @@ class HammerEngine(EngineBase):
     def _loop(self):
         self.elapsedTime = time.time() - self.startTime
         
+        if self.bytesTransferred >= self.transferLimit:
+            self.stop()
+            return
+        
         if self.elapsedTime >= self.duration:
             self.stop()
             return

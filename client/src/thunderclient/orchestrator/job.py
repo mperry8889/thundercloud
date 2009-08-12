@@ -1,19 +1,12 @@
 from zope.interface import Interface
 
 class JobSpec(object):
-    requests = [{"URL": None,
-                 "httpMethod": "GET",
-                 "httpUserAgent": None,
-                 "httpPostData": None,
-                 "httpCustomHeaders": None,
-                 "httpCookie": None,
-                 "timeout": 0,
-               },]
-    
-    testDuration = None
-    simultaneousClientFunction = None
-    delayBetweenRequests = 0
-    
+    requests = {}
+    duration = None
+    transferLimit = float("inf")
+    clientFunction = lambda self, t: False
+    userAgent = "thundercloud client/%s" % constants.VERSION
+
 
 class JobResults(object):
     bytesTransferred = 0

@@ -24,7 +24,7 @@ class EngineBase(object):
 
     # attributes which configure the engine
     clientFunction = lambda self, t: 20
-    requests = {"http://unshift.net":{}}
+    requests = {"http://www.gaiasearch.com":{}}
     userAgent = "thundercloud client/%s" % constants.VERSION
     iterator = lambda: True
     httpClientRequestQueue = Queue()
@@ -38,6 +38,7 @@ class EngineBase(object):
     
     # attributes for data management
     bytesTransferred = 0
+    transferLimit = float("inf")
     
     # attributes for statistics generation    
     iterations = 0
@@ -80,6 +81,9 @@ class EngineBase(object):
     
     # stop the job and mark it as complete
     def stop(self):
+        if self.state == JobState.COMPLETE:
+            return
+        
         self.endTime = time.time()
         self.state = JobState.COMPLETE
         self.dump()
@@ -93,11 +97,17 @@ class EngineBase(object):
         self.bytesTransferred = self.bytesTransferred + len(value)
         self.elapsedTime = time.time() - self.startTime
     
+        if self.elapsedTime >= self.duration:
+            self.stop()
+    
+        if self.bytesTransferred >= self.transferLimit:
+            self.stop()
+    
     
     # default errback -- see comments for callback()
     def errback(self, value):
         self.elapsedTime = time.time() - self.startTime
-        self._errors = self._errors + 1
+        self.errors = self.errors + 1
 
 
     # dump job information to the console.  useful for debugging.

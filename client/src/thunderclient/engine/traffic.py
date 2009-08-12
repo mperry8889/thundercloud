@@ -57,17 +57,13 @@ class TrafficEngine(EngineBase):
 
     # after each request is processed, do some calculations and spin up some
     # new requests if the test is going to continue
-    def callback(self, value):        
+    def callback(self, value):
         super(TrafficEngine, self).callback(value)
         self.clients = self.clients - 1
         
         # just bail if the job isn't running anymore
         if self.state != JobState.RUNNING:
             return
-        
-        # if we're over time, also bail
-        if self.elapsedTime >= self.duration:
-            self.stop()
             
         # otherwise keep it going
         else:
@@ -80,8 +76,7 @@ class TrafficEngine(EngineBase):
 
     
     iterator = _loop
+    userAgent = "thundercloud traffic simulation client/%s" % constants.VERSION
     delay = DelayFactory.createFactory(0.0)
     clients = 0
-    userAgent = "thundercloud traffic simulation client/%s" % constants.VERSION
-        
     
