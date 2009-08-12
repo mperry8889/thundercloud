@@ -29,7 +29,7 @@ class RandomDelay(object):
     def __call__(self):
         return random.uniform(0, self.boundary)
 
-class TrafficEngine(EngineBase):
+class BenchmarkEngine(EngineBase):
 
     # find out the number of clients needed at the current time, and add clients
     # until the max number of clients is reached
@@ -57,8 +57,8 @@ class TrafficEngine(EngineBase):
 
     # after each request is processed, do some calculations and spin up some
     # new requests if the test is going to continue
-    def callback(self, value):
-        super(TrafficEngine, self).callback(value)
+    def callback(self, value, requestTime):
+        super(BenchmarkEngine, self).callback(value, requestTime)
         self.clients = self.clients - 1
         
         # just bail if the job isn't running anymore
@@ -70,8 +70,8 @@ class TrafficEngine(EngineBase):
             self._loop()
 
 
-    def errback(self, value):
-        super(TrafficEngine, self).errback(value)
+    def errback(self, value, requestTime):
+        super(BenchmarkEngine, self).errback(value, requestTime)
         self.clients = self.clients - 1
 
     

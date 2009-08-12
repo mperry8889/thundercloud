@@ -1,5 +1,7 @@
 from zope.interface import Interface
 
+from thundercloud import constants
+
 class JobSpec(object):
     requests = {}
     duration = None
