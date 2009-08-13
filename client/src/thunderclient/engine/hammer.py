@@ -35,7 +35,9 @@ class HammerEngine(EngineBase):
             for i in range(0, numRequests):
                 request = self.httpClientRequestQueue.get()
                 self.httpClientRequestQueue.put(request)
-                reactor.callLater(timeBetween, self._request, request[0], request[1], request[2])
+                reactor.callLater(timeBetween, self._request, 
+                                  request[0], request[1], request[2],
+                                  request[3], request[4], request[5])
             reactor.callLater(1, self.iterator)
             
 

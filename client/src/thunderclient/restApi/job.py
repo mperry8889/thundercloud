@@ -1,12 +1,13 @@
 from zope.interface import Interface, implements
-import simplejson as json
+import jsonpickle
+import simplejson
 
 from nodes import RootNode
 from nodes import LeafNode
 from nodes import Http400, Http404
 
 from ..orchestrator import Orchestrator
-from thundercloud.job import IJob, JobSpec  
+from thundercloud.job import IJob, JobSpec, JobResults
 
 # List only active jobs, /job/active
 class ActiveJobs(RootNode):
@@ -31,7 +32,11 @@ class Job(RootNode):
     
     # create a new job based on the given JSON job spec
     def POST(self, request):
-        jobId = Orchestrator.createJob(JobSpec())
+        jobSpecObj = jsonpickle.decode(request.args["body"][0])
+        if not jobSpecObj.validate():
+            raise Http400, "Invalid request"
+        
+        jobId = Orchestrator.createJob(jobSpecObj)
         self.putChild("%d" % jobId, JobNode())
         return jobId
 
@@ -40,10 +45,14 @@ class Job(RootNode):
 class JobNode(LeafNode):
     implements(IJob)
     
-    # handle GET /job/n -- return a detailed status of the job
+    # handle GET /job/n
     def GET(self, request):
-        return "status"
-    
+        if request.postpath:
+            jobId = int(request.prepath[-1])
+            return getattr(self, request.postpath[0])(jobId, request.args)
+        else:
+            return "status"
+
     # handle POST /job/n/operation -- call the appropriate method
     # for the given job ID
     def POST(self, request):
@@ -52,14 +61,14 @@ class JobNode(LeafNode):
             return getattr(self, request.postpath[0])(jobId, request.args)
         else:
             raise Http400
-     
     
     # start a new job
     def start(self, jobId, args):
         try:
             Orchestrator.startJob(jobId)
             return True
-        except:
+        except Exception, e:
+            print e
             raise Http400
     
     # pause an existing jo
@@ -97,12 +106,18 @@ class JobNode(LeafNode):
         except:
             raise Http400
 
-
     # remove job from the system
     def remove(self, jobId, args):
         try:
             Orchestrator.removeJob(jobId)
             return True
+        except:
+            raise Http400
+    
+    # get a job's statistics
+    def results(self, jobId, args):
+        try:
+            return jsonpickle.encode(Orchestrator.jobResults(jobId))
         except:
             raise Http400
 

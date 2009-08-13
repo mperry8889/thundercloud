@@ -31,7 +31,7 @@ class _Orchestrator(object):
         jobNo = self.__jobSeqNo
         self.__jobSeqNo = self.__jobSeqNo + 1
         
-        self.__jobs[jobNo] = EngineFactory.createFactory(jobSpec)      
+        self.__jobs[jobNo] = EngineFactory.createFactory(jobSpec)
         return jobNo       
 
     def startJob(self, jobId):
@@ -58,5 +58,8 @@ class _Orchestrator(object):
     
     def jobState(self, jobId):
         return self.__jobs[jobId].state
+    
+    def jobResults(self, jobId):
+        return self.__jobs[jobId].results()
     
 Orchestrator = _Orchestrator()

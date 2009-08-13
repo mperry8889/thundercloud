@@ -1,13 +1,31 @@
 import httplib
 import time
+import jsonpickle
+import sys
+import urllib
+
+from thundercloud.job import JobSpec, JobResults
+
+j = JobSpec()
+j.requests = {
+    "http://unshift.net": {
+        "method": "GET",
+        "postdata": None,
+        "cookies": [],
+    },
+}
+j.duration = 15
+j.transferLimit = 5*1024*1024
+j.statsGranularity = 10
 
 client = httplib.HTTPConnection("localhost:7000")
 print "GET /job"
 client.request("GET", "/job")
 print client.getresponse().read()
 
+p = jsonpickle.encode(j)
 print "POST /job"
-client.request("POST", "/job")
+client.request("POST", "/job", urllib.urlencode({"body":p}), {"Content-type": "application/x-www-form-urlencoded"})
 id = client.getresponse().read()
 print id
 
@@ -34,6 +52,17 @@ print "POST /job/0/resume"
 print "GET /job/active"
 client.request("GET", "/job/active")
 print client.getresponse().read()
+
+print "sleeping %s sec" % j.duration
+time.sleep(j.duration)
+
+print "GET /job/%s/results" % id
+client.request("GET", "/job/%s/results" % id)
+results = client.getresponse().read()
+obj = jsonpickle.decode(results)
+print obj
+print type(obj)
+
 
 #print "sleeping 60 seconds"
 #time.sleep(60)

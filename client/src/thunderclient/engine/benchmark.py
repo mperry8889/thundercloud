@@ -52,7 +52,9 @@ class BenchmarkEngine(EngineBase):
                     request = self.httpClientRequestQueue.get()
                     self.httpClientRequestQueue.put(request)
                     self.clients = self.clients + 1
-                    reactor.callLater(self.delay(), self._request, request[0], request[1], request[2])
+                    reactor.callLater(self.delay(), self._request, 
+                                      request[0], request[1], request[2],
+                                      request[3], request[4], request[5])
                         
 
     # after each request is processed, do some calculations and spin up some

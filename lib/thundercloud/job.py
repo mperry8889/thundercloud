@@ -2,16 +2,61 @@ from zope.interface import Interface
 
 from thundercloud import constants
 
+class InvalidJobSpec(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+
 class JobSpec(object):
-    requests = {}
-    duration = None
+    class JobProfile:
+        HAMMER = 0
+        BENCHMARK = 1
+
+    requests = {"":{}}
+    duration = float("inf")
     transferLimit = float("inf")
-    clientFunction = lambda self, t: False
+    clientFunction = "1"
+    statsGranularity = 60
     userAgent = "thundercloud client/%s" % constants.VERSION
+    profile = JobProfile.HAMMER
+    
+    # verify rules for job specs are adhered to
+    def validate(self):
+        # can't have an infinite transfer limit and infinite duration
+        if self.duration == float("inf") and self.transferLimit == float("inf"):
+            raise InvalidJobSpec("Must set a duration or transfer limit")
+    
+        # stats granularity must be an int
+        if type(self.statsGranularity) != int:
+            raise InvalidJobSpec("Invalid stats granularity")
+    
+        # client function has to use t as an argument
+        
+        # requests must be a dict of URLs to well-formed request objects
+        if type(self.requests) != dict:
+            raise InvalidJobSpec("Requests must be a well-formed dictionary")
+        for request in self.requests:
+            if type(self.requests[request]) != dict:
+                raise InvalidJobSpec("Malformed request")
+            if not self.requests[request].has_key("method")   or \
+               not self.requests[request].has_key("postdata") or \
+               not self.requests[request].has_key("cookies"):
+                raise InvalidJobSpec("Malformed request, missing key")
+        
+        # profile has to be valid
+        if self.profile != JobSpec.JobProfile.BENCHMARK and \
+           self.profile != JobSpec.JobProfile.HAMMER:
+            raise InvalidJobSpec("Invalid job profile")
+        
+        # if everything is ok...
+        return True
 
 
 class JobResults(object):
-    pass
+    iterations = 0
+    bytesTransferred = 0
+    elapsedTime = 0
+    statisticsByTime = {}
+    errors = {}
 
 
 class JobState(object):

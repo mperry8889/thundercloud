@@ -23,8 +23,8 @@ class EngineBase(object):
     implements(IEngine, IJob)
 
     # attributes which configure the engine
-    clientFunction = lambda self, t: 40#((10*math.sin(.1*t))+10)
-    requests = {"http://unshift.net/projects":{}}#/sling/images/toga_sling.gif":{}}
+    clientFunction = lambda self, t: 1
+    requests = {"":{}}
     userAgent = "thundercloud client/%s" % constants.VERSION
     iterator = lambda: True
     httpClientRequestQueue = Queue()
@@ -32,7 +32,7 @@ class EngineBase(object):
 
     # attributes for time management
     duration = float("inf") #60
-    starTime = None
+    startTime = None
     endTime = None
     elapsedTime = 0.00000001    # so clientFunction(0) != 0
     pausedTime = 0.0
@@ -40,7 +40,7 @@ class EngineBase(object):
     
     # attributes for data management
     bytesTransferred = 0
-    transferLimit = 1024*1024*10 #float("inf")
+    transferLimit = float("inf")
     
     # attributes for statistics generation    
     iterations = 0
@@ -56,16 +56,27 @@ class EngineBase(object):
             "clients": 0,            
         }
     }
-    statsGranularity = 3
+    statsGranularity = 60
     _statsBookmark = 0          # shortcut to last time stats were generated.
                                 # avoids listing/sorting statisticsByTime keys
     
   
     def __init__(self, jobSpec):
+        self.requests = jobSpec.requests
+        self.transferLimit = jobSpec.transferLimit
+        self.duration = jobSpec.duration
+        self.userAgent = jobSpec.userAgent
+        self.statsGranularity = jobSpec.statsGranularity
+        self.clientFunction = lambda t: eval(jobSpec.clientFunction)
+        
         # dump the host/port/URLs to be fetched into a queue
         for url in self.requests.keys():
             scheme, host, port, path = _parse(url)
-            self.httpClientRequestQueue.put([host, port, url])
+            self.httpClientRequestQueue.put([host, port, 
+                                             self.requests[url]["method"], 
+                                             url, 
+                                             self.requests[url]["postdata"],
+                                             self.requests[url]["cookies"]])
 
   
     # start the engine.  set the current time and set the job state as running,
@@ -82,13 +93,22 @@ class EngineBase(object):
 
     # handy method to set up a Deferred and set up callbacks.  this needs to be
     # a separate method so it can easily be triggered by reactor.callLater
-    def _request(self, host, port, url):
+    def _request(self, host, port, method, url, postdata, cookies):
         requestTime = time.time()
-        factory = HTTPClientFactory(url, agent=self.userAgent)
+        factory = HTTPClientFactory(url,
+                                    method=method,
+                                    postdata=postdata,
+                                    cookies=cookies, 
+                                    agent=self.userAgent)
         reactor.connectTCP(host, port, factory)
         factory.deferred.addCallback(self.callback, requestTime)
         factory.deferred.addErrback(self.errback, requestTime)
-
+        try:
+            self.bytesTransferred = self.bytesTransferred + len(cookies)
+            self.bytesTransferred = self.bytesTransferred + len(postdata)
+        except TypeError:
+                pass
+        
 
     # mark a job as paused.  derived class' iteration loops should be
     # careful to check the job's state before continuing, making pause/resume
@@ -120,11 +140,10 @@ class EngineBase(object):
         self.state = JobState.COMPLETE
         self.endTime = time.time()
         self._generateStats(force=True)
-        self.dump()
     
     
     # some bookkeeping
-    def _bookkeeping(self, value, requestTime):
+    def _bookkeep(self, value, requestTime):
         self.iterations = self.iterations + 1
         self.bytesTransferred = self.bytesTransferred + len(value)
         self.elapsedTime = time.time() - self.startTime - self.pausedTime
@@ -158,13 +177,13 @@ class EngineBase(object):
     # can re-implement callback() but should probably call this method
     # via super(), or else duplicate the bookkeeping code
     def callback(self, value, requestTime):
-        self._bookkeeping(value, requestTime)
+        self._bookkeep(value, requestTime)
         self._generateStats()
 
     
     # default errback -- see comments for callback()
     def errback(self, value, requestTime):
-        self._bookkeeping("", requestTime)
+        self._bookkeep("", requestTime)
         self._generateStats()
         
         # this is probably going to slow things down in a super high traffic environment
@@ -173,6 +192,16 @@ class EngineBase(object):
         if "Connection lost" in value.getErrorMessage():
             self.errors["connectionLost"] = self.errors["connectionLost"] + 1
 
+
+    # generate and fill in a JobResults object
+    def results(self):
+        jobResults = JobResults()
+        jobResults.iterations = self.iterations
+        jobResults.bytesTransferred = self.bytesTransferred
+        jobResults.elapsedTime = self.elapsedTime
+        jobResults.statisticsByTime = self.statisticsByTime
+        jobResults.errors = self.errors
+        return jobResults
 
     # dump job information to the console.  useful for debugging.
     def dump(self):
