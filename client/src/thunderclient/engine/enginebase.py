@@ -203,6 +203,7 @@ class EngineBase(object):
         jobResults.errors = self.errors
         return jobResults
 
+
     # dump job information to the console.  useful for debugging.
     def dump(self):
         print "state: %s" % self.state

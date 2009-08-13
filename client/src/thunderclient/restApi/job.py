@@ -47,16 +47,16 @@ class JobNode(LeafNode):
     
     # handle GET /job/n
     def GET(self, request):
-        if request.postpath:
-            jobId = int(request.prepath[-1])
+        jobId = int(request.prepath[-1])
+        if request.postpath and request.postpath == "results":
             return getattr(self, request.postpath[0])(jobId, request.args)
         else:
-            return "status"
+            return self.results(jobId, None)
 
     # handle POST /job/n/operation -- call the appropriate method
     # for the given job ID
     def POST(self, request):
-        if request.postpath:
+        if request.postpath and request.postpath != "results":
             jobId = int(request.prepath[-1])
             return getattr(self, request.postpath[0])(jobId, request.args)
         else:

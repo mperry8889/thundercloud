@@ -14,7 +14,7 @@ j.requests = {
         "cookies": [],
     },
 }
-j.duration = 15
+j.duration = 5
 j.transferLimit = 5*1024*1024
 j.statsGranularity = 10
 
@@ -59,9 +59,9 @@ time.sleep(j.duration)
 print "GET /job/%s/results" % id
 client.request("GET", "/job/%s/results" % id)
 results = client.getresponse().read()
-obj = jsonpickle.decode(results)
+obj = jsonpickle.decode(jsonpickle.decode(results))
 print obj
-print type(obj)
+print obj.bytesTransferred
 
 
 #print "sleeping 60 seconds"
