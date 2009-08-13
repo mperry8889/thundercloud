@@ -7,8 +7,7 @@ from twisted.web.client import HTTPClientFactory, _parse
 from twisted.internet import reactor
 
 from thundercloud import constants
-from ..orchestrator.job import IJob
-from ..orchestrator.job import JobSpec, JobState, JobResults
+from thundercloud.job import IJob, JobSpec, JobState, JobResults
 
 class IEngine(Interface):
     clients = Attribute("""foo""")
@@ -24,27 +23,40 @@ class EngineBase(object):
     implements(IEngine, IJob)
 
     # attributes which configure the engine
-    clientFunction = lambda self, t: ((10*math.sin(.1*t))+10)
-    requests = {"http://unshift.net":{}}
+    clientFunction = lambda self, t: 40#((10*math.sin(.1*t))+10)
+    requests = {"http://unshift.net/projects":{}}#/sling/images/toga_sling.gif":{}}
     userAgent = "thundercloud client/%s" % constants.VERSION
     iterator = lambda: True
     httpClientRequestQueue = Queue()
     state = JobState.NEW
-        
+
     # attributes for time management
-    duration = 60
+    duration = float("inf") #60
     starTime = None
     endTime = None
     elapsedTime = 0.00000001    # so clientFunction(0) != 0
+    pausedTime = 0.0
+    _timeAtPause = 0.0
     
     # attributes for data management
     bytesTransferred = 0
-    transferLimit = float("inf")
+    transferLimit = 1024*1024*10 #float("inf")
     
     # attributes for statistics generation    
     iterations = 0
-    statisticsByTime = {}
-    statsGranularity = 10
+    errors = {
+        "connectionLost": 0,
+        "serviceNotAvailable": 0,
+        "unknown": 0,      
+    }
+    statisticsByTime = {
+        0: {
+            "iterations": 0,
+            "requestsPerSec": 0,
+            "clients": 0,            
+        }
+    }
+    statsGranularity = 3
     _statsBookmark = 0          # shortcut to last time stats were generated.
                                 # avoids listing/sorting statisticsByTime keys
     
@@ -55,11 +67,6 @@ class EngineBase(object):
             scheme, host, port, path = _parse(url)
             self.httpClientRequestQueue.put([host, port, url])
 
-        self.statisticsByTime[0] = {
-            "iterations": 0,
-            "clientsPerSec": 0,
-            "clients": 0,
-        }
   
     # start the engine.  set the current time and set the job state as running,
     # then spin up all of the clients
@@ -87,7 +94,11 @@ class EngineBase(object):
     # careful to check the job's state before continuing, making pause/resume
     # very simple
     def pause(self):
+        if self.state != JobState.RUNNING:
+            raise Exception, "Not running"
+        
         self.state = JobState.PAUSED
+        self._timeAtPause = time.time()
     
     
     # mark the job as running, and spin up new clients
@@ -96,6 +107,7 @@ class EngineBase(object):
         if self.state != JobState.PAUSED:
             raise Exception, "Not paused"
         
+        self.pausedTime = self.pausedTime + (time.time() - self._timeAtPause)
         self.state = JobState.RUNNING
         self.iterator()
     
@@ -105,8 +117,9 @@ class EngineBase(object):
         if self.state == JobState.COMPLETE:
             return
         
-        self.endTime = time.time()
         self.state = JobState.COMPLETE
+        self.endTime = time.time()
+        self._generateStats(force=True)
         self.dump()
     
     
@@ -114,7 +127,7 @@ class EngineBase(object):
     def _bookkeeping(self, value, requestTime):
         self.iterations = self.iterations + 1
         self.bytesTransferred = self.bytesTransferred + len(value)
-        self.elapsedTime = time.time() - self.startTime
+        self.elapsedTime = time.time() - self.startTime - self.pausedTime
     
         if self.elapsedTime >= self.duration:
             self.stop()
@@ -122,32 +135,43 @@ class EngineBase(object):
         if self.bytesTransferred >= self.transferLimit:
             self.stop()        
     
-    # default callback which handles bookkeeping.  derived classes
-    # can re-implement callback() but should probably call this method
-    # via super(), or else duplicate the bookkeeping code
-    def callback(self, value, requestTime):        
-        self._bookkeeping(value, requestTime)
-        
-        # if it's been 1 or more seconds since the last time we took stats
-        # (avg TuT, number of concurrent requests) then let's do it again
-        if int(self.elapsedTime - self._statsBookmark) >= self.statsGranularity:
+    
+    # generate statistics
+    def _generateStats(self, force=False):
+        # if another timeslice has passed since the last time we took stats
+        # (requests/sec, number of concurrent requests) then let's do it again.
+        if (self.elapsedTime - self._statsBookmark >= self.statsGranularity) or force:
             try:
                 self.statisticsByTime[self.elapsedTime] = {
                     "iterations": self.iterations,
-                    "clientsPerSec": float(self.iterations - self.statisticsByTime[self._statsBookmark]["iterations"])/float(self.elapsedTime - self._statsBookmark),
+                    "requestsPerSec": float(self.iterations - self.statisticsByTime[self._statsBookmark]["iterations"])/float(self.elapsedTime - self._statsBookmark),
                     # XXX: this isn't entirely accurate. this gives f(t) but isn't the
                     # actual number of clients in the system
-                    "clients": abs(int(math.ceil(self.clientFunction(time.time())))),
+                    "clients": min(constants.CLIENT_UPPER_BOUND, abs(int(math.ceil(self.clientFunction(time.time()))))),
                 }
                 self._statsBookmark = self.elapsedTime
             except ZeroDivisionError:
                 pass
-                
+    
+    
+    # default callback which handles bookkeeping.  derived classes
+    # can re-implement callback() but should probably call this method
+    # via super(), or else duplicate the bookkeeping code
+    def callback(self, value, requestTime):
+        self._bookkeeping(value, requestTime)
+        self._generateStats()
+
     
     # default errback -- see comments for callback()
     def errback(self, value, requestTime):
-        print value
         self._bookkeeping("", requestTime)
+        self._generateStats()
+        
+        # this is probably going to slow things down in a super high traffic environment
+        # due to string searches, but there doesn't seem to be a better way.  errback 
+        # handling is not very awesome, especially in terms of propagating exceptions
+        if "Connection lost" in value.getErrorMessage():
+            self.errors["connectionLost"] = self.errors["connectionLost"] + 1
 
 
     # dump job information to the console.  useful for debugging.
@@ -156,9 +180,12 @@ class EngineBase(object):
         print "start time: %s, end time: %s, elapsed time: %s" % (self.startTime, self.endTime, self.elapsedTime)
         print "bytes transferred: %s" % self.bytesTransferred
         print "iterations: %s" % self.iterations
+        print "elapsed time: %s" % self.elapsedTime
+        print "paused time: %s" % self.pausedTime
         print "stats last: %s" % self.statisticsByTime[sorted(self.statisticsByTime.keys())[-1]]
         print "stats total:"
         for key in sorted(self.statisticsByTime.keys()):
-            print "t=%s" % int(key)
+            print "t=%s" % key
             print self.statisticsByTime[key]
-            
+        print "errors:"
+        print self.errors

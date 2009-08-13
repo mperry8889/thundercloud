@@ -6,7 +6,7 @@ import random
 from twisted.internet import reactor
 
 from enginebase import EngineBase
-from ..orchestrator.job import JobState
+from thundercloud.job import JobState
 from thundercloud import constants
 
 class DelayFactory(object):
@@ -36,7 +36,7 @@ class BenchmarkEngine(EngineBase):
     def _loop(self):
         if self.state == JobState.RUNNING:
             # calculates client function at time t
-            clientFunctionResult = abs(int(math.ceil(self.clientFunction(self.elapsedTime))))
+            clientFunctionResult = min(constants.CLIENT_UPPER_BOUND, abs(int(math.ceil(self.clientFunction(time.time())))))
             
             # only add clients if clientFunc(t) calls for more clients than are
             # currently in the system.  this may not always be the case -- if a 

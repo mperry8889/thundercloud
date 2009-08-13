@@ -6,8 +6,7 @@ from nodes import LeafNode
 from nodes import Http400, Http404
 
 from ..orchestrator import Orchestrator
-from ..orchestrator.job import IJob, JobSpec
-    
+from thundercloud.job import IJob, JobSpec  
 
 # List only active jobs, /job/active
 class ActiveJobs(RootNode):

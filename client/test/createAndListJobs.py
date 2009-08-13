@@ -35,20 +35,25 @@ print "GET /job/active"
 client.request("GET", "/job/active")
 print client.getresponse().read()
 
-print "sleeping 60 seconds"
-time.sleep(60)
-print "POST /job/%s/stop" % id
-client.request("POST", "/job/%s/stop" % id)
-print client.getresponse().read()
+#print "sleeping 60 seconds"
+#time.sleep(60)
+#print "POST /job/%s/stop" % id
+#client.request("POST", "/job/%s/stop" % id)
+#print client.getresponse().read()
 
-print "GET /job/complete"
-client.request("GET", "/job/complete")
-print client.getresponse().read()
+#print "GET /job/complete"
+#client.request("GET", "/job/complete")
+#print client.getresponse().read()
 
-print "POST /job/%s/remove" % id
-client.request("POST", "/job/%s/remove" % id)
-print client.getresponse().read()
+#print "POST /job/%s/remove" % id
+#client.request("POST", "/job/%s/remove" % id)
+#print client.getresponse().read()
 
-print "GET /job/complete"
-client.request("GET", "/job/complete")
-print client.getresponse().read()
+#print "GET /job/complete"
+#client.request("GET", "/job/complete")
+#print client.getresponse().read()
+
+#print "sleeping 90 seconds"
+#time.sleep(90)
+#print "GET /die"
+#client.request("GET", "/die")

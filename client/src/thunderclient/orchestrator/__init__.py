@@ -1,5 +1,4 @@
-from job import JobSpec
-from job import JobState
+from thundercloud.job import JobSpec, JobState
 from ..engine import EngineFactory
 
 # Tracks and operates on jobs in the system, maintaining an instance

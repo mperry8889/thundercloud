@@ -7,7 +7,7 @@ from twisted.web.client import HTTPClientFactory
 from twisted.web.client import _parse
 
 from enginebase import EngineBase
-from ..orchestrator.job import JobState
+from thundercloud.job import JobState
 from thundercloud import constants
 
 class HammerEngine(EngineBase):
@@ -26,7 +26,7 @@ class HammerEngine(EngineBase):
             return
         
         if self.state == JobState.RUNNING:
-            numRequests = abs(int(math.ceil(self.clientFunction(self.elapsedTime))))
+            numRequests = min(constants.CLIENT_UPPER_BOUND, abs(int(math.ceil(self.clientFunction(time.time())))))
             try:
                 timeBetween = 1.0/numRequests
             except ZeroDivisionError:

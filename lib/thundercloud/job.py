@@ -11,16 +11,7 @@ class JobSpec(object):
 
 
 class JobResults(object):
-    bytesTransferred = 0
-    httpResponses = {"Code": 0}
-    responseTime = {
-        "time": {
-            "min": None,
-            "max": None,
-            "avg": None,
-            "stddev": None,
-        }
-    }
+    pass
 
 
 class JobState(object):
