@@ -1,5 +1,5 @@
 from twisted.internet import reactor
-from thunderclient.restApi import createRestApi
+from thunderslave.restApi import createRestApi
 import logging as log
 #import psyco
 #psyco.full()

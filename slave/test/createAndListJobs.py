@@ -8,15 +8,16 @@ from thundercloud.job import JobSpec, JobResults
 
 j = JobSpec()
 j.requests = {
-    "http://unshift.net": {
+    "http://designerdogfood.com": {
         "method": "GET",
         "postdata": None,
         "cookies": [],
     },
 }
-j.duration = 5
-j.transferLimit = 5*1024*1024
+j.duration = 120
+j.transferLimit = float("inf")#5*1024*1024
 j.statsGranularity = 10
+j.profile = JobSpec.JobProfile.BENCHMARK
 
 client = httplib.HTTPConnection("localhost:7000")
 print "GET /job"
@@ -40,14 +41,14 @@ print client.getresponse().read()
 print "sleeping 5 seconds"
 time.sleep(5)
 print "POST /job/0/pause"
-#client.request("POST", "/job/0/pause")
-#print client.getresponse().read()
+client.request("POST", "/job/0/pause")
+print client.getresponse().read()
 
 print "sleeping 2 seconds"
 time.sleep(2)
 print "POST /job/0/resume"
-#client.request("POST", "/job/0/resume")
-#print client.getresponse().read()
+client.request("POST", "/job/0/resume")
+print client.getresponse().read()
 
 print "GET /job/active"
 client.request("GET", "/job/active")
@@ -59,9 +60,9 @@ time.sleep(j.duration)
 print "GET /job/%s/results" % id
 client.request("GET", "/job/%s/results" % id)
 results = client.getresponse().read()
+print results
 obj = jsonpickle.decode(jsonpickle.decode(results))
 print obj
-print obj.bytesTransferred
 
 
 #print "sleeping 60 seconds"
