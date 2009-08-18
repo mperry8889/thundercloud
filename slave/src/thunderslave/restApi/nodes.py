@@ -25,7 +25,7 @@ class Node(Resource):
 
     def render_GET(self, request):
         try:
-            request.setHeader("Content-Type", "application/json")
+            request.setHeader("Content-Type", "text/plain")
             return json.dumps(self.GET(request))
         except Http400:
             request.setResponseCode(400)
@@ -34,7 +34,7 @@ class Node(Resource):
         
     def render_POST(self, request):
         try:
-            request.setHeader("Content-Type", "application/json")
+            request.setHeader("Content-Type", "text/plain")
             return json.dumps(self.POST(request))
         except Http400:
             request.setResponseCode(400)

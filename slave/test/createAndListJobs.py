@@ -14,7 +14,7 @@ j.requests = {
         "cookies": [],
     },
 }
-j.duration = 120
+j.duration = 1
 j.transferLimit = float("inf")#5*1024*1024
 j.statsGranularity = 10
 j.profile = JobSpec.JobProfile.BENCHMARK
@@ -24,6 +24,8 @@ client = httplib.HTTPConnection("localhost:7000")
 print "GET /job"
 client.request("GET", "/job")
 print client.getresponse().read()
+
+sys.exit(0)
 
 p = jsonpickle.encode(j, unpicklable=False)
 print "POST /job"
@@ -58,12 +60,12 @@ print client.getresponse().read()
 print "sleeping %s sec" % j.duration
 time.sleep(j.duration)
 
-print "GET /job/%s/results" % id
-client.request("GET", "/job/%s/results" % id)
-results = client.getresponse().read()
-print results
-obj = jsonpickle.decode(jsonpickle.decode(results))
-print obj
+#print "GET /job/%s/results" % id
+#client.request("GET", "/job/%s/results" % id)
+#results = client.getresponse().read()
+#print results
+#obj = jsonpickle.decode(jsonpickle.decode(results))
+#print obj
 
 
 #print "sleeping 60 seconds"
