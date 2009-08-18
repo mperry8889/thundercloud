@@ -1,4 +1,4 @@
-package cc.thundercloud.ui.client.widgets;
+package cc.thundercloud.ui.client.panels;
 
 
 import java.util.ArrayList;
@@ -26,7 +26,6 @@ public class UrlListPanel extends VerticalPanel {
 	
 	
 	final FlexTable urlTable;
-	private ArrayList<String> urlList = new ArrayList<String>();
 	private int index = 0;
 	
 	private UrlListPanel() {
@@ -49,7 +48,7 @@ public class UrlListPanel extends VerticalPanel {
 						break;
 					}
 				}
-				urlList.remove(url);
+				UrlQueue.remove(url);
 			}
 		});
 		removeButton.setText("X");
@@ -59,11 +58,16 @@ public class UrlListPanel extends VerticalPanel {
 		g.setWidget(0, 1, removeButton);
 //		g.setWidth("100%");
 		urlTable.setWidget(urlTable.getRowCount(), 0, g);
-		urlList.add(url);
+		try {
+			UrlQueue.add(url);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	public boolean hasUrl(final String url) {
-		return urlList.contains(url);
+		return UrlQueue.contains(url);
 	}
 	
 	public boolean validateUrl(final String url) {

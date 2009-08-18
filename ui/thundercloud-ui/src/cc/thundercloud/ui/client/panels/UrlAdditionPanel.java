@@ -1,4 +1,4 @@
-package cc.thundercloud.ui.client.widgets;
+package cc.thundercloud.ui.client.panels;
 
 import com.google.gwt.dom.client.Text;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -13,7 +13,7 @@ import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.ToggleButton;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
-import cc.thundercloud.ui.client.widgets.UrlListPanel;
+import cc.thundercloud.ui.client.panels.UrlListPanel;
 
 public class UrlAdditionPanel extends VerticalPanel {
 
@@ -45,7 +45,7 @@ public class UrlAdditionPanel extends VerticalPanel {
 		HorizontalPanel urlBar = new HorizontalPanel();
 		HorizontalPanel errorPanel = new HorizontalPanel();
 		
-		urlBox.setText("URL...");
+		urlBox.setText("http://unshift.net");
 		urlBox.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent clickEvent) {
 				urlBox.setText("");

@@ -18,7 +18,12 @@ class JobSpec(object):
     statsGranularity = 60
     userAgent = "thundercloud client/%s" % constants.VERSION
     profile = JobProfile.HAMMER
-    
+
+    def __init__(self, json=None):
+        if json is None: return
+        for key in json.keys():
+            setattr(self, key, json[key])
+
     # verify rules for job specs are adhered to
     def validate(self):
         # can't have an infinite transfer limit and infinite duration

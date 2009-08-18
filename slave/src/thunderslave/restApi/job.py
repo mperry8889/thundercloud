@@ -32,7 +32,8 @@ class Job(RootNode):
     
     # create a new job based on the given JSON job spec
     def POST(self, request):
-        jobSpecObj = jsonpickle.decode(request.args["body"][0])
+        # this is gross
+        jobSpecObj = JobSpec(simplejson.loads(request.content.read()))
         if not jobSpecObj.validate():
             raise Http400, "Invalid request"
         

@@ -18,19 +18,23 @@ public class UrlQueue {
 	
 	private static ArrayList<String> urlList = new ArrayList<String>();
 	
-	public void add(String url) throws Exception {
+	public static void add(String url) throws Exception {
 		if (urlList.contains(url)) {
 			throw new Exception();
 		}
 		urlList.add(url);
 	}
 	
-	public void remove(String url) {
+	public static void remove(String url) {
 		urlList.remove(url);
 	}
 	
 	public static List<String> getList() {
 		return urlList;
+	}
+	
+	public static boolean contains(String url) {
+		return urlList.contains(url);
 	}
 	
 }

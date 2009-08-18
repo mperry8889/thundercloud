@@ -1,4 +1,4 @@
-package cc.thundercloud.ui.client.widgets;
+package cc.thundercloud.ui.client.panels;
 
 
 import cc.thundercloud.ui.client.widgets.StartButton;

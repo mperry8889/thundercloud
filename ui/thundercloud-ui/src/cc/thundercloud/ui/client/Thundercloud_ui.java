@@ -19,17 +19,23 @@ import com.google.gwt.user.client.ui.TabPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
-import cc.thundercloud.ui.client.widgets.ButtonPanel;
+import cc.thundercloud.ui.client.panels.ButtonPanel;
+import cc.thundercloud.ui.client.panels.DurationPanel;
+import cc.thundercloud.ui.client.panels.ThrottlePanel;
+import cc.thundercloud.ui.client.panels.TransferPanel;
+import cc.thundercloud.ui.client.panels.UrlAdditionPanel;
+import cc.thundercloud.ui.client.panels.UrlListPanel;
 import cc.thundercloud.ui.client.widgets.PauseButton;
 import cc.thundercloud.ui.client.widgets.StartButton;
 import cc.thundercloud.ui.client.widgets.StopButton;
-import cc.thundercloud.ui.client.widgets.UrlAdditionPanel;
-import cc.thundercloud.ui.client.widgets.UrlListPanel;
 
 public class Thundercloud_ui implements EntryPoint {
 	public void onModuleLoad() {
 		RootPanel.get().setWidth("100%");
 		RootPanel.get().add(UrlAdditionPanel.get());
+		RootPanel.get().add(ThrottlePanel.get());
+		RootPanel.get().add(TransferPanel.get());
+		RootPanel.get().add(DurationPanel.get());
 		RootPanel.get().add(ButtonPanel.get());
 		RootPanel.get().add(UrlListPanel.get());
 	}

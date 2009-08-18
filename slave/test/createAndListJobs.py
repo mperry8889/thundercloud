@@ -20,13 +20,14 @@ j.statsGranularity = 10
 j.profile = JobSpec.JobProfile.BENCHMARK
 
 client = httplib.HTTPConnection("localhost:7000")
+
 print "GET /job"
 client.request("GET", "/job")
 print client.getresponse().read()
 
-p = jsonpickle.encode(j)
+p = jsonpickle.encode(j, unpicklable=False)
 print "POST /job"
-client.request("POST", "/job", urllib.urlencode({"body":p}), {"Content-type": "application/x-www-form-urlencoded"})
+client.request("POST", "/job", p, {"Content-type": "application/json"})
 id = client.getresponse().read()
 print id
 
