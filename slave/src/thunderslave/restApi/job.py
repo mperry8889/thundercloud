@@ -32,7 +32,7 @@ class Job(RootNode):
     
     # create a new job based on the given JSON job spec
     def POST(self, request):
-        # this is gross
+        request.content.seek(0, 0)
         jobSpecObj = JobSpec(simplejson.loads(request.content.read()))
         if not jobSpecObj.validate():
             raise Http400, "Invalid request"

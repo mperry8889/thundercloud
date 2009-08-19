@@ -1,0 +1,83 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+		<title>thundercloud 1.0.0</title>
+		
+		<script type="text/javascript" src="http://jqueryjs.googlecode.com/files/jquery-1.3.1.js"></script>
+		<script type="text/javascript" src="http://www.datatables.net/release-datatables/media/js/jquery.dataTables.js"></script>
+		<script type="text/javascript" src="http://www.appelsiini.net/download/jquery.jeditable.js"></script>
+		<script type="text/javascript" src="http://jquery-json.googlecode.com/files/jquery.json-2.1.js"></script>
+		<script type="text/javascript" src="thundercloud.js"></script>
+		<script type="text/javascript" src="panels/url.js"></script>
+		<script type="text/javascript" src="panels/buttons.js"></script>
+		<script type="text/javascript" src="panels/settings.js"></script>
+
+		<style type="text/css" title="currentStyle">
+			@import "thundercloud.css";
+		</style>
+	</head>
+	<body>
+
+
+
+<div id="add-url-panel">
+	<div>
+	<input type="text" id="add-url-input">
+	<input type="button" id="add-url-button" value="Add">
+	<input type="button" id="add-url-clear-button" value="Clear">
+	</div>
+	<div>
+	<input type="checkbox" id="add-url-getCssJsImg" name="add-url-getCssJsImg"> Get CSS/JS/Images
+	</div>
+	<div>
+		<span id="add-url-errorMsg"></span>
+	</div>
+	
+	<div><br><br></div>
+		
+	<div id="control-button-panel">
+	<input type="button" id="control-button-start" value="Start">
+	<input type="button" id="control-button-pauseResume" value="Pause">
+	<input type="button" id="control-button-stop" value="Stop">
+	</div>
+	
+	<div>
+		<input type="text" id="settings-clientsPerSec-input"> Clients/sec<br />
+		<input type="text" id="settings-maxTransfer-input">
+		<select id="settings-maxTransfer-units" name="settings-maxTransfer-units">
+			<option value="MB">MB</option>
+			<option value="GB" selected>GB</option>
+			<option value="TB">TB</option>
+		</select>Max transfer<br />
+		<input type="text" id="settings-duration-input">
+		<select id="settings-duration-units" name="settings-duration-units">
+			<option value="seconds">seconds</option>
+			<option value="minutes" selected">minutes</option>
+			<option value="hours">hours</option>
+			<option value="days">days</option>
+		</select> Duration<br />
+	</div>
+	
+	<div>
+		<table cellpadding="0" cellspacing="0" border="0" id="urlList" width="100%">
+	<thead>
+		<tr>
+			<th>URLs</th>
+			<th>Actions</th>
+		</tr>
+	</thead>
+	<tbody>
+
+	</tbody>
+</table>
+
+	</div>
+	
+	<div><br><br></div>
+	<div id="dump"></div>
+</div>
+
+
+	</body>
+</html>

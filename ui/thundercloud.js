@@ -1,64 +1,55 @@
-var thundercloud = new Object();
-thundercloud.util = new Object();
+var tc = new Object();
+tc.data = new Object();
+tc.panel = new Object();
+tc.restApi = new Object();
 
-thundercloud.util.clearInnerHtml = function (id) {
-		document.getElementById(id).innerHTML = "";
-};
-thundercloud.util.clearValue = function (id) {
-		document.getElementById(id).value = "";
-};
-
-
-/* URL ADDITION PANEL */
-
-function clearUrlPanel() {
-	$("#add-url-input").val("");
-	$("#add-url-errorMsg").html("");
-	$("#add-url-getCssJsImg").attr("checked", false);	
-}
-
-var oAddUrlButton = new YAHOO.widget.Button("add-url-button");
-$("#add-url-input").val("http://unshift.net");
-oAddUrlButton.on("click", function (p_oEvent) {
-	_value = $("#add-url-input").val();
-	if (_value == "") {
-		$("#add-url-errorMsg").html("No URL given");
-		return;
+tc.data.urlList = new Object();
+tc.data.urlList._list = [];
+tc.data.urlList.add = function(url) {
+	for (i in tc.data.urlList._list) {
+		if (tc.data.urlList._list[i] == url) {
+			throw "Duplicate URL";
+		}
 	}
-	//if (!thundercloud.util.validateUrl(_value)) {
-	//	$("#add-url-errorMsg").html("Invalid URL");
-	//	return;
-	//}
-	if ($("#add-url-getCssJsImg").attr("checked")) {
-	//	
-	}           
-	
-	oUrlList.addRow({Index: 0, Method: "GET", URL: _value, Actions: "Edit | Remove"});
-	clearUrlPanel();
-});
-
-var oClearUrlButton = new YAHOO.widget.Button("add-url-clear-input-button");
-oClearUrlButton.on("click", function (p_oEvent) {
-	clearUrlPanel();
-});
-
-
-/* URL LIST */
-
-var oUrlListColumns = [
-	{key: "Index", resizeable: false},
-    {key: "Method", resizeable: false},
-	{key: "URL", resizeable: false},
-	{key: "Actions", resizeable: false},
-];
-var oUrlListDataSource = YAHOO.util.DataSource([]);
-oUrlListDataSource.responseType = YAHOO.util.DataSource.TYPE_JSARRAY;
-oUrlListDataSource.responseSchema = {
-	fields: ["Index", "Method", "URL", "Actions"]
+	tc.data.urlList._list.push(url);
 };
-var oUrlList = new YAHOO.widget.DataTable("urlList", oUrlListColumns, oUrlListDataSource);
-oUrlList.hideColumn("Index");
+tc.data.urlList.del = function(url) {
+	for (var i = 0; i <= tc.data.urlList._list.length; i++) {
+		if (url == tc.data.urlList._list[i]) {
+			tc.data.urlList._list.splice(i, 1);
+			return;
+		}		
+	}
+};
+tc.data.urlList.alert = function() {
+	console.log(tc.data.urlList._list);
+};
 
+tc.restApi._jobId = null;
+tc.restApi._jobSpec = null;
+tc.restApi._backend = "http://localhost:8080/api/job"
+tc.restApi.createJobCallback = function(data, statusText) {
+	tc.restApi._jobId = data;
+	tc.restApi.startJob();
+};
+tc.restApi.createJob = function() {
+	var jobSpec = Object();
+	jobSpec.requests = {};
+	for (i in tc.data.urlList._list) {
+		jobSpec.requests[tc.data.urlList._list[i]] = {"method": "GET", "postdata": null, "cookies": []};
+	}
+	jobSpec.duration = 10;
+	jobSpec.maxTransfer = 10240;
+	jobSpec.clientFunction = "5";
+	jobSpec.statsGranularity = 10;
+	jobSpec.profile = 1;
+	tc.restApi._jobSpec = jobSpec;
+	$.post(tc.restApi._backend, $.toJSON(tc.restApi._jobSpec), tc.restApi.createJobCallback, "json");
+};
 
-/* ACTION BUTTONS */
-
+tc.restApi.startJobCallback = function(data, statusText) {
+	console.log("starting job");
+};
+tc.restApi.startJob = function() {
+	$.post(tc.restApi._backend + "/" + tc.restApi._jobId + "/start", null, tc.restApi.startJobCallback);
+};
