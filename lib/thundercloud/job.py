@@ -16,9 +16,10 @@ class JobSpec(object):
         self.duration = float("inf")
         self.transferLimit = float("inf")
         self.clientFunction = "1"
-        self.statsGranularity = 60
+        self.statsGranularity = float("inf")
         self.userAgent = "thundercloud client/%s" % constants.VERSION
         self.profile = JobSpec.JobProfile.HAMMER
+        self.state = JobState.NEW
         if json is not None: self.slurp(json)
     
     def slurp(self, json):
@@ -93,3 +94,6 @@ class IJob(Interface):
     
     def state(self):
         """Get job state"""
+    
+    def results(self):
+        """Get job results"""

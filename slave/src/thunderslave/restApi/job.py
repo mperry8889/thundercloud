@@ -119,8 +119,12 @@ class JobNode(LeafNode):
     
     # get a job's statistics
     def results(self, jobId, args):
+        if args.has_key("short"):
+            short = simplejson.loads(args["short"][0])
+        else:
+            short = None
         try:
-            return jsonpickle.encode(Orchestrator.jobResults(jobId), unpicklable=False)
+            return jsonpickle.Pickler(unpicklable=True).flatten(Orchestrator.jobResults(jobId, short))
         except:
             raise Http400
 

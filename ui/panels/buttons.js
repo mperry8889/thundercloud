@@ -4,6 +4,10 @@ $(document).ready(function() {
 	tc.panel.buttons.jobStopped();
 
 	$("#control-button-start").click(function() {
+		if (tc.data.urlList.isEmpty()) {
+			window.alert("No URLs");
+			return;
+		}
 		tc.restApi.createJob();
 	});
 	$("#control-button-stop").click(function() {

@@ -59,7 +59,7 @@ class _Orchestrator(object):
     def jobState(self, jobId):
         return self.jobs[jobId].state
     
-    def jobResults(self, jobId):
-        return self.jobs[jobId].results()
+    def jobResults(self, jobId, args):
+        return self.jobs[jobId].results(args)
     
 Orchestrator = _Orchestrator()

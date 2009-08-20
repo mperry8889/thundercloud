@@ -168,6 +168,18 @@ class EngineBase(object):
                     # actual number of clients in the system
                     "clients": min(constants.CLIENT_UPPER_BOUND, abs(int(math.ceil(self.clientFunction(time.time()))))),
                 }
+                
+                # if it's been less than 1 second since the last stats
+                # calculation, the results can get skewed.  for example
+                # if the engine is humming along at 15 requests/sec and 
+                # we get stats at time t and t+0.001 during which there have
+                # been 2 hits, the calculation will say there has been 
+                # 2/.001 = 2000 hits/sec.  so in this case, just steal it
+                # from time t, i guess
+                if self.elapsedTime - self._statsBookmark < 1.0:
+                    self.statisticsByTime[self.elapsedTime]["requestsPerSec"] = self.statisticsByTime[self._statsBookmark]["requestsPerSec"]
+                
+                
                 self._statsBookmark = self.elapsedTime
             except ZeroDivisionError:
                 pass
@@ -194,13 +206,23 @@ class EngineBase(object):
 
 
     # generate and fill in a JobResults object
-    def results(self):
+    def results(self, short=False):
         jobResults = JobResults()
+        jobResults.state = self.state
         jobResults.iterations = self.iterations
         jobResults.bytesTransferred = self.bytesTransferred
         jobResults.elapsedTime = self.elapsedTime
-        jobResults.statisticsByTime = self.statisticsByTime
         jobResults.errors = self.errors
+        
+        # don't attach statistics if the caller is looking for short results
+        if short == True:
+            try:
+                del(jobResults.statisticsByTime)
+            except AttributeError:
+                pass
+        else:
+            jobResults.statisticsByTime = self.statisticsByTime
+        
         return jobResults
 
 

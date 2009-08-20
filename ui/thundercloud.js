@@ -23,3 +23,6 @@ tc.data.urlList.del = function(url) {
 	}
 };
 
+tc.data.urlList.isEmpty = function() {
+	return tc.data.urlList._list.length == 0 ? true : false;
+};

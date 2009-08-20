@@ -32,7 +32,7 @@ tc.restApi.createJob = function() {
 	jobSpec.maxTransfer = parseInt($("#settings-maxTransfer-input").val() * $("#settings-maxTransfer-units").val());
 	jobSpec.clientFunction = $("#settings-clientsPerSec-input").val().toString();
 	jobSpec.statsGranularity = parseInt($("#settings-statsGranularity-input").val() * $("#settings-statsGranularity-units").val());
-	jobSpec.profile = 0;
+	jobSpec.profile = parseInt($("#settings-profile").val());
 	tc.restApi._jobSpec = jobSpec;
 	$.ajax({
 		type: "POST",
@@ -128,8 +128,10 @@ tc.restApi.resumeJob = function() {
 
 /* polling code */
 tc.restApi.pollCallback = function(data, statusText) {
-	tc.restApi._state = parseInt(data);
-	if (data == tc.restApi.JobState.RUNNING) {
+	var response = jsonParse(data)
+	tc.restApi._state = parseInt(response.state)
+	$("#currentStatus").html(response.state + " " + response.elapsedTime)
+	if (tc.restApi._state == tc.restApi.JobState.RUNNING) {
 		tc.restApi._timeoutId = setTimeout("tc.restApi.poll()", 5000);
 	}
 	else if (tc.restApi._state == tc.restApi.JobState.COMPLETE) {
@@ -144,20 +146,18 @@ tc.restApi.poll = function() {
 	if (tc.restApi._state == tc.restApi.JobState.RUNNING) {
 		$.ajax({
 			type: "GET",
-			url: tc.restApi._backend + "/" + tc.restApi._jobId + "/state",
+			url: tc.restApi._backend + "/" + tc.restApi._jobId + "/results?short=true",
 			success: tc.restApi.pollCallback,
 			error: tc.restApi.pollErrback,
 		});
-	}
-	else if (tc.restApi._state == tc.restApi.JobState.COMPLETE) {
-		tc.restApi.results();
 	}
 };
 
 
 /* stats */
 tc.restApi.resultsCallback = function(data, statusText) {
-	$("#dump").html(data);
+	var response = jsonParse(data)
+	tc.panel.results.plot(response.statisticsByTime);
 };
 tc.restApi.resultsErrback = function(data, statusText) {
 	
