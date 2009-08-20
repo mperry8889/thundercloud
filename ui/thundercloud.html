@@ -8,10 +8,13 @@
 		<script type="text/javascript" src="http://www.datatables.net/release-datatables/media/js/jquery.dataTables.js"></script>
 		<script type="text/javascript" src="http://www.appelsiini.net/download/jquery.jeditable.js"></script>
 		<script type="text/javascript" src="http://jquery-json.googlecode.com/files/jquery.json-2.1.js"></script>
+		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.2/jquery-ui.js"></script>
 		<script type="text/javascript" src="thundercloud.js"></script>
 		<script type="text/javascript" src="panels/url.js"></script>
 		<script type="text/javascript" src="panels/buttons.js"></script>
 		<script type="text/javascript" src="panels/settings.js"></script>
+		<script type="text/javascript" src="panels/results.js"></script>
+		<script type="text/javascript" src="api/restApi.js"></script>
 
 		<style type="text/css" title="currentStyle">
 			@import "thundercloud.css";
@@ -43,20 +46,30 @@
 	</div>
 	
 	<div>
-		<input type="text" id="settings-clientsPerSec-input"> Clients/sec<br />
-		<input type="text" id="settings-maxTransfer-input">
+		Profile:<br>
+		<input type="radio" id="settings-profile" name="settings-profile" value="0"> Benchmark<br>
+		<input type="radio" id="settings-profile" name="settings-profile" value="1"> Hammer<br>
+		<input type="text" id="settings-clientsPerSec-input" size=4> Clients/sec<br />
+		<input type="text" id="settings-maxTransfer-input" size=4>
 		<select id="settings-maxTransfer-units" name="settings-maxTransfer-units">
-			<option value="MB">MB</option>
-			<option value="GB" selected>GB</option>
-			<option value="TB">TB</option>
+			<option value="1048576">MB</option>
+			<option value="1073741824" selected>GB</option>
+			<option value="1099511627776">TB</option>
 		</select>Max transfer<br />
-		<input type="text" id="settings-duration-input">
+		<input type="text" id="settings-duration-input" size=4>
 		<select id="settings-duration-units" name="settings-duration-units">
-			<option value="seconds">seconds</option>
-			<option value="minutes" selected">minutes</option>
-			<option value="hours">hours</option>
-			<option value="days">days</option>
+			<option value="1">seconds</option>
+			<option value="60" selected">minutes</option>
+			<option value="3600">hours</option>
+			<option value="86400">days</option>
 		</select> Duration<br />
+		<input type="text" id="settings-statsGranularity-input" size=4>
+		<select id="settings-statsGranularity-units" name="settings-statsGranularity-units">
+			<option value="1">seconds</option>
+			<option value="60" selected">minutes</option>
+			<option value="3600">hours</option>
+			<option value="86400">days</option>
+		</select> Stats Granularity<br />
 	</div>
 	
 	<div>
@@ -74,7 +87,6 @@
 
 	</div>
 	
-	<div><br><br></div>
 	<div id="dump"></div>
 </div>
 

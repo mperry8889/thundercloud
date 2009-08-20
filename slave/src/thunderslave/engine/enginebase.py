@@ -21,47 +21,47 @@ class IEngine(Interface):
 # doesn't need to be reproduced
 class EngineBase(object):
     implements(IEngine, IJob)
-
-    # attributes which configure the engine
-    clientFunction = lambda self, t: 1
-    requests = {"":{}}
-    userAgent = "thundercloud client/%s" % constants.VERSION
-    iterator = lambda: True
-    httpClientRequestQueue = Queue()
-    state = JobState.NEW
-
-    # attributes for time management
-    duration = float("inf") #60
-    startTime = None
-    endTime = None
-    elapsedTime = 0.00000001    # so clientFunction(0) != 0
-    pausedTime = 0.0
-    _timeAtPause = 0.0
-    
-    # attributes for data management
-    bytesTransferred = 0
-    transferLimit = float("inf")
-    
-    # attributes for statistics generation    
-    iterations = 0
-    errors = {
-        "connectionLost": 0,
-        "serviceNotAvailable": 0,
-        "unknown": 0,      
-    }
-    statisticsByTime = {
-        0: {
-            "iterations": 0,
-            "requestsPerSec": 0,
-            "clients": 0,            
-        }
-    }
-    statsGranularity = 60
-    _statsBookmark = 0          # shortcut to last time stats were generated.
-                                # avoids listing/sorting statisticsByTime keys
-    
   
     def __init__(self, jobSpec):
+        # attributes which configure the engine
+        self.clientFunction = lambda self, t: 1
+        self.requests = {"":{}}
+        self.userAgent = "thundercloud client/%s" % constants.VERSION
+        self.iterator = lambda: True
+        self.httpClientRequestQueue = Queue()
+        self.state = JobState.NEW
+    
+        # attributes for time management
+        self.duration = float("inf") #60
+        self.startTime = None
+        self.endTime = None
+        self.elapsedTime = 0.00000001    # so clientFunction(0) != 0
+        self.pausedTime = 0.0
+        self._timeAtPause = 0.0
+        
+        # attributes for data management
+        self.bytesTransferred = 0
+        self.transferLimit = float("inf")
+        
+        # attributes for statistics generation    
+        self.iterations = 0
+        self.errors = {
+            "connectionLost": 0,
+            "serviceNotAvailable": 0,
+            "unknown": 0,      
+        }
+        self.statisticsByTime = {
+            0: {
+                "iterations": 0,
+                "requestsPerSec": 0,
+                "clients": 0,            
+            }
+        }
+        self.statsGranularity = 60
+        self._statsBookmark = 0          # shortcut to last time stats were generated.
+                                         # avoids listing/sorting statisticsByTime keys
+        
+        # read the job spec and update attributes
         self.requests = jobSpec.requests
         self.transferLimit = jobSpec.transferLimit
         self.duration = jobSpec.duration

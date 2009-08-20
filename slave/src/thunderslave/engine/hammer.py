@@ -1,4 +1,4 @@
-from Queue import Queue
+from Queue import Queue, Empty
 from twisted.internet import reactor
 import time
 import math
@@ -11,6 +11,10 @@ from thundercloud.job import JobState
 from thundercloud import constants
 
 class HammerEngine(EngineBase):
+
+    def __init__(self, jobSpec):
+        super(HammerEngine, self).__init__(jobSpec)
+        self.iterator = self._loop
 
     # dump a bunch of requests into the reactor, scheduling them evenly over the next 
     # second.  then schedule another loop for a second later
@@ -33,13 +37,14 @@ class HammerEngine(EngineBase):
                 reactor.callLater(0, self._loop)   # avoid recursing
                 return
             for i in range(0, numRequests):
-                request = self.httpClientRequestQueue.get()
+                # queue may be empty if there are no URLs in the job spec
+                try:
+                    request = self.httpClientRequestQueue.get(False)
+                except Empty:
+                    self.stop()
+                    return
                 self.httpClientRequestQueue.put(request)
                 reactor.callLater(timeBetween, self._request, 
                                   request[0], request[1], request[2],
                                   request[3], request[4], request[5])
             reactor.callLater(1, self.iterator)
-            
-
-    iterator = _loop
-    userAgent = "thundercloud hammer client/%s" % constants.VERSION

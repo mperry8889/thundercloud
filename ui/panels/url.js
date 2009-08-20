@@ -3,13 +3,12 @@ tc.panel.url = new Object();
 tc.panel.url.err = function(errorMsg) {
 	if ($("#add-url-errorMsg").is(":hidden")) {
 		$("#add-url-errorMsg").html(errorMsg);
-		$("#add-url-errorMsg").slideDown("slow");
+		$("#add-url-errorMsg").fadeIn("normal");
 	}
 	
 };
 tc.panel.url.clearErr = function() {
-	$("#add-url-errorMsg").slideUp("slow");
-	$("#add-url-errorMsg").hide();
+	$("#add-url-errorMsg").fadeOut("normal");
 };
 tc.panel.url.clearAll = function() {
 	tc.panel.url.clearErr();
@@ -26,7 +25,7 @@ tc.panel.url.del = function(value) {
  * won't resolve, because it doesn't exist in the page.
  */
 tc.panel.url.activateRowClicks = function() {
-	$("#urlList tbody td a").click(function(event) {
+	$(".urlList-remove").click(function(event) {
 		_rowIndex = oUrlList.fnGetPosition($(this).parent()[0])[0];
 		_url = oUrlList.fnGetData(_rowIndex)[0];
 		oUrlList.fnDeleteRow(_rowIndex);
@@ -37,6 +36,11 @@ tc.panel.url.activateRowClicks = function() {
 var oUrlList;
 
 $(document).ready(function() {
+	
+	//XXX REMOVE
+	$("#add-url-input").val("http://unshift.net");
+	
+
 	oUrlList = $("#urlList").dataTable({
 		"bPaginate": false,	
 		"bInfo": false,
@@ -63,7 +67,7 @@ $(document).ready(function() {
 			tc.panel.url.err(e);
 			return;
 		}
-		oUrlList.fnAddData([_val, '<a href="javascript:void()">Remove</a>']);
+		oUrlList.fnAddData([_val, '<a href="javascript:;" class="urlList-remove">Remove</a>']);
 		tc.panel.url.clearAll();
 		tc.panel.url.activateRowClicks();
 	});

@@ -11,15 +11,17 @@ class JobSpec(object):
         HAMMER = 0
         BENCHMARK = 1
 
-    requests = {"":{}}
-    duration = float("inf")
-    transferLimit = float("inf")
-    clientFunction = "1"
-    statsGranularity = 60
-    userAgent = "thundercloud client/%s" % constants.VERSION
-    profile = JobProfile.HAMMER
-
     def __init__(self, json=None):
+        self.requests = {"":{}}
+        self.duration = float("inf")
+        self.transferLimit = float("inf")
+        self.clientFunction = "1"
+        self.statsGranularity = 60
+        self.userAgent = "thundercloud client/%s" % constants.VERSION
+        self.profile = JobSpec.JobProfile.HAMMER
+        if json is not None: self.slurp(json)
+    
+    def slurp(self, json):
         if json is None: return
         for key in json.keys():
             setattr(self, key, json[key])
@@ -47,6 +49,10 @@ class JobSpec(object):
                not self.requests[request].has_key("cookies"):
                 raise InvalidJobSpec("Malformed request, missing key")
         
+        # if request dict is empty, spec is invalid
+        if self.requests == {"":{}} or self.requests == {}:
+            raise InvalidJobSpec("No URLs requested")
+        
         # profile has to be valid
         if self.profile != JobSpec.JobProfile.BENCHMARK and \
            self.profile != JobSpec.JobProfile.HAMMER:
@@ -57,11 +63,12 @@ class JobSpec(object):
 
 
 class JobResults(object):
-    iterations = 0
-    bytesTransferred = 0
-    elapsedTime = 0
-    statisticsByTime = {}
-    errors = {}
+    def __init__(self):
+        self.iterations = 0
+        self.bytesTransferred = 0
+        self.elapsedTime = 0
+        self.statisticsByTime = {}
+        self.errors = {}        
 
 
 class JobState(object):

@@ -4,20 +4,19 @@ from ..engine import EngineFactory
 # Tracks and operates on jobs in the system, maintaining an instance
 # of Engine for each job
 class _Orchestrator(object):
-    __jobs = {}
-    __jobSeqNo = 0
     
     def __init__(self):
-        pass
+        self.jobs = {}
+        self._jobSeqNo = 0
     
     def listJobs(self):
-        return self.__jobs.keys()
+        return self.jobs.keys()
 
     def listJobsByState(self, state):
         jobs = self.listJobs()
         jobsInState = []
         for job in jobs:
-            if self.__jobs[job].state == state:
+            if self.jobs[job].state == state:
                 jobsInState.append(job)
         return jobsInState
 
@@ -27,39 +26,40 @@ class _Orchestrator(object):
     def listCompleteJobs(self):
         return self.listJobsByState(JobState.COMPLETE)        
     
-    def createJob(self, jobSpec, start=False):
-        jobNo = self.__jobSeqNo
-        self.__jobSeqNo = self.__jobSeqNo + 1
+    def createJob(self, jobSpec):
+        self._jobSeqNo = self._jobSeqNo + 1
+        while self.jobs.has_key(self._jobSeqNo):
+            self._jobSeqNo = self._jobSeqNo + 1
         
-        self.__jobs[jobNo] = EngineFactory.createFactory(jobSpec)
-        return jobNo       
+        self.jobs[self._jobSeqNo] = EngineFactory.createFactory(jobSpec)
+        return self._jobSeqNo       
 
     def startJob(self, jobId):
-        self.__jobs[jobId].start()
+        self.jobs[jobId].start()
 
     def pauseJob(self, jobId):
-        self.__jobs[jobId].pause()
+        self.jobs[jobId].pause()
     
     def resumeJob(self, jobId):
-        self.__jobs[jobId].resume()
+        self.jobs[jobId].resume()
     
     def stopJob(self, jobId):
-        self.__jobs[jobId].stop()
+        self.jobs[jobId].stop()
 
     def removeJob(self, jobId):
         try:
-            self.__jobs[jobId].stop()
+            self.jobs[jobId].stop()
         except:
             pass
         try:
-            self.__jobs.pop(jobId)
+            self.jobs.pop(jobId)
         except KeyError:
             pass
     
     def jobState(self, jobId):
-        return self.__jobs[jobId].state
+        return self.jobs[jobId].state
     
     def jobResults(self, jobId):
-        return self.__jobs[jobId].results()
+        return self.jobs[jobId].results()
     
 Orchestrator = _Orchestrator()

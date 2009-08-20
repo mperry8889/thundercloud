@@ -45,21 +45,23 @@ class Job(RootNode):
 # Handle requests for /job/n[/operation] URLs
 class JobNode(LeafNode):
     implements(IJob)
+    getCommands = ["results", "state"]
+    postCommands = ["start", "pause", "resume", "stop", "modify", "remove"]
     
     # handle GET /job/n
     def GET(self, request):
         jobId = int(request.prepath[-1])
-        if request.postpath and request.postpath == "results":
-            return getattr(self, request.postpath[0])(jobId, request.args)
+        if request.postpath and request.postpath[0].lower() in self.getCommands:
+            return getattr(self, request.postpath[0].lower())(jobId, request.args)
         else:
             return self.results(jobId, None)
 
     # handle POST /job/n/operation -- call the appropriate method
     # for the given job ID
     def POST(self, request):
-        if request.postpath and request.postpath != "results":
+        if request.postpath and request.postpath[0].lower() in self.postCommands:
             jobId = int(request.prepath[-1])
-            return getattr(self, request.postpath[0])(jobId, request.args)
+            return getattr(self, request.postpath[0].lower())(jobId, request.args)
         else:
             raise Http400
     
@@ -118,7 +120,7 @@ class JobNode(LeafNode):
     # get a job's statistics
     def results(self, jobId, args):
         try:
-            return jsonpickle.encode(Orchestrator.jobResults(jobId))
+            return jsonpickle.encode(Orchestrator.jobResults(jobId), unpicklable=False)
         except:
             raise Http400
 

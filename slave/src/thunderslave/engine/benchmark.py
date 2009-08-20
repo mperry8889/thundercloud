@@ -1,4 +1,4 @@
-from Queue import Queue
+from Queue import Queue, Empty
 import math
 import time
 import random
@@ -31,6 +31,13 @@ class RandomDelay(object):
 
 class BenchmarkEngine(EngineBase):
 
+    def __init__(self, jobSpec):
+        super(BenchmarkEngine, self).__init__(jobSpec)
+        self.iterator = self._loop
+        self.userAgent = "thundercloud traffic simulation client/%s" % constants.VERSION
+        self.delay = DelayFactory.createFactory(0.0)
+        self.clients = 0
+
     # find out the number of clients needed at the current time, and add clients
     # until the max number of clients is reached
     def _loop(self):
@@ -49,7 +56,13 @@ class BenchmarkEngine(EngineBase):
                     # this seems nonsensical but it makes the clients fetch all the URLs
                     # in the order of the queue, and easily allows n clients to handle n+1
                     # URLs
-                    request = self.httpClientRequestQueue.get()
+                    #
+                    # queue may be empty if there are no URLs in the job spec
+                    try:
+                        request = self.httpClientRequestQueue.get(False)
+                    except Empty:
+                        self.stop()
+                        return
                     self.httpClientRequestQueue.put(request)
                     self.clients = self.clients + 1
                     reactor.callLater(self.delay(), self._request, 
@@ -75,10 +88,4 @@ class BenchmarkEngine(EngineBase):
     def errback(self, value, requestTime):
         super(BenchmarkEngine, self).errback(value, requestTime)
         self.clients = self.clients - 1
-
-    
-    iterator = _loop
-    userAgent = "thundercloud traffic simulation client/%s" % constants.VERSION
-    delay = DelayFactory.createFactory(0.0)
-    clients = 0
     
