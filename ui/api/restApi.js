@@ -33,7 +33,6 @@ tc.restApi.createJob = function() {
 	jobSpec.clientFunction = $("#settings-clientsPerSec-input").val().toString();
 	jobSpec.statsGranularity = parseInt($("#settings-statsGranularity-input").val() * $("#settings-statsGranularity-units").val());
 	jobSpec.profile = parseInt($("input[name=settings-profile]:checked").val());
-	console.log(jobSpec.profile);
 	tc.restApi._jobSpec = jobSpec;
 	$.ajax({
 		type: "POST",

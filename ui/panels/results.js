@@ -33,5 +33,8 @@ tc.panel.results.plot = function(data) {
 		displayData.push([x, y]);
 	}
 	
-	tc.panel.results._plot = $.plot($("#resultsGraph"), [displayData], { xaxis: { max: xMax+1 }, yaxis: { max: yMax+1 } });
+	tc.panel.results._plot = $.plot($("#resultsGraph"), 
+							        [{ label: "requests/sec", points: { show: true }, lines: { show: true }, data: displayData }], 
+							        { xaxis: { max: xMax+10 }, yaxis: { max: yMax+1 } }
+	);
 };
