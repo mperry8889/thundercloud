@@ -47,7 +47,7 @@ $(document).ready(function() {
 		"bSort": false,
 		"bFilter": false,
 		"oLanguage": {
-			"sZeroRecords": "",
+			"sZeroRecords": "No URLs added",
 		},
 	});
 

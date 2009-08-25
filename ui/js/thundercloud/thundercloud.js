@@ -2,6 +2,7 @@ var tc = new Object();
 tc.data = new Object();
 tc.panel = new Object();
 
+tc.data.backend = "http://home.unshift.net:8080/api/job"
 
 /* URL list */
 tc.data.urlList = new Object();

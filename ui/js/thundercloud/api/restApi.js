@@ -9,7 +9,6 @@ tc.restApi.JobState = {
 };
 tc.restApi._jobId = null;
 tc.restApi._jobSpec = null;
-tc.restApi._backend = "http://localhost:8080/api/job"
 tc.restApi._state = 0;
 tc.restApi._polling = false;
 tc.restApi._timeoutId = 0;
@@ -21,6 +20,7 @@ tc.restApi.createJobCallback = function(data, statusText) {
 };
 tc.restApi.createJobErrback = function(XMLHttpRequest, statusText, error) {
 	tc.panel.buttons.jobStopped();
+	console.log("error");
 };
 tc.restApi.createJob = function() {
 	var jobSpec = Object();
@@ -36,7 +36,7 @@ tc.restApi.createJob = function() {
 	tc.restApi._jobSpec = jobSpec;
 	$.ajax({
 		type: "POST",
-		url: tc.restApi._backend,
+		url: tc.data.backend,
 		data: $.toJSON(tc.restApi._jobSpec),
 		success: tc.restApi.createJobCallback,
 		error: tc.restApi.createJobErrback,
@@ -55,7 +55,8 @@ tc.restApi.startJobErrback = function(XMLHttpRequest, statusText, error) {
 tc.restApi.startJob = function() {
 	$.ajax({
 		type: "POST",
-		url: tc.restApi._backend + "/" + tc.restApi._jobId + "/start",
+		url: tc.data.backend + "/" + tc.restApi._jobId + "/start",
+		data: {},
 		success: tc.restApi.startJobCallback,
 		error: tc.restApi.startJobErrback,
 	});
@@ -77,7 +78,7 @@ tc.restApi.stopJobErrback = function(XMLHttpRequest, statusText, error) {
 tc.restApi.stopJob = function() {
 	$.ajax({
 		type: "POST",
-		url: tc.restApi._backend + "/" + tc.restApi._jobId + "/stop",
+		url: tc.data.backend + "/" + tc.restApi._jobId + "/stop",
 		success: tc.restApi.stopJobCallback,
 		error: tc.restApi.stopJobErrback,
 	});
@@ -98,7 +99,7 @@ tc.restApi.pauseJobErrback = function(XMLHttpRequest, statusText, error) {
 tc.restApi.pauseJob = function() {
 	$.ajax({
 		type: "POST",
-		url: tc.restApi._backend + "/" + tc.restApi._jobId + "/pause",
+		url: tc.data.backend + "/" + tc.restApi._jobId + "/pause",
 		success: tc.restApi.pauseJobCallback,
 		error: tc.restApi.pauseJobErrback,
 	});
@@ -119,7 +120,7 @@ tc.restApi.resumeJobErrback = function(XMLHttpRequest, statusText, error) {
 tc.restApi.resumeJob = function() {
 	$.ajax({
 		type: "POST",
-		url: tc.restApi._backend + "/" + tc.restApi._jobId + "/resume",
+		url: tc.data.backend + "/" + tc.restApi._jobId + "/resume",
 		success: tc.restApi.resumeJobCallback,
 		error: tc.restApi.resumeJobErrback,
 	});
@@ -130,7 +131,7 @@ tc.restApi.resumeJob = function() {
 tc.restApi.pollCallback = function(data, statusText) {
 	var response = jsonParse(data)
 	tc.restApi._state = parseInt(response.state)
-	$("#currentStatus").html(response.state + " " + response.elapsedTime)
+	$("#currentStatus").html(response.elapsedTime)
 	if (tc.restApi._state == tc.restApi.JobState.RUNNING) {
 		tc.restApi._timeoutId = setTimeout("tc.restApi.poll()", 5000);
 	}
@@ -146,7 +147,7 @@ tc.restApi.poll = function() {
 	if (tc.restApi._state == tc.restApi.JobState.RUNNING) {
 		$.ajax({
 			type: "GET",
-			url: tc.restApi._backend + "/" + tc.restApi._jobId + "/results?short=true",
+			url: tc.data.backend + "/" + tc.restApi._jobId + "/results?short=true",
 			success: tc.restApi.pollCallback,
 			error: tc.restApi.pollErrback,
 		});
@@ -165,7 +166,7 @@ tc.restApi.resultsErrback = function(data, statusText) {
 tc.restApi.results = function() {
 	$.ajax({
 		type: "GET",
-		url: tc.restApi._backend + "/" + tc.restApi._jobId + "/results",
+		url: tc.data.backend + "/" + tc.restApi._jobId + "/results",
 		success: tc.restApi.resultsCallback,
 		error: tc.restApi.resultsErrback,
 	});	

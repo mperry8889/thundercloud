@@ -1,0 +1,154 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+        <title>thundercloud 1.0.0</title>
+        <script type="text/javascript" src="js/jquery/jquery-1.3.2.min.js">
+        </script>
+        <script type="text/javascript" src="js/jquery/jquery-ui-1.7.2.custom.min.js">
+        </script>
+        <script type="text/javascript" src="js/thundercloud/wizard.js">
+        </script>
+        <link rel="stylesheet" href="css/jquery-ui-1.7.2.custom.css" type="text/css" media="all" />
+        <link rel="stylesheet" href="css/wizard.css" type="text/css" media="all" />
+    </head>
+    <body>
+        <div id="container">
+            <div id="main-tabs">
+                <ul>
+                    <li>
+                        <a href="#main-tabs-new">Start New Test</a>
+                    </li>
+                    <li>
+                        <a href="#main-tabs-previous">View Previous Results</a>
+                    </li>
+                    <li>
+                        <a href="#main-tabs-dashboard">Dashboard</a>
+                    </li>
+					<li>
+						<a href="#main-tabs-account">My Account</a>
+					</li>
+                </ul>
+                <div id="main-tabs-new">
+                    <div id="wizard-workflow">
+                        <ul>
+                            <li>
+                                <a href="#wizard-begin">Step 1: Test Type</a>
+                            </li>
+                            <li>
+                                <a href="#wizard-parameters">Step 2: Parameters</a>
+                            </li>
+                            <li>
+                                <a href="#wizard-url">Step 3: Add URLs</a>
+                            </li>
+                            <li>
+                                <a href="#wizard-confirm">Step 4: Review &amp; Confirm</a>
+                            </li>
+                        </ul>
+                        <div id="wizard-begin">
+                            <p>
+                                I want to run a:
+                            </p>
+                            <input type="radio" name="jobspec-profile-input" value="0">Stress Test
+                            <br>
+                            <input type="radio" name="jobspec-profile-input" value="1">Benchmark
+                        </div>
+                        <div id="wizard-parameters">
+                            <p>
+                                Duration: <input type="text" id="jobspec-duration-input" size=4>
+                                <select id="jobspec-duration-multiplier" jobspec-duration-multiplier>
+                                    <option value="1" selected>seconds</option>
+                                    <option value="60">minutes</option>
+                                    <option value="3600">hours</option>
+                                    <option value="86400">days</option>
+                                </select>
+                                <a href="javascript:;" id="help-stress-duration" class="help-link-show">?</a>
+                                <div id="help-stress-duration-element" style="display: none;">
+                                    The duration, word. <a href="javascript:;" class="help-link-hide">X</a>
+                                </div>
+                            </p>
+                            <p>
+                                <span id="wizard-concurrency"></span>
+                                <input type="text" name="jobspec-clientFunction-input" size=2><a href="javascript:;" id="help-clientFunction" class="help-link-show">?</a>
+                                <div id="help-clientFunction-element" style="display: none;">
+                                    <span id="wizard-concurrency-help"></span>
+                                    <a href="javascript:;" class="help-link-hide">X</a>
+                                </div>
+                            </p>
+                            <p>
+                                Statistics Polling Frequency: <a href="javascript:;" id="help-stress-statsGranularity" class="help-link-show">?</a>
+                                <div id="jobspec-statsGranularity" style="width: 50%">
+                                </div>
+                                <div id="help-stress-statsGranularity-element" style="display: none;">
+                                    Hows often we's getting stats <a href="javascript:;" class="help-link-hide">X</a>
+                                </div>
+                            </p>
+                        </div>
+                        <div id="wizard-url">
+                            <div>
+                                <input type="text" id="jobspec-request-url-input"><input type="button" id="jobspec-request-url-add" value="Add"><input type="button" id="jobspec-request-url-check" value="Check">
+                            </div>
+                            <div>
+                                <div>
+                                    Get linked <input type="checkbox" id="jobspec-request-css">CSS, <input type="checkbox" id="jobspec-request-js">Javascript, <input type="checkbox" id="jobspec-request-img">Images
+                                </div>
+                                <div>
+                                    <input type="checkbox" id="jobspec-request-spider">Spider URL <a href="javascript:;">?</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="wizard-confirm">
+                            <div>
+                                <a href="javascript:;" id="dashboard-link">CREATE AND GO TO DASHBOARD</a>
+                                <br>
+                                <a href="javascript:;" id="clear-all">START OVER</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="main-tabs-previous">
+                    <p>
+                        OLD RESULTS
+                    </p>
+                </div>
+                <div id="main-tabs-dashboard">
+                    <div id="dashboard-progress">
+                    </div>
+                    <div id="dashboard-progress-text">
+                        Job is 27% complete; 3:04:56 remaining
+                    </div>
+                    <div id="dashboard-stats-container">
+                        <div id="dashboard-stats-current" style="display: inline;">
+                            Current stats:
+                            Average of 37 requests/sec
+                            <br>
+                            Average response time: 87ms
+                            <br>
+                            Last dispatched 100 clients
+                            <br>
+                            Requests complete: 9056
+                            <br>
+                        </div>
+                        <div id="dashboard-stats-average" style="display: inline;">
+                            Average stats:
+                            Average of 37 requests/sec
+                            <br>
+                            Average response time: 87ms
+                            <br>
+                            Last dispatched 100 clients
+                            <br>
+                            Requests complete: 9056
+                            <br>
+                        </div>
+                    </div>
+                    <div id="dashboard-buttons">
+                        <input type="button" id="dashboard-button-start" value="Start"><input type="button" id="dashboard-button-pause" value="Pause"><input type="button" id="dashboard-button-stop" value="Stop">
+                    </div>
+                </div>
+				<div id="main-tabs-account">
+					I OWE YOU MONEY
+				</div>
+            </div>
+        </div>
+    </body>
+</html>

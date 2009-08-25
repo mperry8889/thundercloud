@@ -50,11 +50,13 @@ class EngineBase(object):
             "serviceNotAvailable": 0,
             "unknown": 0,      
         }
+        self._averageResponseTime = 0
         self.statisticsByTime = {
             0: {
                 "iterations": 0,
                 "requestsPerSec": 0,
-                "clients": 0,            
+                "clients": 0,
+                "averageResponseTime": 0,
             }
         }
         self.statsGranularity = 60
@@ -147,6 +149,7 @@ class EngineBase(object):
         self.iterations = self.iterations + 1
         self.bytesTransferred = self.bytesTransferred + len(value)
         self.elapsedTime = time.time() - self.startTime - self.pausedTime
+        self._averageResponseTime = ((time.time() - requestTime) + ((self.iterations-1) * self._averageResponseTime))/self.iterations
     
         if self.elapsedTime >= self.duration:
             self.stop()
@@ -167,6 +170,7 @@ class EngineBase(object):
                     # XXX: this isn't entirely accurate. this gives f(t) but isn't the
                     # actual number of clients in the system
                     "clients": min(constants.CLIENT_UPPER_BOUND, abs(int(math.ceil(self.clientFunction(time.time()))))),
+                    "averageResponseTime": self._averageResponseTime,
                 }
                 
                 # if it's been less than 1 second since the last stats
@@ -196,6 +200,8 @@ class EngineBase(object):
     # default errback -- see comments for callback()
     def errback(self, value, requestTime):
         self._bookkeep("", requestTime)
+        self.iterations = self.iterations - 1  # take away the iteration
+        self.errors["unknown"] = self.errors["unknown"] + 1
         self._generateStats()
         
         # this is probably going to slow things down in a super high traffic environment

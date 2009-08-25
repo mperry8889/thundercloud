@@ -1,0 +1,17 @@
+
+
+#dashboard-stats-container {
+    position: relative;
+}
+
+#dashboard-stats-current {
+    float: left;
+}
+
+#dashboard-stats-average {
+    float: left;
+}
+
+#dashboard-buttons {
+	clear: both;
+}

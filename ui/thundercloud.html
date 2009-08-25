@@ -12,15 +12,14 @@
         <!--[if IE]><script language="javascript" type="text/javascript" src="excanvas.pack.js"></script><![endif]-->
         <script type="text/javascript" src="http://jquery-json.googlecode.com/files/jquery.json-2.1.js">
         </script>
-        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.2/jquery-ui.js">
+		 <script type="text/javascript" src="http://jquery-json.googlecode.com/files/jquery.json-2.1.js">
         </script>
+		<script type="text/javascript" src="http://www.json.org/json2.js"></script>
         <script type="text/javascript" src="http://json-sans-eval.googlecode.com/svn/trunk/src/json_sans_eval.js">
         </script>
         <script type="text/javascript" src="thundercloud.js">
         </script>
         <script type="text/javascript" src="panels/url.js">
-        </script>
-        <script type="text/javascript" src="panels/buttons.js">
         </script>
         <script type="text/javascript" src="panels/settings.js">
         </script>
@@ -28,40 +27,29 @@
         </script>
         <script type="text/javascript" src="api/restApi.js">
         </script>
-        <style type="text/css">
-            @import "thundercloud.css";
-            
-            #settings {
-                display: inline;
-            }
-            
-            #urlListDiv {
-                display: inline;
-            }
-        </style>
+        <script type="text/javascript" src="panels/buttons.js">
+        </script>
+        <script type="text/javascript" src="api/error.js">
+        </script>
+        <link rel="stylesheet" type="text/css" href="thundercloud.css" />
     </head>
     <body>
-        <div id="add-url-panel">
-            <div>
-                <input type="text" id="add-url-input"><input type="button" id="add-url-button" value="Add"><input type="button" id="add-url-clear-button" value="Clear">
-            </div>
-            <div>
-                <input type="checkbox" id="add-url-getCssJsImg" name="add-url-getCssJsImg">Get CSS/JS/Images
-            </div>
-            <div>
-                <span id="add-url-errorMsg"></span>
+        <div id="add-url-container">
+            <div id="add-url-panel">
+                <div>
+                    <input type="text" id="add-url-input"><input type="button" id="add-url-button" value="Add"><input type="button" id="add-url-clear-button" value="Clear">
+                </div>
+                <div id="add-url-options">
+                    <input type="checkbox" id="add-url-getCssJsImg" name="add-url-getCssJsImg">Get CSS/JS/Images
+                </div>
             </div>
         </div>
-        <div>
-            <br>
-            <br>
-        </div>
+		
         <div id="control-button-panel">
             <input type="button" id="control-button-start" value="Start"><input type="button" id="control-button-pauseResume" value="Pause"><input type="button" id="control-button-stop" value="Stop">
         </div>
-        <div>
-        </div>
-        <div id="settings">
+        
+		<div id="settings" class="container">
             Profile:
             <br>
             <input type="radio" id="settings-profile-hammer" name="settings-profile" value="0" checked>Hammer
@@ -79,8 +67,8 @@
             <br/>
             <input type="text" id="settings-duration-input" size=4>
             <select id="settings-duration-units" name="settings-duration-units">
-                <option value="1">seconds</option>
-                <option value="60" selected">minutes</option>
+                <option value="1" selected>seconds</option>
+                <option value="60">minutes</option>
                 <option value="3600">hours</option>
                 <option value="86400">days</option>
             </select>
@@ -96,12 +84,13 @@
             Stats Granularity
             <br/>
         </div>
-        <div id="urlListDiv">
+		
+        <div id="urlListDiv" class="container">
             <table cellpadding="0" cellspacing="0" border="0" id="urlList">
                 <thead>
                     <tr>
                         <th>
-                            URLs
+                            URL
                         </th>
                         <th>
                             Actions
@@ -112,12 +101,15 @@
                 </tbody>
             </table>
         </div>
-        </div>
+		
         <div id="currentStatus">
         </div>
         <div id="dump">
         </div>
-        <div id="resultsGraph" style="width:400px;height:300px">
+        <div id="resultsGraph" style="width:500px;height:300px">
         </div>
+        <div id="responseTimeGraph" style="width:500px;height:300px">
+        </div>
+        <div id="error"></div>
     </body>
 </html>
