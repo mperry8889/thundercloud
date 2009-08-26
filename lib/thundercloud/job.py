@@ -1,4 +1,5 @@
 from zope.interface import Interface
+import jsonpickle
 
 from thundercloud import constants
 
@@ -22,10 +23,12 @@ class JobSpec(object):
         self.state = JobState.NEW
         if json is not None: self.slurp(json)
     
+    
     def slurp(self, json):
         if json is None: return
         for key in json.keys():
             setattr(self, key, json[key])
+
 
     # verify rules for job specs are adhered to
     def validate(self):
@@ -61,6 +64,29 @@ class JobSpec(object):
         
         # if everything is ok...
         return True
+
+
+    # json representation
+    def toJson(self):
+        return jsonpickle.Pickler(unpicklable=True).flatten(self.__repr__())
+
+
+    # string representation: JSON object
+    def __repr__(self):
+        return {
+            "requests": self.requests,
+            "duration": self.duration,
+            "transferLimit": self.transferLimit,
+            "clientFunction": self.clientFunction,
+            "statsInterval": self.statsInterval,
+            "userAgent": self.userAgent,
+            "profile": self.profile,
+            "state": self.state,
+        }
+    
+    
+    def __str__(self):
+        return "%s" % self.toJson()
 
 
 class JobResults(object):

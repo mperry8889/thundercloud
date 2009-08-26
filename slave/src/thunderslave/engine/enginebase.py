@@ -2,12 +2,15 @@ from Queue import Queue
 from zope.interface import Interface, Attribute, implements
 import time
 import math
+import logging
 
 from twisted.web.client import HTTPClientFactory, _parse
 from twisted.internet import reactor
 
 from thundercloud import constants
 from thundercloud.job import IJob, JobSpec, JobState, JobResults
+
+log = logging.getLogger("engineBase")
 
 class IEngine(Interface):
     clients = Attribute("""foo""")
@@ -138,6 +141,8 @@ class EngineBase(object):
     def stop(self):
         if self.state == JobState.COMPLETE:
             return
+        
+        log.debug("Job complete")
         
         self.state = JobState.COMPLETE
         self.endTime = time.time()

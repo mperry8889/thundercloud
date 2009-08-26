@@ -34,7 +34,7 @@ class _Orchestrator(object):
         while self.jobs.has_key(self._jobSeqNo):
             self._jobSeqNo = self._jobSeqNo + 1
         
-        log.debug("Creating job %s; jobspec: %s" % (self._jobSeqNo, jobSpec))
+        log.debug("Creating job %s; jobspec: %s" % (self._jobSeqNo, str(jobSpec)))
         self.jobs[self._jobSeqNo] = EngineFactory.createFactory(jobSpec)
         return self._jobSeqNo       
 

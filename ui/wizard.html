@@ -17,6 +17,10 @@
         </script>
         <script type="text/javascript" src="js/thundercloud/thundercloud.js">
         </script>
+        <script type="text/javascript" src="js/thundercloud/newtab.js">
+        </script>
+        <script type="text/javascript" src="js/thundercloud/dashboard.js">
+        </script>
         <link rel="stylesheet" href="css/jquery-ui-1.7.2.custom.css" type="text/css" media="all" />
         <link rel="stylesheet" href="css/demo_page.css" type="text/css" media="all" />
         <link rel="stylesheet" href="css/demo_table.css" type="text/css" media="all" />
@@ -69,13 +73,13 @@
                                 <p>
                                     <b>STRESS TESTS</b>
                                     send a predetermined number of requests per second to your server, regardless of the number of outstanding requests. <a href="javascript:;" id="help-profile-stress" class="help-link-show">more...</a>
-                                    <div id="help-profile-stress-element" style="display: none">
+                                    <div id="help-profile-stress-element" style="display: none;">
                                         YOU HELPS ME <a href="javascript:;" class="help-link-hide">X</a>
                                     </div>
                                 </p>
                                 <p>
                                     <b>BENCHMARK</b>ing your website will tell you how many requests/sec your website can handle.  Each client will wait for a request to complete before sending a new one. <a href="javascript:;" id="help-profile-benchmark" class="help-link-show">more...</a>
-                                    <div id="help-profile-benchmark-element" style="display: none">
+                                    <div id="help-profile-benchmark-element" style="display: none;">
                                         YOU HELPS ME <a href="javascript:;" class="help-link-hide">X</a>
                                     </div>
                                 </p>
@@ -116,7 +120,9 @@
                                 </div>
                             </p>
                             <p>
-                                Statistics Polling Frequency: <a href="javascript:;" id="help-statsInterval" class="help-link-show">?</a>
+                                <label for="jobspec-statsInterval-amount">
+                                Statistics Polling Frequency: <span id="jobspec-statsInterval-amount"></span>
+                                <a href="javascript:;" id="help-statsInterval" class="help-link-show">?</a>
                                 <div id="jobspec-statsInterval" style="width: 50%">
                                 </div>
                                 <div id="help-statsInterval-element" style="display: none;">
@@ -126,34 +132,36 @@
                         </div>
                         <div id="wizard-url">
                             <div>
-                                <input type="text" id="jobspec-request-url-input"><input type="button" id="jobspec-request-url-add" value="Add"><input type="button" id="jobspec-request-url-check" value="Check">
+                                <input type="text" id="jobspec-request-url-input"><input type="button" id="jobspec-request-url-add" value="Add"><input type="button" id="jobspec-request-url-clear" value="Clear">
+                            </div>
+                            <div id="jobspec-request-url-error" style="display: none;">
+                            </div>
+                            <!--<div>
+                            Get linked <input type="checkbox" id="jobspec-request-css">CSS, <input type="checkbox" id="jobspec-request-js">Javascript, <input type="checkbox" id="jobspec-request-img">Images
                             </div>
                             <div>
-                                <div>
-                                    Get linked <input type="checkbox" id="jobspec-request-css">CSS, <input type="checkbox" id="jobspec-request-js">Javascript, <input type="checkbox" id="jobspec-request-img">Images
-                                </div>
-                                <div>
-                                    <input type="checkbox" id="jobspec-request-spider">Spider URL <a href="javascript:;">?</a>
-                                </div>
-                                <div id="wizard-url-list">
-                                    <table cellpadding="0" cellspacing="0" border="0" id="jobspec-url-list" style="width: 50%">
-                                        <thead style="display: none">
-                                            <tr>
-                                                <th>
-                                                    URL
-                                                </th>
-                                                <th>
-                                                    Actions
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                        </tbody>
-                                    </table>
-                                </div>
+                            <input type="checkbox" id="jobspec-request-spider">Spider URL <a href="javascript:;">?</a>
+                            </div>-->
+                            <div id="wizard-url-list">
+                                <table cellpadding="0" cellspacing="0" border="0" id="jobspec-url-list" style="width: 50%">
+                                    <thead style="display: none;">
+                                        <tr>
+                                            <th>
+                                                URL
+                                            </th>
+                                            <th>
+                                                Actions
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                         <div id="wizard-confirm">
+                            <div id="wizard-confirm-parameters">
+                            </div>
                             <div>
                                 <a href="javascript:;" id="create-job-link">CREATE JOB AND GO TO DASHBOARD</a>
                                 <br>

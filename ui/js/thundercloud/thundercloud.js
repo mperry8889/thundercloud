@@ -128,24 +128,24 @@ tc.api.jobState = function(jobId, callback, errback) {
 	$.ajax({
 		type: "GET",
 		url: tc.api.backend + "/job/" + jobId + "/results",
-		success: tc.restApi.resultsCallback,
-		error: tc.restApi.resultsErrback,
+		success: tc.api.jobStateCallback,
+		error: tc.api.jobStateErrback,
 	});		
 };
-tc.api.jobStateJobCallback = function(data, statusText) {
+tc.api.jobStateCallback = function(data, statusText) {
 	tc.api.state = parseInt(data);
 };
-tc.api.jobStateJobErrback = function(XMLHttpRequest, statusText, error) {
+tc.api.jobStateErrback = function(XMLHttpRequest, statusText, error) {
 	
 };
 
 tc.api.jobResults = function(jobId, summaryOnly, callback, errback) { // summaryOnly == short, but short is a reserver keyword in JS
 	
 };
-tc.api.jobResultsJobCallback = function(data, statusText) {
+tc.api.jobResultsCallback = function(data, statusText) {
 	
 };
-tc.api.jobResultsJobErrback = function(XMLHttpRequest, statusText, error) {
+tc.api.jobResultsErrback = function(XMLHttpRequest, statusText, error) {
 	
 };
 
