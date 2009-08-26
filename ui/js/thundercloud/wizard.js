@@ -1,9 +1,15 @@
+if (tc == null) { 
+	var tc = new Object();
+}
+tc.ui = new Object();
+tc.ui.urls = [];
+
 $(document).ready(function() {
 	/* OBJECT SETUP */
 	var $main_tabs = $("#main-tabs").tabs({
 		disabled: [2],
 	});
-	var statsSlider = $("#jobspec-statsGranularity").slider({
+	var statsSlider = $("#jobspec-statsInterval").slider({
 			value: 5,
 			min: 1,
 			max: 60,
@@ -22,7 +28,18 @@ $(document).ready(function() {
 			"sZeroRecords": "No URLs added",
 		},
 	});
-	url_table.fnAddData(["http://www.unshift.net", '<a href="javascript:;" class="jobspec-url-list-remove">Remove</a>']);
+	
+    $("#jobspec-request-url-add").click(function() {
+    	var url = $("#jobspec-request-url-input").val();
+    	tc.ui.urls.push(url);
+    	url_table.fnAddData([url, '<a href="javascript:;" class="jobspec-url-list-remove">Remove</a>']);
+    });
+    $(".jobspec-url-list-remove").click(function() {
+    	
+    });
+    
+    
+    
     
     $("#dashboard-progress").progressbar({ value: 27 });  
 	
@@ -67,11 +84,11 @@ $(document).ready(function() {
 		jobSpec.clientFunction = $("#jobspec-clientFunction-input").val().toString();
 		jobSpec.statsGranularity = parseInt(statsSlider.slider("value"));
 		jobSpec.requests = { "http://unshift.net": { method: "GET", postdata: null, cookies: [] }};
-		tc.api.createJob(jobSpec, function(jobId) {
+		//tc.api.createJob(jobSpec, function(jobId) {
 			$main_tabs.tabs("enable", 2);
 			$main_tabs.tabs("select", 2);		
-			tc.api.startJob(jobId);	
-		});
+		//	tc.api.startJob(jobId);	
+		//});
 		return true;
 	});
 

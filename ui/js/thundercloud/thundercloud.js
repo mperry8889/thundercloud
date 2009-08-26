@@ -1,4 +1,6 @@
-var tc = new Object();
+if (tc == null) { 
+	var tc = new Object();
+}
 tc.api = new Object();
 tc.api.backend = "/api"
 tc.api.JobState = {
