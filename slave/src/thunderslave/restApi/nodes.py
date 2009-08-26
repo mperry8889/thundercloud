@@ -1,6 +1,9 @@
 from twisted.web.resource import Resource
 from zope.interface import Interface, implements
 import simplejson as json
+import logging
+
+log = logging.getLogger("restApi.node")
 
 class Http400(Exception):
     pass
@@ -26,7 +29,9 @@ class Node(Resource):
     def render_GET(self, request):
         try:
             request.setHeader("Content-Type", "text/plain")
-            return json.dumps(self.GET(request))
+            response = json.dumps(self.GET(request))
+            log.debug(response)
+            return response
         except Http400:
             request.setResponseCode(400)
         except Http404:
@@ -35,7 +40,9 @@ class Node(Resource):
     def render_POST(self, request):
         try:
             request.setHeader("Content-Type", "text/plain")
-            return json.dumps(self.POST(request))
+            response = json.dumps(self.POST(request))
+            log.debug(response)
+            return response
         except Http400:
             request.setResponseCode(400)
         except Http404:

@@ -1,6 +1,7 @@
 from zope.interface import Interface, implements
 import jsonpickle
 import simplejson
+import logging
 
 from nodes import RootNode
 from nodes import LeafNode
@@ -8,6 +9,8 @@ from nodes import Http400, Http404
 
 from ..orchestrator import Orchestrator
 from thundercloud.job import IJob, JobSpec, JobResults
+
+log = logging.getLogger("restApi.job")
 
 # List only active jobs, /job/active
 class ActiveJobs(RootNode):

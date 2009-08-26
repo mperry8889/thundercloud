@@ -1,5 +1,8 @@
 from thundercloud.job import JobSpec, JobState
 from ..engine import EngineFactory
+import logging
+
+log = logging.getLogger("orchestrator")
 
 # Tracks and operates on jobs in the system, maintaining an instance
 # of Engine for each job
@@ -31,19 +34,24 @@ class _Orchestrator(object):
         while self.jobs.has_key(self._jobSeqNo):
             self._jobSeqNo = self._jobSeqNo + 1
         
+        log.debug("Creating job %s; jobspec: %s" % (self._jobSeqNo, jobSpec))
         self.jobs[self._jobSeqNo] = EngineFactory.createFactory(jobSpec)
         return self._jobSeqNo       
 
     def startJob(self, jobId):
+        log.debug("Starting job %d" % jobId)
         self.jobs[jobId].start()
 
     def pauseJob(self, jobId):
+        log.debug("Pausing job %d" % jobId)
         self.jobs[jobId].pause()
     
     def resumeJob(self, jobId):
+        log.debug("Resuming job %d" % jobId)
         self.jobs[jobId].resume()
     
     def stopJob(self, jobId):
+        log.debug("Stopping job %d" % jobId)
         self.jobs[jobId].stop()
 
     def removeJob(self, jobId):
