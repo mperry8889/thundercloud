@@ -1,6 +1,6 @@
 var tc = new Object();
 tc.api = new Object();
-tc.api.backend = "http://localhost:8080/api"
+tc.api.backend = "/api"
 tc.api.JobState = {
 	"NEW": 0,
     "RUNNING": 1,
