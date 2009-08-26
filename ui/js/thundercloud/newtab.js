@@ -6,7 +6,7 @@ if (tc.ui == null) {
 }
 tc.ui.newtab = new Object();
 tc.ui.newtab.urls = [];
-
+tc.ui.newtab.profile = 0;
 
 $(document).ready(function() {
 	tc.ui.newtab.statsSlider = $("#jobspec-statsInterval").slider({
@@ -54,15 +54,25 @@ $(document).ready(function() {
  		},
  	});
  	
-	$(":input[@name='jobspec-profile-input']").click(function() {
-		switch (parseInt($(":input[@name='jobspec-profile-input']:checked").val())) {
-			case 0:
+	$(":input[name='jobspec-profile-input']").click(function() {
+		switch ($(":input[@name='jobspec-profile-input']:checked").val()) {
+			case "stress":
 				$("#wizard-concurrency").html("Requests/sec");
 				$("#wizard-concurrency-help").html("how many requests/sec");
+				tc.ui.newtab.profile = 0;
+				tc.ui.newtab.resetClientFunction();
 				break;
-			case 1:
+			case "benchmark":
 				$("#wizard-concurrency").html("Concurrent clients");
 				$("#wizard-concurrency-help").html("how many clients");
+				tc.ui.newtab.profile = 1;
+				tc.ui.newtab.resetClientFunction();
+				break;
+			case "simulation":
+				$("#wizard-concurrency").html("Starting clients");
+				$("#wizard-concurrency-help").html("how many clients to start");
+				tc.ui.newtab.profile = 0;
+				$("#wizard-function").show();
 				break;
 			default:
 		}				
@@ -70,6 +80,7 @@ $(document).ready(function() {
 		wizard_tabs.tabs("enable", 2);
 		wizard_tabs.tabs("enable", 3);
 	});
+	tc.ui.newtab.resetClientFunction();
 	
 	var checkComplete = function() {
 		return true;
@@ -85,7 +96,6 @@ $(document).ready(function() {
 			tc.ui.wizard.tabs.tabs("select", 2);
 			tc.api.startJob(jobId);	
 		});
-		console.log(jobSpec.toString());
 		return true;
 	});	
 	
@@ -136,12 +146,23 @@ tc.ui.newtab.clearError = function() {
 	$("#jobspec-request-url-error").html("");
 };
 
+tc.ui.newtab.resetClientFunction = function() {
+	$(":input[name='jobspec-clientFunction-input']").attr("checked", false);
+	$(":input[name='jobspec-clientFunction-input']").each(function() {
+		if ($(this).val() == "0") {
+			$(this).attr("checked", true);
+			return;
+		}
+	});
+	$("#wizard-function").hide();	
+};
+
 tc.ui.newtab.createJobSpec = function() {
 	jobSpec = new tc.api.JobSpec();
-	jobSpec.profile = parseInt($(":input[@name='jobspec-profile-input']:checked").val());
+	jobSpec.profile = tc.ui.newtab.profile;
 	jobSpec.duration = parseInt($("#jobspec-duration-input").val() * $("#jobspec-duration-multiplier").val());
 	jobSpec.maxTransfer = parseInt($("#jobspec-maxTransfer-input").val() * $("#jobspec-maxTransfer-multiplier").val());
-	jobSpec.clientFunction = $("#jobspec-clientFunction-input").val().toString();
+	jobSpec.clientFunction = $(":input[name='jobspec-clientFunction-input']:checked").val() + " + " + parseInt($("#jobspec-clients-input").val()).toString();
 	jobSpec.statsInterval = parseInt(tc.ui.newtab.statsSlider.slider("value"));
 	jobSpec.requests = {};
 	for (var i in tc.ui.newtab.urls) {
@@ -152,5 +173,6 @@ tc.ui.newtab.createJobSpec = function() {
 
 tc.ui.newtab.reviewParameters = function() {
 	jobSpec = tc.ui.newtab.createJobSpec();
-	$("#wizard-confirm-parameters").html(jobSpec.profile);
+	$("#wizard-confirm-parameters").html(jobSpec.profile+"<br>"+jobSpec.clientFunction);
+	
 };

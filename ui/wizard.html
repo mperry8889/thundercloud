@@ -66,158 +66,205 @@
                             <p>
                                 I want to run a:
                             </p>
-                            <input type="radio" name="jobspec-profile-input" value="0">Stress Test
+                            <input type="radio" name="jobspec-profile-input" value="stress">Stress Test
                             <br>
-                            <input type="radio" name="jobspec-profile-input" value="1">Benchmark
+                            <input type="radio" name="jobspec-profile-input" value="benchmark">Benchmark
+                            <br>
+                            <input type="radio" name="jobspec-profile-input" value="simulation">Simulation
                             <div>
                                 <p>
                                     <b>STRESS TESTS</b>
-                                    send a predetermined number of requests per second to your server, regardless of the number of outstanding requests. <a href="javascript:;" id="help-profile-stress" class="help-link-show">more...</a>
+                                    send a fixed number of clients to your website each second. <a href="javascript:;" id="help-profile-stress" class="help-link-show">more...</a>
                                     <div id="help-profile-stress-element" style="display: none;">
-                                        YOU HELPS ME <a href="javascript:;" class="help-link-hide">X</a>
+                                        Clients do not wait for responses from the server before sending more requests. <a href="javascript:;" class="help-link-hide">X</a>
                                     </div>
                                 </p>
                                 <p>
-                                    <b>BENCHMARK</b>ing your website will tell you how many requests/sec your website can handle.  Each client will wait for a request to complete before sending a new one. <a href="javascript:;" id="help-profile-benchmark" class="help-link-show">more...</a>
+                                    <b>BENCHMARKING</b>
+                                    your website will measure its performance in terms of serviceable requests per second. <a href="javascript:;" id="help-profile-benchmark" class="help-link-show">more...</a>
                                     <div id="help-profile-benchmark-element" style="display: none;">
-                                        YOU HELPS ME <a href="javascript:;" class="help-link-hide">X</a>
+                                        Each client sends a request, and waits for a response before sending another. <a href="javascript:;" class="help-link-hide">X</a>
+                                    </div>
+                                </p>
+                                <p>
+                                    <b>SIMULATIONS</b>
+                                    model real-world traffic patterns. <a href="javascript:;" id="help-profile-simulation" class="help-link-show">more...</a>
+                                    <div id="help-profile-simulation-element" style="display: none;">
+                                        A variable number of clients will connect to your website over time. <a href="javascript:;" class="help-link-hide">X</a>
                                     </div>
                                 </p>
                             </div>
                         </div>
                         <div id="wizard-parameters">
                             <p>
-                                Duration: <input type="text" id="jobspec-duration-input" size=4>
-                                <select id="jobspec-duration-multiplier" jobspec-duration-multiplier>
-                                    <option value="1" selected>seconds</option>
-                                    <option value="60">minutes</option>
-                                    <option value="3600">hours</option>
-                                    <option value="86400">days</option>
-                                </select>
-                                <a href="javascript:;" id="help-duration" class="help-link-show">?</a>
+                                <table cellpadding="0" cellspacing="0" border="0" style="width: 50%">
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                Duration:
+                                            </td>
+                                            <td>
+                                                <input type="text" id="jobspec-duration-input" size=4>
+                                                <select id="jobspec-duration-multiplier" jobspec-duration-multiplier>
+                                                    <option value="1" selected>seconds</option>
+                                                    <option value="60">minutes</option>
+                                                    <option value="3600">hours</option>
+                                                    <option value="86400">days</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <a href="javascript:;" id="help-duration" class="help-link-show">?</a>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                Max Transfer
+                                            </td>
+                                            <td>
+                                                <input type="text" id="jobspec-maxTransfer-input" size=4>
+                                                <select id="jobspec-maxTransfer-multiplier" jobspec-maxTransfer-multiplier>
+                                                    <option value="1048576">MB</option>
+                                                    <option value="1073741824" selected>GB</option>
+                                                    <option value="1099511627776">TB</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <a href="javascript:;" id="help-maxTransfer" class="help-link-show">?</a>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <span id="wizard-concurrency"></span>
+                                            </td>
+                                            <td>
+                                                <input type="text" id="jobspec-clients-input" size=2>
+                                            </td>
+                                            <td>
+                                                <a href="javascript:;" id="help-clients" class="help-link-show">?</a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                                 <div id="help-duration-element" style="display: none;">
                                     The duration, word. <a href="javascript:;" class="help-link-hide">X</a>
                                 </div>
-                            </p>
-                            <p>
-                                Max Transfer: <input type="text" id="jobspec-maxTransfer-input" size=4>
-                                <select id="jobspec-maxTransfer-multiplier" jobspec-maxTransfer-multiplier>
-                                    <option value="1048576">MB</option>
-                                    <option value="1073741824" selected>GB</option>
-                                    <option value="1099511627776">TB</option>
-                                </select>
-                                <a href="javascript:;" id="help-maxTransfer" class="help-link-show">?</a>
                                 <div id="help-maxTransfer-element" style="display: none;">
                                     The max data transfer, word. <a href="javascript:;" class="help-link-hide">X</a>
                                 </div>
-                            </p>
-                            <p>
-                                <span id="wizard-concurrency"></span>
-                                <input type="text" id="jobspec-clientFunction-input" size=2><a href="javascript:;" id="help-clientFunction" class="help-link-show">?</a>
-                                <div id="help-clientFunction-element" style="display: none;">
+                                <div id="help-clients-element" style="display: none;">
                                     <span id="wizard-concurrency-help"></span>
                                     <a href="javascript:;" class="help-link-hide">X</a>
                                 </div>
-                            </p>
+                                <p id="wizard-function" style="display: none;">
+                                    Simulation Function <a href="javascript:;" id="help-clientFunction" class="help-link-show">?</a>
+                                    <br>
+                                    <input type="radio" name="jobspec-clientFunction-input" value="0" checked> static
+                                    <br>
+                                    <input type="radio" name="jobspec-clientFunction-input" value="math.sin(t)"> sine wave
+                                    <br>
+                                    <div id="help-clientFunction-element" style="display: none;">
+                                        which sim <a href="javascript:;" class="help-link-hide">X</a>
+                                    </div>
+                                </p>
+                                <p>
+                                    <label for="jobspec-statsInterval-amount">
+                                    Statistics Polling Frequency: <span id="jobspec-statsInterval-amount"></span>
+                                    <a href="javascript:;" id="help-statsInterval" class="help-link-show">?</a>
+                                    <div id="jobspec-statsInterval" style="width: 50%">
+                                    </div>
+                                    <div id="help-statsInterval-element" style="display: none;">
+                                        Hows often we's getting stats.  Stats more often means more points on resultant graphs, and more noisy graphs. <a href="javascript:;" class="help-link-hide">X</a>
+                                    </div>
+                                </p>
+                                </div>
+                                <div id="wizard-url">
+                                    <div>
+                                        <input type="text" id="jobspec-request-url-input"><input type="button" id="jobspec-request-url-add" value="Add"><input type="button" id="jobspec-request-url-clear" value="Clear">
+                                    </div>
+                                    <div id="jobspec-request-url-error" style="display: none;">
+                                    </div>
+                                    <!--<div>
+                                    Get linked <input type="checkbox" id="jobspec-request-css">CSS, <input type="checkbox" id="jobspec-request-js">Javascript, <input type="checkbox" id="jobspec-request-img">Images
+                                    </div>
+                                    <div>
+                                    <input type="checkbox" id="jobspec-request-spider">Spider URL <a href="javascript:;">?</a>
+                                    </div>-->
+                                    <div id="wizard-url-list">
+                                        <table cellpadding="0" cellspacing="0" border="0" id="jobspec-url-list" style="width: 50%">
+                                            <thead style="display: none;">
+                                                <tr>
+                                                    <th>
+                                                        URL
+                                                    </th>
+                                                    <th>
+                                                        Actions
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div id="wizard-confirm">
+                                    <div id="wizard-confirm-parameters">
+                                    </div>
+                                    <div>
+                                        <a href="javascript:;" id="create-job-link">CREATE JOB AND GO TO DASHBOARD</a>
+                                        <br>
+                                        <a href="javascript:;" id="clear-all">START OVER</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="main-tabs-previous">
                             <p>
-                                <label for="jobspec-statsInterval-amount">
-                                Statistics Polling Frequency: <span id="jobspec-statsInterval-amount"></span>
-                                <a href="javascript:;" id="help-statsInterval" class="help-link-show">?</a>
-                                <div id="jobspec-statsInterval" style="width: 50%">
-                                </div>
-                                <div id="help-statsInterval-element" style="display: none;">
-                                    Hows often we's getting stats.  Stats more often means more points on resultant graphs, and more noisy graphs. <a href="javascript:;" class="help-link-hide">X</a>
-                                </div>
+                                OLD RESULTS
                             </p>
                         </div>
-                        <div id="wizard-url">
-                            <div>
-                                <input type="text" id="jobspec-request-url-input"><input type="button" id="jobspec-request-url-add" value="Add"><input type="button" id="jobspec-request-url-clear" value="Clear">
+                        <div id="main-tabs-dashboard">
+                            <div id="dashboard-status">
+                                Job Status: NEW
                             </div>
-                            <div id="jobspec-request-url-error" style="display: none;">
+                            <div id="dashboard-progress">
                             </div>
-                            <!--<div>
-                            Get linked <input type="checkbox" id="jobspec-request-css">CSS, <input type="checkbox" id="jobspec-request-js">Javascript, <input type="checkbox" id="jobspec-request-img">Images
+                            <div id="dashboard-progress-text">
+                                Job is 27% complete; 3:04:56 remaining
                             </div>
-                            <div>
-                            <input type="checkbox" id="jobspec-request-spider">Spider URL <a href="javascript:;">?</a>
-                            </div>-->
-                            <div id="wizard-url-list">
-                                <table cellpadding="0" cellspacing="0" border="0" id="jobspec-url-list" style="width: 50%">
-                                    <thead style="display: none;">
-                                        <tr>
-                                            <th>
-                                                URL
-                                            </th>
-                                            <th>
-                                                Actions
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                    </tbody>
-                                </table>
+                            <div id="dashboard-stats-container">
+                                <div id="dashboard-stats-current" style="display: inline;">
+                                    Current stats:
+                                    Average of 37 requests/sec
+                                    <br>
+                                    Average response time: 87ms
+                                    <br>
+                                    Last dispatched 100 clients
+                                    <br>
+                                    Requests complete: 9056
+                                    <br>
+                                </div>
+                                <div id="dashboard-stats-average" style="display: inline;">
+                                    Average stats:
+                                    Average of 37 requests/sec
+                                    <br>
+                                    Average response time: 87ms
+                                    <br>
+                                    Last dispatched 100 clients
+                                    <br>
+                                    Requests complete: 9056
+                                    <br>
+                                </div>
+                            </div>
+                            <div id="dashboard-buttons">
+                                <input type="button" id="dashboard-button-start" value="Start"><input type="button" id="dashboard-button-pause" value="Pause"><input type="button" id="dashboard-button-stop" value="Stop">
                             </div>
                         </div>
-                        <div id="wizard-confirm">
-                            <div id="wizard-confirm-parameters">
-                            </div>
-                            <div>
-                                <a href="javascript:;" id="create-job-link">CREATE JOB AND GO TO DASHBOARD</a>
-                                <br>
-                                <a href="javascript:;" id="clear-all">START OVER</a>
-                            </div>
+                        <div id="main-tabs-account">
+                            I OWE YOU MONEY
+                        </div>
+                        <div id="main-tabs-help">
                         </div>
                     </div>
                 </div>
-                <div id="main-tabs-previous">
-                    <p>
-                        OLD RESULTS
-                    </p>
-                </div>
-                <div id="main-tabs-dashboard">
-                    <div id="dashboard-status">
-                        Job Status: NEW
-                    </div>
-                    <div id="dashboard-progress">
-                    </div>
-                    <div id="dashboard-progress-text">
-                        Job is 27% complete; 3:04:56 remaining
-                    </div>
-                    <div id="dashboard-stats-container">
-                        <div id="dashboard-stats-current" style="display: inline;">
-                            Current stats:
-                            Average of 37 requests/sec
-                            <br>
-                            Average response time: 87ms
-                            <br>
-                            Last dispatched 100 clients
-                            <br>
-                            Requests complete: 9056
-                            <br>
-                        </div>
-                        <div id="dashboard-stats-average" style="display: inline;">
-                            Average stats:
-                            Average of 37 requests/sec
-                            <br>
-                            Average response time: 87ms
-                            <br>
-                            Last dispatched 100 clients
-                            <br>
-                            Requests complete: 9056
-                            <br>
-                        </div>
-                    </div>
-                    <div id="dashboard-buttons">
-                        <input type="button" id="dashboard-button-start" value="Start"><input type="button" id="dashboard-button-pause" value="Pause"><input type="button" id="dashboard-button-stop" value="Stop">
-                    </div>
-                </div>
-                <div id="main-tabs-account">
-                    I OWE YOU MONEY
-                </div>
-                <div id="main-tabs-help">
-                </div>
-            </div>
-        </div>
-    </body>
-</html>
+                </body>
+            </html>
