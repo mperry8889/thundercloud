@@ -25,9 +25,12 @@
                     <li>
                         <a href="#main-tabs-dashboard">Dashboard</a>
                     </li>
-					<li>
-						<a href="#main-tabs-account">My Account</a>
-					</li>
+                    <li>
+                        <a href="#main-tabs-account">My Account</a>
+                    </li>
+                    <li>
+                        <a href="#main-tabs-help">Help</a>
+                    </li>
                 </ul>
                 <div id="main-tabs-new">
                     <div id="wizard-workflow">
@@ -52,6 +55,21 @@
                             <input type="radio" name="jobspec-profile-input" value="0">Stress Test
                             <br>
                             <input type="radio" name="jobspec-profile-input" value="1">Benchmark
+                            <div>
+                                <p>
+                                    <b>STRESS TESTS</b>
+                                    send a predetermined number of requests per second to your server, regardless of the number of outstanding requests. <a href="javascript:;" id="help-profile-stress" class="help-link-show">more...</a>
+                                    <div id="help-profile-stress-element" style="display: none">
+                                        YOU HELPS ME <a href="javascript:;" class="help-link-hide">X</a>
+                                    </div>
+                                </p>
+                                <p>
+                                    <b>BENCHMARK</b>ing your website will tell you how many requests/sec your website can handle.  Each client will wait for a request to complete before sending a new one. <a href="javascript:;" id="help-profile-benchmark" class="help-link-show">more...</a>
+                                    <div id="help-profile-benchmark-element" style="display: none">
+                                        YOU HELPS ME <a href="javascript:;" class="help-link-hide">X</a>
+                                    </div>
+                                </p>
+                            </div>
                         </div>
                         <div id="wizard-parameters">
                             <p>
@@ -80,7 +98,7 @@
                                 <div id="jobspec-statsGranularity" style="width: 50%">
                                 </div>
                                 <div id="help-stress-statsGranularity-element" style="display: none;">
-                                    Hows often we's getting stats <a href="javascript:;" class="help-link-hide">X</a>
+                                    Hows often we's getting stats.  Stats more often means more points on resultant graphs, and more noisy graphs. <a href="javascript:;" class="help-link-hide">X</a>
                                 </div>
                             </p>
                         </div>
@@ -112,6 +130,9 @@
                     </p>
                 </div>
                 <div id="main-tabs-dashboard">
+                    <div id="dashboard-status">
+                        Job Status: NEW
+                    </div>
                     <div id="dashboard-progress">
                     </div>
                     <div id="dashboard-progress-text">
@@ -145,9 +166,11 @@
                         <input type="button" id="dashboard-button-start" value="Start"><input type="button" id="dashboard-button-pause" value="Pause"><input type="button" id="dashboard-button-stop" value="Stop">
                     </div>
                 </div>
-				<div id="main-tabs-account">
-					I OWE YOU MONEY
-				</div>
+                <div id="main-tabs-account">
+                    I OWE YOU MONEY
+                </div>
+                <div id="main-tabs-help">
+                </div>
             </div>
         </div>
     </body>

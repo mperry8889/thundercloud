@@ -1,22 +1,27 @@
 $(document).ready(function() {
 	var $main_tabs = $("#main-tabs").tabs({
-		//disabled: [2],
+		disabled: [2],
 	});
 	
-	$("#jobspec-statsGranularity").slider();
+	$("#jobspec-statsGranularity").slider({
+			value: 5,
+			min: 1,
+			max: 60,
+			step: 1,
+			slide: function(event, ui) {
+				$("#amount").val('$' + ui.value);
+			}
+	});
 	$("#dashboard-progress").progressbar({ value: 27 });               
 
     
     
     /* JOB SETUP WORKFLOW TABS */
  	var $wizard_tabs = $("#wizard-workflow").tabs({
- 		enable: function(event, ui) {
- 			console.log(ui);
- 		},
  		disabled: [1,2,3],
  	});
  	
-	$(":input[@name='jobspec-profile-input']").change(function() {
+	$(":input[@name='jobspec-profile-input']").click(function() {
 		switch (parseInt($(":input[@name='jobspec-profile-input']:checked").val())) {
 			case 0:
 				$("#wizard-concurrency").html("Requests/sec");
@@ -30,6 +35,7 @@ $(document).ready(function() {
 		}				
 		$wizard_tabs.tabs("enable", 1);
 		$wizard_tabs.tabs("enable", 2);
+		$wizard_tabs.tabs("enable", 3);
 	});
 
 	var checkComplete = function() {
