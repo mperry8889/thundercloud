@@ -16,7 +16,7 @@ class JobSpec(object):
         self.duration = float("inf")
         self.transferLimit = float("inf")
         self.clientFunction = "1"
-        self.statsGranularity = float("inf")
+        self.statsInterval = float("inf")
         self.userAgent = "thundercloud client/%s" % constants.VERSION
         self.profile = JobSpec.JobProfile.HAMMER
         self.state = JobState.NEW
@@ -34,7 +34,7 @@ class JobSpec(object):
             raise InvalidJobSpec("Must set a duration or transfer limit")
     
         # stats granularity must be an int
-        if type(self.statsGranularity) != int:
+        if type(self.statsInterval) != int:
             raise InvalidJobSpec("Invalid stats granularity")
     
         # client function has to use t as an argument

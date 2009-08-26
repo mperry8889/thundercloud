@@ -59,7 +59,7 @@ class EngineBase(object):
                 "averageResponseTime": 0,
             }
         }
-        self.statsGranularity = 60
+        self.statsInterval = 60
         self._statsBookmark = 0          # shortcut to last time stats were generated.
                                          # avoids listing/sorting statisticsByTime keys
         
@@ -68,7 +68,7 @@ class EngineBase(object):
         self.transferLimit = jobSpec.transferLimit
         self.duration = jobSpec.duration
         self.userAgent = jobSpec.userAgent
-        self.statsGranularity = jobSpec.statsGranularity
+        self.statsInterval = jobSpec.statsInterval
         self.clientFunction = lambda t: eval(jobSpec.clientFunction)
         
         # dump the host/port/URLs to be fetched into a queue
@@ -162,7 +162,7 @@ class EngineBase(object):
     def _generateStats(self, force=False):
         # if another timeslice has passed since the last time we took stats
         # (requests/sec, number of concurrent requests) then let's do it again.
-        if (self.elapsedTime - self._statsBookmark >= self.statsGranularity) or force:
+        if (self.elapsedTime - self._statsBookmark >= self.statsInterval) or force:
             try:
                 self.statisticsByTime[self.elapsedTime] = {
                     "iterations": self.iterations,

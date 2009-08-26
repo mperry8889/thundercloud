@@ -11,7 +11,7 @@ tc.api.JobSpec = function() {
 	this.requests = {"":{}};
 	this.clientFunction = null;
 	this.duration = null;
-	this.statsGranularity = null;
+	this.statsInterval = null;
 	this.maxTransfer = null;
 	this.profile = null;
 }

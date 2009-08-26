@@ -16,7 +16,7 @@ j.requests = {
 }
 j.duration = 1
 j.transferLimit = float("inf")#5*1024*1024
-j.statsGranularity = 10
+j.statsInterval = 10
 j.profile = JobSpec.JobProfile.BENCHMARK
 
 client = httplib.HTTPConnection("localhost:7000")

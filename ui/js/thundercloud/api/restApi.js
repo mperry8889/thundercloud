@@ -31,7 +31,7 @@ tc.restApi.createJob = function() {
 	jobSpec.duration = parseInt($("#settings-duration-input").val() * $("#settings-duration-units").val());
 	jobSpec.maxTransfer = parseInt($("#settings-maxTransfer-input").val() * $("#settings-maxTransfer-units").val());
 	jobSpec.clientFunction = $("#settings-clientsPerSec-input").val().toString();
-	jobSpec.statsGranularity = parseInt($("#settings-statsGranularity-input").val() * $("#settings-statsGranularity-units").val());
+	jobSpec.statsInterval = parseInt($("#settings-statsInterval-input").val() * $("#settings-statsInterval-units").val());
 	jobSpec.profile = parseInt($("input[name=settings-profile]:checked").val());
 	tc.restApi._jobSpec = jobSpec;
 	$.ajax({
