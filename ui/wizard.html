@@ -7,9 +7,17 @@
         </script>
         <script type="text/javascript" src="js/jquery/jquery-ui-1.7.2.custom.min.js">
         </script>
+        <script type="text/javascript" src="js/jquery/jquery.dataTables.min.js">
+        </script>
+        <script type="text/javascript" src="js/jquery/jquery.json-2.2.min.js">
+        </script>
         <script type="text/javascript" src="js/thundercloud/wizard.js">
         </script>
+        <script type="text/javascript" src="js/thundercloud/thundercloud.js">
+        </script>
         <link rel="stylesheet" href="css/jquery-ui-1.7.2.custom.css" type="text/css" media="all" />
+        <link rel="stylesheet" href="css/demo_page.css" type="text/css" media="all" />
+        <link rel="stylesheet" href="css/demo_table.css" type="text/css" media="all" />
         <link rel="stylesheet" href="css/wizard.css" type="text/css" media="all" />
     </head>
     <body>
@@ -80,24 +88,36 @@
                                     <option value="3600">hours</option>
                                     <option value="86400">days</option>
                                 </select>
-                                <a href="javascript:;" id="help-stress-duration" class="help-link-show">?</a>
-                                <div id="help-stress-duration-element" style="display: none;">
+                                <a href="javascript:;" id="help-duration" class="help-link-show">?</a>
+                                <div id="help-duration-element" style="display: none;">
                                     The duration, word. <a href="javascript:;" class="help-link-hide">X</a>
                                 </div>
                             </p>
                             <p>
+                                Max Transfer: <input type="text" id="jobspec-maxTransfer-input" size=4>
+                                <select id="jobspec-maxTransfer-multiplier" jobspec-maxTransfer-multiplier>
+                                    <option value="1048576">MB</option>
+                                    <option value="1073741824" selected>GB</option>
+                                    <option value="1099511627776">TB</option>
+                                </select>
+                                <a href="javascript:;" id="help-maxTransfer" class="help-link-show">?</a>
+                                <div id="help-maxTransfer-element" style="display: none;">
+                                    The max data transfer, word. <a href="javascript:;" class="help-link-hide">X</a>
+                                </div>
+                            </p>
+                            <p>
                                 <span id="wizard-concurrency"></span>
-                                <input type="text" name="jobspec-clientFunction-input" size=2><a href="javascript:;" id="help-clientFunction" class="help-link-show">?</a>
+                                <input type="text" id="jobspec-clientFunction-input" size=2><a href="javascript:;" id="help-clientFunction" class="help-link-show">?</a>
                                 <div id="help-clientFunction-element" style="display: none;">
                                     <span id="wizard-concurrency-help"></span>
                                     <a href="javascript:;" class="help-link-hide">X</a>
                                 </div>
                             </p>
                             <p>
-                                Statistics Polling Frequency: <a href="javascript:;" id="help-stress-statsGranularity" class="help-link-show">?</a>
+                                Statistics Polling Frequency: <a href="javascript:;" id="help-statsGranularity" class="help-link-show">?</a>
                                 <div id="jobspec-statsGranularity" style="width: 50%">
                                 </div>
-                                <div id="help-stress-statsGranularity-element" style="display: none;">
+                                <div id="help-statsGranularity-element" style="display: none;">
                                     Hows often we's getting stats.  Stats more often means more points on resultant graphs, and more noisy graphs. <a href="javascript:;" class="help-link-hide">X</a>
                                 </div>
                             </p>
@@ -113,11 +133,27 @@
                                 <div>
                                     <input type="checkbox" id="jobspec-request-spider">Spider URL <a href="javascript:;">?</a>
                                 </div>
+                                <div id="wizard-url-list">
+                                    <table cellpadding="0" cellspacing="0" border="0" id="jobspec-url-list" style="width: 50%">
+                                        <thead style="display: none">
+                                            <tr>
+                                                <th>
+                                                    URL
+                                                </th>
+                                                <th>
+                                                    Actions
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                         <div id="wizard-confirm">
                             <div>
-                                <a href="javascript:;" id="dashboard-link">CREATE AND GO TO DASHBOARD</a>
+                                <a href="javascript:;" id="create-job-link">CREATE JOB AND GO TO DASHBOARD</a>
                                 <br>
                                 <a href="javascript:;" id="clear-all">START OVER</a>
                             </div>

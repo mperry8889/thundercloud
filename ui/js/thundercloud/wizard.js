@@ -1,9 +1,9 @@
 $(document).ready(function() {
+	/* OBJECT SETUP */
 	var $main_tabs = $("#main-tabs").tabs({
 		disabled: [2],
 	});
-	
-	$("#jobspec-statsGranularity").slider({
+	var statsSlider = $("#jobspec-statsGranularity").slider({
 			value: 5,
 			min: 1,
 			max: 60,
@@ -11,12 +11,25 @@ $(document).ready(function() {
 			slide: function(event, ui) {
 				$("#amount").val('$' + ui.value);
 			}
-	});
-	$("#dashboard-progress").progressbar({ value: 27 });               
+	});             
 
+	var url_table = $("#jobspec-url-list").dataTable({
+		"bPaginate": false,	
+		"bInfo": false,
+		"bSort": false,
+		"bFilter": false,
+		"oLanguage": {
+			"sZeroRecords": "No URLs added",
+		},
+	});
+	url_table.fnAddData(["http://www.unshift.net", '<a href="javascript:;" class="jobspec-url-list-remove">Remove</a>']);
     
+    $("#dashboard-progress").progressbar({ value: 27 });  
+	
+	
+	
     
-    /* JOB SETUP WORKFLOW TABS */
+    /* JOB SETUP */
  	var $wizard_tabs = $("#wizard-workflow").tabs({
  		disabled: [1,2,3],
  	});
@@ -44,9 +57,21 @@ $(document).ready(function() {
 
 
 	
-	$("#dashboard-link").click(function() {
-		$main_tabs.tabs("enable", 2);
-		$main_tabs.tabs("select", 2);
+	
+	/* JOB CREATION */
+	$("#create-job-link").click(function() {
+		jobSpec = new tc.api.JobSpec();
+		jobSpec.profile = parseInt($(":input[@name='jobspec-profile-input']:checked").val());
+		jobSpec.duration = parseInt($("#jobspec-duration-input").val() * $(".jobspec-duration-multiplier").val());
+		jobSpec.maxTransfer = parseInt($("#jobspec-maxTransfer-input").val() * $(".jobspec-maxTransfer-multiplier").val());
+		jobSpec.clientFunction = $("#jobspec-clientFunction-input").val().toString();
+		jobSpec.statsGranularity = parseInt(statsSlider.slider("value"));
+		jobSpec.requests = { "http://unshift.net": { method: "GET", postdata: null, cookies: [] }};
+		tc.api.createJob(jobSpec, function(jobId) {
+			$main_tabs.tabs("enable", 2);
+			$main_tabs.tabs("select", 2);		
+			tc.api.startJob(jobId);	
+		});
 		return true;
 	});
 
