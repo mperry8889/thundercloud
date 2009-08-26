@@ -31,11 +31,12 @@ class _Orchestrator(object):
     
     def createJob(self, jobSpec):
         self._jobSeqNo = self._jobSeqNo + 1
-        while self.jobs.has_key(self._jobSeqNo):
-            self._jobSeqNo = self._jobSeqNo + 1
+        # this makes things slow.
+        #while self.jobs.has_key(self._jobSeqNo):
+        #    self._jobSeqNo = self._jobSeqNo + 1
         
         log.debug("Creating job %s; jobspec: %s" % (self._jobSeqNo, str(jobSpec)))
-        self.jobs[self._jobSeqNo] = EngineFactory.createFactory(jobSpec)
+        self.jobs[self._jobSeqNo] = EngineFactory.createFactory(self._jobSeqNo, jobSpec)
         return self._jobSeqNo       
 
     def startJob(self, jobId):

@@ -12,8 +12,8 @@ from thundercloud import constants
 
 class HammerEngine(EngineBase):
 
-    def __init__(self, jobSpec):
-        super(HammerEngine, self).__init__(jobSpec)
+    def __init__(self, jobId, jobSpec):
+        super(HammerEngine, self).__init__(jobId, jobSpec)
         self.iterator = self._loop
 
     # dump a bunch of requests into the reactor, scheduling them evenly over the next 

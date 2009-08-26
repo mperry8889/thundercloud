@@ -4,8 +4,8 @@ from thundercloud.job import JobSpec
 
 class EngineFactory(object):
     @staticmethod
-    def createFactory(jobSpec):
+    def createFactory(jobId, jobSpec):
         if jobSpec.profile == JobSpec.JobProfile.BENCHMARK:
-            return BenchmarkEngine(jobSpec)
+            return BenchmarkEngine(jobId, jobSpec)
         elif jobSpec.profile == JobSpec.JobProfile.HAMMER:
-            return HammerEngine(jobSpec)
+            return HammerEngine(jobId, jobSpec)

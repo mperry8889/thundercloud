@@ -31,10 +31,9 @@ class RandomDelay(object):
 
 class BenchmarkEngine(EngineBase):
 
-    def __init__(self, jobSpec):
-        super(BenchmarkEngine, self).__init__(jobSpec)
+    def __init__(self, jobId, jobSpec):
+        super(BenchmarkEngine, self).__init__(jobId, jobSpec)
         self.iterator = self._loop
-        self.userAgent = "thundercloud traffic simulation client/%s" % constants.VERSION
         self.delay = DelayFactory.createFactory(0.0)
         self.clients = 0
 

@@ -30,7 +30,6 @@ class Node(Resource):
         try:
             request.setHeader("Content-Type", "text/plain")
             response = json.dumps(self.GET(request))
-            log.debug(response)
             return response
         except Http400:
             request.setResponseCode(400)
@@ -41,7 +40,6 @@ class Node(Resource):
         try:
             request.setHeader("Content-Type", "text/plain")
             response = json.dumps(self.POST(request))
-            log.debug(response)
             return response
         except Http400:
             request.setResponseCode(400)

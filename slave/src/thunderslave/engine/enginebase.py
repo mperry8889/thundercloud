@@ -25,7 +25,9 @@ class IEngine(Interface):
 class EngineBase(object):
     implements(IEngine, IJob)
   
-    def __init__(self, jobSpec):
+    def __init__(self, jobId, jobSpec):
+        self.jobId = jobId
+        
         # attributes which configure the engine
         self.clientFunction = lambda self, t: 1
         self.requests = {"":{}}
@@ -91,6 +93,8 @@ class EngineBase(object):
         if self.state != JobState.NEW:
             raise Exception, "Job not new"
         
+        log.debug("Starting job %d" % self.jobId)
+        
         self.startTime = time.time()
         self.state = JobState.RUNNING
         self.iterator()
@@ -141,12 +145,12 @@ class EngineBase(object):
     def stop(self):
         if self.state == JobState.COMPLETE:
             return
-        
-        log.debug("Job complete")
-        
+                
         self.state = JobState.COMPLETE
         self.endTime = time.time()
         self._generateStats(force=True)
+        
+        log.debug("Job %d complete" % self.jobId)
     
     
     # some bookkeeping
