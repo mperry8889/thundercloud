@@ -22,8 +22,6 @@
         <script type="text/javascript" src="js/thundercloud/dashboard.js">
         </script>
         <link rel="stylesheet" href="css/jquery-ui-1.7.2.custom.css" type="text/css" media="all" />
-        <link rel="stylesheet" href="css/demo_page.css" type="text/css" media="all" />
-        <link rel="stylesheet" href="css/demo_table.css" type="text/css" media="all" />
         <link rel="stylesheet" href="css/wizard.css" type="text/css" media="all" />
     </head>
     <body>
@@ -62,42 +60,38 @@
                                 <a href="#wizard-confirm">Step 4: Review &amp; Confirm</a>
                             </li>
                         </ul>
-                        <div id="wizard-begin">
-                            <p>
-                                I want to run a:
-                            </p>
-                            <input type="radio" name="jobspec-profile-input" value="stress">Stress Test
-                            <br>
-                            <input type="radio" name="jobspec-profile-input" value="benchmark">Benchmark
-                            <br>
-                            <input type="radio" name="jobspec-profile-input" value="simulation">Simulation
+                        <div id="wizard-begin" class="wizard">
                             <div>
-                                <p>
-                                    <b>STRESS TESTS</b>
+                                <div>
+                                    <input type="radio" name="jobspec-profile-input" value="stress"><b>STRESS TESTS</b>
                                     send a fixed number of clients to your website each second. <a href="javascript:;" id="help-profile-stress" class="help-link-show">more...</a>
                                     <div id="help-profile-stress-element" style="display: none;">
                                         Clients do not wait for responses from the server before sending more requests. <a href="javascript:;" class="help-link-hide">X</a>
                                     </div>
-                                </p>
+                                </div>
                                 <p>
-                                    <b>BENCHMARKING</b>
+                                </p>
+                                <div>
+                                    <input type="radio" name="jobspec-profile-input" value="benchmark"><b>BENCHMARKING</b>
                                     your website will measure its performance in terms of serviceable requests per second. <a href="javascript:;" id="help-profile-benchmark" class="help-link-show">more...</a>
                                     <div id="help-profile-benchmark-element" style="display: none;">
                                         Each client sends a request, and waits for a response before sending another. <a href="javascript:;" class="help-link-hide">X</a>
                                     </div>
-                                </p>
+                                </div>
                                 <p>
-                                    <b>SIMULATIONS</b>
+                                </p>
+                                <div>
+                                    <input type="radio" name="jobspec-profile-input" value="simulation"><b>SIMULATIONS</b>
                                     model real-world traffic patterns. <a href="javascript:;" id="help-profile-simulation" class="help-link-show">more...</a>
                                     <div id="help-profile-simulation-element" style="display: none;">
                                         A variable number of clients will connect to your website over time. <a href="javascript:;" class="help-link-hide">X</a>
                                     </div>
-                                </p>
+                                </div>
                             </div>
                         </div>
-                        <div id="wizard-parameters">
+                        <div id="wizard-parameters" class="wizard">
                             <p>
-                                <table cellpadding="0" cellspacing="0" border="0" style="width: 50%">
+                                <table cellpadding="0" cellspacing="0" border="0">
                                     <tbody>
                                         <tr>
                                             <td>
@@ -111,8 +105,6 @@
                                                     <option value="3600">hours</option>
                                                     <option value="86400">days</option>
                                                 </select>
-                                            </td>
-                                            <td>
                                                 <a href="javascript:;" id="help-duration" class="help-link-show">?</a>
                                             </td>
                                         </tr>
@@ -127,8 +119,6 @@
                                                     <option value="1073741824" selected>GB</option>
                                                     <option value="1099511627776">TB</option>
                                                 </select>
-                                            </td>
-                                            <td>
                                                 <a href="javascript:;" id="help-maxTransfer" class="help-link-show">?</a>
                                             </td>
                                         </tr>
@@ -137,10 +127,7 @@
                                                 <span id="wizard-concurrency"></span>
                                             </td>
                                             <td>
-                                                <input type="text" id="jobspec-clients-input" size=2>
-                                            </td>
-                                            <td>
-                                                <a href="javascript:;" id="help-clients" class="help-link-show">?</a>
+                                                <input type="text" id="jobspec-clients-input" size=2><a href="javascript:;" id="help-clients" class="help-link-show">?</a>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -160,7 +147,7 @@
                                     <br>
                                     <input type="radio" name="jobspec-clientFunction-input" value="0" checked> static
                                     <br>
-                                    <input type="radio" name="jobspec-clientFunction-input" value="math.sin(t)"> sine wave
+                                    <input type="radio" name="jobspec-clientFunction-input" value="math.sin(t)">sine wave
                                     <br>
                                     <div id="help-clientFunction-element" style="display: none;">
                                         which sim <a href="javascript:;" class="help-link-hide">X</a>
@@ -177,9 +164,17 @@
                                     </div>
                                 </p>
                                 </div>
-                                <div id="wizard-url">
+                                <div id="wizard-url" class="wizard">
                                     <div>
-                                        <input type="text" id="jobspec-request-url-input"><input type="button" id="jobspec-request-url-add" value="Add"><input type="button" id="jobspec-request-url-clear" value="Clear">
+                                        <input type="text" id="jobspec-request-url-input"><input type="button" id="jobspec-request-url-add" value="Add"><input type="button" id="jobspec-request-url-clear" value="Clear"><a href="javascript:;" id="help-url" class="help-link-show">?</a>
+                                    </div>
+                                    <div id="help-url-element" style="display: none;">
+                                        Add one or more URLs to fetch during the test.  URLs must be unique, and their response must contain your user key somewhere in the page (usually in a comment) or HTTP header.
+                                        <p>
+                                        </p>
+                                        Clicking "add" will trigger a GET request to your server, to validate the URL and spider it if requested. <a href="javascript:;" class="help-link-hide">X</a>
+                                    </div>
+                                    <div>
                                     </div>
                                     <div id="jobspec-request-url-error" style="display: none;">
                                     </div>
@@ -190,7 +185,7 @@
                                     <input type="checkbox" id="jobspec-request-spider">Spider URL <a href="javascript:;">?</a>
                                     </div>-->
                                     <div id="wizard-url-list">
-                                        <table cellpadding="0" cellspacing="0" border="0" id="jobspec-url-list" style="width: 50%">
+                                        <table cellpadding="0" cellspacing="0" border="0" id="jobspec-url-list">
                                             <thead style="display: none;">
                                                 <tr>
                                                     <th>
@@ -202,15 +197,37 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
+                                                <td width="90%">
+                                                </td>
+                                                <td width="10%">
+                                                </td>
                                             </tbody>
                                         </table>
                                     </div>
                                 </div>
-                                <div id="wizard-confirm">
-                                    <div id="wizard-confirm-parameters">
+                                <div id="wizard-confirm" class="wizard">
+                                    <div>
+                                        <table cellpadding="0" cellspacing="0" border="0" id="wizard-confirm-parameters" style="width: 50%">
+                                            <thead>
+                                                <tr>
+                                                    <th>
+                                                    </th>
+                                                    <th>
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <td width="50%">
+                                                </td>
+                                                <td width="50%">
+                                                </td>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div id="wizard-confirm-error" style="display: none; color: #ff0000; font-weight: bold;">
                                     </div>
                                     <div>
-                                        <a href="javascript:;" id="create-job-link">CREATE JOB AND GO TO DASHBOARD</a>
+                                        <a href="javascript:;" id="create-job-link" style="display: none;">CREATE JOB AND GO TO DASHBOARD</a>
                                         <br>
                                         <a href="javascript:;" id="clear-all">START OVER</a>
                                     </div>
@@ -223,13 +240,13 @@
                             </p>
                         </div>
                         <div id="main-tabs-dashboard">
-                            <div id="dashboard-status">
-                                Job Status: NEW
+                            <div id="dashboard-status-panel">
+                                Job Status: <span id="dashboard-status"></span>
                             </div>
                             <div id="dashboard-progress">
                             </div>
                             <div id="dashboard-progress-text">
-                                Job is 27% complete; 3:04:56 remaining
+                                <span id="dashboard-percent-complete"></span>% complete; <span id="dashboard-time-remaining"></span> remaining
                             </div>
                             <div id="dashboard-stats-container">
                                 <div id="dashboard-stats-current" style="display: inline;">

@@ -6,11 +6,12 @@ if (tc.ui == null) {
 }
 
 tc.ui.wizard = new Object();
+tc.ui.jobId = null;
 
 $(document).ready(function() {
 	/* OBJECT SETUP */
 	tc.ui.wizard.tabs = $("#main-tabs").tabs({
-		disabled: [2],
+		//disabled: [2],
 	});	
 	
 	/* HELP BUTTONS */

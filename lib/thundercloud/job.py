@@ -24,6 +24,7 @@ class JobSpec(object):
         if json is not None: self.slurp(json)
     
     
+    # conveniently import JSON
     def slurp(self, json):
         if json is None: return
         for key in json.keys():

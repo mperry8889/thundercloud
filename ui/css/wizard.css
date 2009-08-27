@@ -1,3 +1,13 @@
+body {
+	font-size: 12px;
+}
+
+
+#jobspec-url-list {
+	width: 50%;
+	margin-left: auto;
+	margin-right: auto;
+}
 
 
 #dashboard-stats-container {

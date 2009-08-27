@@ -30,6 +30,16 @@ $(document).ready(function() {
 		},
 	});
 	
+	tc.ui.newtab.review_table = $("#wizard-confirm-parameters").dataTable({
+		"bPaginate": false,	
+		"bInfo": false,
+		"bSort": false,
+		"bFilter": false,
+		"oLanguage": {
+			"sZeroRecords": "",
+		},		
+	});
+	
     $("#jobspec-request-url-add").click(function() {
     	try {
     		tc.ui.newtab.addUrl($("#jobspec-request-url-input").val());
@@ -45,7 +55,7 @@ $(document).ready(function() {
     
     /* JOB SETUP */
  	var wizard_tabs = $("#wizard-workflow").tabs({
- 		//disabled: [1,2,3],
+ 		disabled: [1,2,3],
  		select: function(event, ui) {
  			// review & confirm tab. have to use numerical index
  			if (ui.index == 3) {
@@ -82,26 +92,19 @@ $(document).ready(function() {
 	});
 	tc.ui.newtab.resetClientFunction();
 	
-	var checkComplete = function() {
-		return true;
-	};
-
-	
 	
 	/* JOB CREATION */
 	$("#create-job-link").click(function() {
 		jobSpec = tc.ui.newtab.createJobSpec();
-		tc.api.createJob(jobSpec, function(jobId) {
-			tc.ui.wizard.tabs.tabs("enable", 2);
-			tc.ui.wizard.tabs.tabs("select", 2);
-			tc.api.startJob(jobId);	
-		});
+		if (tc.ui.newtab.validate(jobSpec)) {
+			tc.api.createJob(jobSpec, function(jobId) {
+				tc.ui.wizard.tabs.tabs("enable", 2);
+				tc.ui.wizard.tabs.tabs("select", 2);
+				tc.ui.jobId = jobId;
+			});
+		}
 		return true;
 	});	
-	
-	
-	
-	
 	
 });
 
@@ -173,6 +176,72 @@ tc.ui.newtab.createJobSpec = function() {
 
 tc.ui.newtab.reviewParameters = function() {
 	jobSpec = tc.ui.newtab.createJobSpec();
-	$("#wizard-confirm-parameters").html(jobSpec.profile+"<br>"+jobSpec.clientFunction);
+	var testType = $(":input[@name='jobspec-profile-input']:checked").val();
+	testType = testType.charAt(0).toUpperCase() + testType.substring(1);
+	var urls = "";
+	for (var i in jobSpec.requests) {
+		urls += i + "<br />";
+	}
+	var clientStr = null;
+	var clientVal = null;
+	switch (testType) {
+		case "Stress":
+			clientStr = "Requests per second";
+			clientVal = $("#jobspec-clients-input").val();
+			break;
+		case "Benchmark":
+			clientStr = "Concurrent Clients";
+			clientVal = $("#jobspec-clients-input").val();
+			break;
+		case "Simulation":
+			clientStr = "Client Function";
+			clientVal = jobSpec.clientFunction;
+			break;
+	};
 	
+	$("#wizard-confirm-error").hide();
+	tc.ui.newtab.review_table.fnClearTable();
+	tc.ui.newtab.review_table.fnAddData([
+		["Test Type", testType],
+		["Duration", $("#jobspec-duration-input").val() + " " + $("#jobspec-duration-multiplier :selected").html()],
+		["Max Transfer", $("#jobspec-maxTransfer-input").val() + " " + $("#jobspec-maxTransfer-multiplier :selected").html()],
+		["Statistics Interval", jobSpec.statsInterval + " seconds"],	
+		[clientStr, clientVal],
+		["URLs", urls],				
+	]);
+	
+	try {
+		tc.ui.newtab.validate(jobSpec);
+	}
+	catch (e) {
+		$("#wizard-confirm-error").show();
+		$("#wizard-confirm-error").html(e);
+		return;
+	}
+	$("#create-job-link").show();
+};
+
+tc.ui.newtab.validate = function(jobSpec) {
+	if (jobSpec.profile != 0 && jobSpec.profile != 1) {
+		throw "Invalid test type";
+	}
+	if (jobSpec.duration <= 0 || isNaN(jobSpec.duration) || typeof jobSpec.duration != "number") {
+		throw "Invalid test duration";
+	}
+	if (jobSpec.maxTransfer <= 0 || isNaN(jobSpec.maxTransfer) || typeof jobSpec.maxTransfer != "nubmer") {
+		throw "Invalid maximum data transfer";
+	}
+	if (jobSpec.clientFunction == "0 + NaN" || typeof jobSpec.clientFunction != "string") {
+		throw "Invalid concurrent client settings";
+	}
+
+	// no good way to get the listing of keys in a request object
+	var jsKeys = 0;
+	for (var i in jobSpec.requests) {
+		jsKeys += 1;
+	}
+	if (jsKeys == 0) {
+		throw "No URLs added";
+	}	
+	return true;
 };

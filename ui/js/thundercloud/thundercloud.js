@@ -46,11 +46,11 @@ tc.api.createJobErrback = function(XMLHttpRequest, statusText, error) {
 };
 
 
-tc.api.startJob = function(jobSpec, callback, errback) {
+tc.api.startJob = function(jobId, callback, errback) {
 	$.ajax({
 		type: "POST",
-		url: tc.api.backend + "/job",
-		data: $.toJSON(jobSpec),
+		url: tc.api.backend + "/job/" + jobId + "/start",
+		data: {},
 		success: function(data, statusText) {
 			tc.api.startJobCallback(data, statusText);
 			if (callback != undefined) {
@@ -96,11 +96,11 @@ tc.api.resumeJobErrback = function(XMLHttpRequest, statusText, error) {
 
 
 
-tc.api.stopJob = function(jobSpec, callback, errback) {
+tc.api.stopJob = function(jobId, callback, errback) {
 	$.ajax({
 		type: "POST",
-		url: tc.api.backend + "/job",
-		data: $.toJSON(jobSpec),
+		url: tc.api.backend + "/job/" + jobId + "/stop",
+		data: {},
 		success: function(data, statusText) {
 			tc.api.stopJobCallback(data, statusText);
 			if (callback != undefined) {
@@ -124,11 +124,11 @@ tc.api.stopJobErrback = function(XMLHttpRequest, statusText, error) {
 
 
 
-tc.api.jobState = function(jobSpec, callback, errback) {
+tc.api.jobState = function(jobId, callback, errback) {
 	$.ajax({
 		type: "POST",
-		url: tc.api.backend + "/job",
-		data: $.toJSON(jobSpec),
+		url: tc.api.backend + "/job/" + jobId + "/state",
+		data: {},
 		success: function(data, statusText) {
 			tc.api.jobStateCallback(data, statusText);
 			if (callback != undefined) {
