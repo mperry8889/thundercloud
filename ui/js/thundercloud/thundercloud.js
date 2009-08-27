@@ -14,7 +14,7 @@ tc.api.JobSpec = function() {
 	this.clientFunction = null;
 	this.duration = null;
 	this.statsInterval = null;
-	this.maxTransfer = null;
+	this.transferLimit = null;
 	this.profile = null;
 }
 
@@ -75,7 +75,23 @@ tc.api.startJobErrback = function(XMLHttpRequest, statusText, error) {
 
 
 tc.api.pauseJob = function(jobId, callback, errback) {
-	
+	$.ajax({
+		type: "POST",
+		url: tc.api.backend + "/job/" + jobId + "/pause",
+		data: {},
+		success: function(data, statusText) {
+			tc.api.pauseJobCallback(data, statusText);
+			if (callback != undefined) {
+				callback(data, statusText);
+			}
+		},
+		error: function(XMLHttpRequest, statusText, error) {
+			 tc.api.pauseJobErrback(XMLHttpRequest, statusText, error);
+			 if (errback != undefined) {
+				 errback(XMLHttpRequest, statusText, error);
+			 }
+		},
+	});	
 };
 tc.api.pauseJobCallback = function(data, statusText) {
 	
@@ -85,7 +101,23 @@ tc.api.pauseJobErrback = function(XMLHttpRequest, statusText, error) {
 };
 
 tc.api.resumeJob = function(jobId, callback, errback) {
-	
+	$.ajax({
+		type: "POST",
+		url: tc.api.backend + "/job/" + jobId + "/resume",
+		data: {},
+		success: function(data, statusText) {
+			tc.api.resumeJobCallback(data, statusText);
+			if (callback != undefined) {
+				callback(data, statusText);
+			}
+		},
+		error: function(XMLHttpRequest, statusText, error) {
+			 tc.api.resumeJobErrback(XMLHttpRequest, statusText, error);
+			 if (errback != undefined) {
+				 errback(XMLHttpRequest, statusText, error);
+			 }
+		},
+	});	
 };
 tc.api.resumeJobCallback = function(data, statusText) {
 	
@@ -161,7 +193,11 @@ tc.api.jobResultsErrback = function(XMLHttpRequest, statusText, error) {
 };
 
 
-tc.api.poll = function(jobId, callback, errback) {
+/* map job ID <-> polls for each job. this enforces one poll per job, and
+   allows the backend here to cancel outstanding polls when jobs get updated.
+   this probably breaks some kind of abstraction, but whatever */
+tc.api.pollMap = {};
+tc.api.poll = function(jobId, delay, callback, errback) {
 	
 }
 tc.api.pollCallback = function(data, statusText) {

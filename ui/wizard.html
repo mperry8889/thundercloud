@@ -113,13 +113,13 @@
                                                 Max Transfer
                                             </td>
                                             <td>
-                                                <input type="text" id="jobspec-maxTransfer-input" size=4>
-                                                <select id="jobspec-maxTransfer-multiplier" jobspec-maxTransfer-multiplier>
+                                                <input type="text" id="jobspec-transferLimit-input" size=4>
+                                                <select id="jobspec-transferLimit-multiplier" jobspec-transferLimit-multiplier>
                                                     <option value="1048576">MB</option>
                                                     <option value="1073741824" selected>GB</option>
                                                     <option value="1099511627776">TB</option>
                                                 </select>
-                                                <a href="javascript:;" id="help-maxTransfer" class="help-link-show">?</a>
+                                                <a href="javascript:;" id="help-transferLimit" class="help-link-show">?</a>
                                             </td>
                                         </tr>
                                         <tr>
@@ -135,7 +135,7 @@
                                 <div id="help-duration-element" style="display: none;">
                                     The duration, word. <a href="javascript:;" class="help-link-hide">X</a>
                                 </div>
-                                <div id="help-maxTransfer-element" style="display: none;">
+                                <div id="help-transferLimit-element" style="display: none;">
                                     The max data transfer, word. <a href="javascript:;" class="help-link-hide">X</a>
                                 </div>
                                 <div id="help-clients-element" style="display: none;">
@@ -227,9 +227,9 @@
                                     <div id="wizard-confirm-error" style="display: none; color: #ff0000; font-weight: bold;">
                                     </div>
                                     <div>
-                                        <a href="javascript:;" id="create-job-link" style="display: none;">CREATE JOB AND GO TO DASHBOARD</a>
+                                        <a href="javascript:;" id="wizard-create-job-link" style="display: none;">CREATE JOB AND GO TO DASHBOARD</a>
                                         <br>
-                                        <a href="javascript:;" id="clear-all">START OVER</a>
+                                        <a href="javascript:;" id="wizard-clear-all-link">START OVER</a>
                                     </div>
                                 </div>
                             </div>

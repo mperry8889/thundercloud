@@ -5,10 +5,27 @@ if (tc.ui == null) {
 	tc.ui = new Object();
 }
 tc.ui.newtab = new Object();
-tc.ui.newtab.urls = [];
-tc.ui.newtab.profile = 0;
 
 $(document).ready(function() {
+	tc.ui.newtab.reset();
+});
+
+tc.ui.newtab.reset = function() {
+
+	$("*[id^=wizard]").unbind();
+	$("*[name^=wizard]").unbind();
+	$("*[id^=jobspec]").unbind();
+	$("*[name^=jobspec]").unbind();
+	
+
+	tc.ui.newtab.urls = [];
+	tc.ui.newtab.profile = 0;	
+
+	tc.ui.newtab.clearUrl();
+	tc.ui.newtab.clearError();
+	
+	$("#jobspec-duration-input").val("");
+	$("#jobspec-transferLimit-input").val("");	
 	tc.ui.newtab.statsSlider = $("#jobspec-statsInterval").slider({
 		value: 30,
 		min: 1,
@@ -63,6 +80,7 @@ $(document).ready(function() {
  			}
  		},
  	});
+ 	wizard_tabs.tabs("select", 0);
  	
 	$(":input[name='jobspec-profile-input']").click(function() {
 		switch ($(":input[@name='jobspec-profile-input']:checked").val()) {
@@ -94,19 +112,24 @@ $(document).ready(function() {
 	
 	
 	/* JOB CREATION */
-	$("#create-job-link").click(function() {
+	$("#wizard-create-job-link").click(function() {
 		jobSpec = tc.ui.newtab.createJobSpec();
 		if (tc.ui.newtab.validate(jobSpec)) {
 			tc.api.createJob(jobSpec, function(jobId) {
 				tc.ui.wizard.tabs.tabs("enable", 2);
 				tc.ui.wizard.tabs.tabs("select", 2);
+				tc.ui.wizard.tabs.tabs("disable", 0);
 				tc.ui.jobId = jobId;
 			});
 		}
 		return true;
 	});	
 	
-});
+	$("#wizard-clear-all-link").click(function() {
+		tc.ui.newtab.reset();
+	});
+	
+};
 
 tc.ui.newtab.activateUrlRowClicks = function() {
 	$(".jobspec-url-list-remove").click(function() {
@@ -150,6 +173,7 @@ tc.ui.newtab.clearError = function() {
 };
 
 tc.ui.newtab.resetClientFunction = function() {
+	$("#jobspec-clients-input").val("");
 	$(":input[name='jobspec-clientFunction-input']").attr("checked", false);
 	$(":input[name='jobspec-clientFunction-input']").each(function() {
 		if ($(this).val() == "0") {
@@ -164,7 +188,7 @@ tc.ui.newtab.createJobSpec = function() {
 	jobSpec = new tc.api.JobSpec();
 	jobSpec.profile = tc.ui.newtab.profile;
 	jobSpec.duration = parseInt($("#jobspec-duration-input").val() * $("#jobspec-duration-multiplier").val());
-	jobSpec.maxTransfer = parseInt($("#jobspec-maxTransfer-input").val() * $("#jobspec-maxTransfer-multiplier").val());
+	jobSpec.transferLimit = parseInt($("#jobspec-transferLimit-input").val() * $("#jobspec-transferLimit-multiplier").val());
 	jobSpec.clientFunction = $(":input[name='jobspec-clientFunction-input']:checked").val() + " + " + parseInt($("#jobspec-clients-input").val()).toString();
 	jobSpec.statsInterval = parseInt(tc.ui.newtab.statsSlider.slider("value"));
 	jobSpec.requests = {};
@@ -204,7 +228,7 @@ tc.ui.newtab.reviewParameters = function() {
 	tc.ui.newtab.review_table.fnAddData([
 		["Test Type", testType],
 		["Duration", $("#jobspec-duration-input").val() + " " + $("#jobspec-duration-multiplier :selected").html()],
-		["Max Transfer", $("#jobspec-maxTransfer-input").val() + " " + $("#jobspec-maxTransfer-multiplier :selected").html()],
+		["Max Transfer", $("#jobspec-transferLimit-input").val() + " " + $("#jobspec-transferLimit-multiplier :selected").html()],
 		["Statistics Interval", jobSpec.statsInterval + " seconds"],	
 		[clientStr, clientVal],
 		["URLs", urls],				
@@ -218,7 +242,7 @@ tc.ui.newtab.reviewParameters = function() {
 		$("#wizard-confirm-error").html(e);
 		return;
 	}
-	$("#create-job-link").show();
+	$("#wizard-create-job-link").show();
 };
 
 tc.ui.newtab.validate = function(jobSpec) {
@@ -228,7 +252,7 @@ tc.ui.newtab.validate = function(jobSpec) {
 	if (jobSpec.duration <= 0 || isNaN(jobSpec.duration) || typeof jobSpec.duration != "number") {
 		throw "Invalid test duration";
 	}
-	if (jobSpec.maxTransfer <= 0 || isNaN(jobSpec.maxTransfer) || typeof jobSpec.maxTransfer != "nubmer") {
+	if (jobSpec.transferLimit <= 0 || isNaN(jobSpec.transferLimit) || typeof jobSpec.transferLimit != "number") {
 		throw "Invalid maximum data transfer";
 	}
 	if (jobSpec.clientFunction == "0 + NaN" || typeof jobSpec.clientFunction != "string") {

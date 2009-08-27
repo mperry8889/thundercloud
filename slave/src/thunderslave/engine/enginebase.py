@@ -128,6 +128,8 @@ class EngineBase(object):
         
         self.state = JobState.PAUSED
         self._timeAtPause = time.time()
+        
+        log.debug("Pausing job %d" % self.jobId)
     
     
     # mark the job as running, and spin up new clients
@@ -139,6 +141,8 @@ class EngineBase(object):
         self.pausedTime = self.pausedTime + (time.time() - self._timeAtPause)
         self.state = JobState.RUNNING
         self.iterator()
+        
+        log.debug("Resuming job %d" % self.jobId)
     
     
     # stop the job and mark it as complete
