@@ -92,11 +92,14 @@ class JobSpec(object):
 
 class JobResults(object):
     def __init__(self):
+        self.jobId = 0
         self.iterations = 0
+        self.transferLimit = 0
         self.bytesTransferred = 0
+        self.duration = 0
         self.elapsedTime = 0
         self.statisticsByTime = {}
-        self.errors = {}        
+        self.errors = {}     
 
 
 class JobState(object):

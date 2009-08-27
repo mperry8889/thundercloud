@@ -27,6 +27,7 @@ class EngineBase(object):
   
     def __init__(self, jobId, jobSpec):
         self.jobId = jobId
+        self.jobSpec = jobSpec
         
         # attributes which configure the engine
         self.clientFunction = lambda self, t: 1
@@ -227,9 +228,12 @@ class EngineBase(object):
     # generate and fill in a JobResults object
     def results(self, short=False):
         jobResults = JobResults()
+        jobResults.jobId = self.jobId
         jobResults.state = self.state
         jobResults.iterations = self.iterations
+        jobResults.transferLimit = self.transferLimit
         jobResults.bytesTransferred = self.bytesTransferred
+        jobResults.duration = self.duration
         jobResults.elapsedTime = self.elapsedTime
         jobResults.errors = self.errors
         

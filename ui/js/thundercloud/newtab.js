@@ -113,7 +113,7 @@ tc.ui.newtab.reset = function() {
 	
 	/* JOB CREATION */
 	$("#wizard-create-job-link").click(function() {
-		jobSpec = tc.ui.newtab.createJobSpec();
+		var jobSpec = tc.ui.newtab.createJobSpec();
 		if (tc.ui.newtab.validate(jobSpec)) {
 			tc.api.createJob(jobSpec, function(jobId) {
 				tc.ui.wizard.tabs.tabs("enable", 2);

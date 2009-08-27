@@ -9,6 +9,12 @@ tc.api.JobState = {
     "PAUSED": 2,
     "COMPLETE": 3,
 };
+tc.api.JobStateToText = {
+	0: "NEW",
+	1: "RUNNING",
+	2: "PAUSED",
+	3: "COMPLETE",
+}
 tc.api.JobSpec = function() {
 	this.requests = {"":{}};
 	this.clientFunction = null;
@@ -158,9 +164,8 @@ tc.api.stopJobErrback = function(XMLHttpRequest, statusText, error) {
 
 tc.api.jobState = function(jobId, callback, errback) {
 	$.ajax({
-		type: "POST",
+		type: "GET",
 		url: tc.api.backend + "/job/" + jobId + "/state",
-		data: {},
 		success: function(data, statusText) {
 			tc.api.jobStateCallback(data, statusText);
 			if (callback != undefined) {
@@ -183,7 +188,23 @@ tc.api.jobStateErrback = function(XMLHttpRequest, statusText, error) {
 };
 
 tc.api.jobResults = function(jobId, summaryOnly, callback, errback) { // summaryOnly == short, but short is a reserver keyword in JS
-	
+	var suffix = summaryOnly == true ? "?short=true" : "";
+	$.ajax({
+		type: "GET",
+		url: tc.api.backend + "/job/" + jobId + "/results" + suffix,
+		success: function(data, statusText) {
+			tc.api.jobStateCallback(data, statusText);
+			if (callback != undefined) {
+				callback(data, statusText);
+			}
+		},
+		error: function(XMLHttpRequest, statusText, error) {
+			 tc.api.jobStateErrback(XMLHttpRequest, statusText, error);
+			 if (errback != undefined) {
+				 errback(XMLHttpRequest, statusText, error);
+			 }
+		},
+	});	
 };
 tc.api.jobResultsCallback = function(data, statusText) {
 	
@@ -198,11 +219,28 @@ tc.api.jobResultsErrback = function(XMLHttpRequest, statusText, error) {
    this probably breaks some kind of abstraction, but whatever */
 tc.api.pollMap = {};
 tc.api.poll = function(jobId, delay, callback, errback) {
-	
+	if (tc.api.pollMap[jobId]) {
+		clearTimeout(tc.api.pollMap[jobId]["timeoutId"]);
+	}
+	tc.api.pollMap[jobId] = { delay: delay, timeoutId: null, callback: callback };
+	tc.api.jobResults(jobId, true, function(data, statusText) {
+		var response = jsonParse(data);
+		var state = parseInt(response.state);
+		var jobId = parseInt(response.jobId);
+		var delay = tc.api.pollMap[jobId]["delay"];
+		var callback = tc.api.pollMap[jobId]["callback"];
+		var errback = null;
+		if (state == tc.api.JobState.RUNNING) {
+			var timeoutId = setTimeout("tc.api.poll(" + jobId + ", " + delay + ", " + callback + ", " + errback + ")", delay);
+		}
+		if (callback != undefined) {
+			callback(response);
+		}
+	});
 }
-tc.api.pollCallback = function(data, statusText) {
-	
-};
-tc.api.pollErrback = function(XMLHttpRequest, statusText, error) {
-	
-};
+tc.api.cancelPoll = function(jobId) {
+	if (tc.api.pollMap[jobId]) {
+		clearTimeout(tc.api.pollMap[jobId]["timeoutId"]);
+		tc.api.pollMap.removeAttribute(jobId);
+	}
+}

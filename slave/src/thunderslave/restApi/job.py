@@ -122,10 +122,13 @@ class JobNode(LeafNode):
     
     # get a job's statistics
     def results(self, jobId, args):
-        if args.has_key("short"):
-            short = simplejson.loads(args["short"][0])
-        else:
-            short = None
+        short = None
+        try:
+            if args.has_key("short"):
+                short = simplejson.loads(args["short"][0])
+        except AttributeError:
+            pass            
+            
         try:
             return jsonpickle.Pickler(unpicklable=True).flatten(Orchestrator.jobResults(jobId, short))
         except:

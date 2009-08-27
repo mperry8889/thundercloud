@@ -6,13 +6,14 @@ if (tc.ui == null) {
 }
 tc.ui.dashboard = new Object();
 tc.ui.dashboard.urls = [];
-tc.ui.dashboard.pollInterval = 5000; // milliseconds
+tc.ui.dashboard.pollInterval = 1000; // milliseconds
 
 $(document).ready(function() {
     
-    $("#dashboard-progress").progressbar({ value: 0 });  
+    tc.ui.dashboard.progressbar = $("#dashboard-progress").progressbar({ value: 0 });  
 	$("#dashboard-status").html("NEW");
 	$("#dashboard-percent-complete").html("0");
+	$("#dashboard-time-elapsed").html("00:00:00");
 	$("#dashboard-time-remaining").html("00:00:00");
 	$("#dashboard-button-pause").attr("disabled", true);
 	$("#dashboard-button-stop").attr("disabled", true);
@@ -23,9 +24,10 @@ $(document).ready(function() {
 							$("#dashboard-button-pause").attr("disabled", false);
 							$("#dashboard-button-stop").attr("disabled", false);
 							$("#dashboard-button-start").attr("disabled", true);	
+							tc.api.poll(tc.ui.jobId, tc.ui.dashboard.pollInterval, tc.ui.dashboard.update);
 						},
 						tc.ui.dashboard.errback
-		);		
+		);
 	});
 	$("#dashboard-button-pause").click(function() {
 		console.log($("#dashboard-button-pause").val());
@@ -33,11 +35,13 @@ $(document).ready(function() {
 			case "Pause":
 				tc.api.pauseJob(tc.ui.jobId, function() {
 					$("#dashboard-button-pause").val("Resume");
+					tc.api.poll(tc.ui.jobId, Infinity, tc.ui.dashboard.update);
 				});
 				break;
 			case "Resume":
 				tc.api.resumeJob(tc.ui.jobId, function() {
 					$("#dashboard-button-pause").val("Pause");
+					tc.api.poll(tc.ui.jobId, tc.ui.dashboard.pollInterval, tc.ui.dashboard.update);
 				});
 				break;
 		};
@@ -46,15 +50,22 @@ $(document).ready(function() {
 		tc.api.stopJob(tc.ui.jobId, 
 						function() {
 							tc.ui.dashboard.jobComplete();
+							tc.api.poll(tc.ui.jobId, Infinity, tc.ui.dashboard.update);
 						},
 						tc.ui.dashboard.errback
 		);
-	});
-
-	
-	
-	
+	});	
 });
+
+tc.ui.dashboard.update = function(response) {
+	var percentage = Math.min(100, parseInt(100 * (response.elapsedTime / response.duration)));
+	var timeleft = Math.max(0, parseInt(response.duration - response.elapsedTime));
+	tc.ui.dashboard.progressbar.progressbar("value", percentage);
+	$("#dashboard-status").html(tc.api.JobStateToText[response.state]);
+	$("#dashboard-percent-complete").html(percentage);
+	$("#dashboard-time-elapsed").html(response.elapsedTime);
+	$("#dashboard-time-remaining").html(timeleft);
+};
 
 tc.ui.dashboard.jobComplete = function() {
 	$("#dashboard-button-start").attr("disabled", true);
