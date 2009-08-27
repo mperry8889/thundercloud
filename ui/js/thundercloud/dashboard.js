@@ -30,7 +30,6 @@ $(document).ready(function() {
 		);
 	});
 	$("#dashboard-button-pause").click(function() {
-		console.log($("#dashboard-button-pause").val());
 		switch ($("#dashboard-button-pause").val()) {
 			case "Pause":
 				tc.api.pauseJob(tc.ui.jobId, function() {
@@ -58,19 +57,29 @@ $(document).ready(function() {
 });
 
 tc.ui.dashboard.update = function(response) {
-	var percentage = Math.min(100, parseInt(100 * (response.elapsedTime / response.duration)));
-	var timeleft = Math.max(0, parseInt(response.duration - response.elapsedTime));
+	var percentage = Math.min(100, 100 * (response.elapsedTime / response.duration));
+	var timeleft = Math.max(0, response.duration - response.elapsedTime);
 	tc.ui.dashboard.progressbar.progressbar("value", percentage);
 	$("#dashboard-status").html(tc.api.JobStateToText[response.state]);
 	$("#dashboard-percent-complete").html(percentage);
 	$("#dashboard-time-elapsed").html(response.elapsedTime);
 	$("#dashboard-time-remaining").html(timeleft);
+	$("#dashboard-stats-current-iterations").html(response.iterations);
+	$("#dashboard-stats-current-elapsedTime").html(response.elapsedTime);
+	$("#dashboard-stats-current-bytesTransferred").html(response.bytesTransferred);
+	
+	if (response.state == tc.api.JobState.COMPLETE) {
+		tc.ui.dashboard.jobComplete();
+	}
+	
 };
 
 tc.ui.dashboard.jobComplete = function() {
 	$("#dashboard-button-start").attr("disabled", true);
 	$("#dashboard-button-stop").attr("disabled", true);
 	$("#dashboard-button-pause").attr("disabled", true);	
+	tc.ui.wizard.tabs.tabs("enable", 0);
+	tc.ui.newtab.reset();
 };
 
 tc.ui.dashboard.errback = function(XMLHttpRequest, statusText, error) {

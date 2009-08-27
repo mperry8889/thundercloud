@@ -19,7 +19,7 @@ class HammerEngine(EngineBase):
     # dump a bunch of requests into the reactor, scheduling them evenly over the next 
     # second.  then schedule another loop for a second later
     def _loop(self):
-        self.elapsedTime = time.time() - self.startTime
+        self.elapsedTime = time.time() - self.startTime - self.pausedTime
         
         if self.bytesTransferred >= self.transferLimit:
             self.stop()
