@@ -9,28 +9,33 @@ from ..db import dbConnection as db
 class JobNotFound(Exception):
     pass
 
+class JobHasNoResults(Exception):
+    pass
+
 class DummyEngine(object):
     implements(IEngine, IJob)
   
     def __init__(self, jobId, jobSpec):
 
-        results = db.execute("SELECT id, spec, results FROM jobs WHERE id = ?", (jobId,)).fetchone()
+        
+        results = db.execute("SELECT id, spec, results FROM jobs WHERE id = ?", (jobId,)).fetchone()   
         if results is None:
             raise JobNotFound
+        if results["results"] is None:
+            raise JobHasNoResults
         
-        jobSpec = results["jobSpec"]
-        jobResults = results["jobResults"]
+        self.jobSpec = results["spec"]
+        self.jobResults = results["results"]
 
-        self.jobId = results["jobId"]
-        self.requests = jobSpec.requests
-        self.transferLimit = jobSpec.transferLimit
-        self.duration = jobSpec.duration
-        self.userAgent = jobSpec.userAgent
-        self.statsInterval = jobSpec.statsInterval
-        self.clientFunction = lambda t: eval(jobSpec.clientFunction)
-  
-        self.jobResults = jobResults
-  
+        self.jobId = results["id"]
+        self.requests = self.jobSpec.requests
+        self.transferLimit = self.jobSpec.transferLimit
+        self.duration = self.jobSpec.duration
+        self.userAgent = self.jobSpec.userAgent
+        self.statsInterval = self.jobSpec.statsInterval
+        self.clientFunction = self.jobSpec.clientFunction
+        
+        
     # normal job operations don't work here
     def start(self):
         return
@@ -45,7 +50,7 @@ class DummyEngine(object):
         return
 
     def state(self):
-        return self.jobResults.jobState
+        return self.jobResults.state
 
     # generate and fill in a JobResults object
     def results(self, short=False):

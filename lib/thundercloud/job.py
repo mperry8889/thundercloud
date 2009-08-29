@@ -1,4 +1,5 @@
 from zope.interface import Interface
+import simplejson as json
 import jsonpickle
 import sqlite3
 
@@ -38,7 +39,7 @@ class JobSpec(object):
     class JobProfile:
         HAMMER = 0
         BENCHMARK = 1
-        _DUMMY = 99
+        DUMMY = 9999
     
     __attributes = {"requests": {"":{}},
                     "duration": float("inf"),
@@ -67,7 +68,7 @@ class JobSpec(object):
     
     # string representation: stringified JSON
     def __str__(self):
-        return "%s" % self.toJson()
+        return json.dumps(self.toJson())
     
     # used for SQLite adaptation
     def __conform__(self, protocol):
@@ -120,7 +121,7 @@ class JobSpec(object):
         # if everything is ok...
         return True
 
-sqlite3.register_converter("jobSpec", JobSpec.__init__)
+sqlite3.register_converter("jobSpec", lambda s: JobSpec(json.loads(s)))
 
 
 
@@ -154,7 +155,7 @@ class JobResults(object):
     
     # string representation: stringified JSON
     def __str__(self):
-        return "%s" % self.toJson()
+        return json.dumps(self.toJson())
     
     # used for SQLite adaptation
     def __conform__(self, protocol):
@@ -171,4 +172,4 @@ class JobResults(object):
         for key in json.keys():
             setattr(self, key, json[key])
 
-sqlite3.register_converter("jobResults", JobResults.__init__)
+sqlite3.register_converter("jobResults", lambda s: JobResults(json.loads(s)))

@@ -161,7 +161,8 @@ class EngineBase(object):
         self.endTime = time.time()
         self._generateStats(force=True)
         
-        db.execute("UPDATE jobs SET endTime = ? WHERE id = ?", (datetime.datetime.now(), self.jobId))      
+        db.execute("UPDATE jobs SET endTime = ? WHERE id = ?", (datetime.datetime.now(), self.jobId))
+        db.execute("UPDATE jobs SET results = ? WHERE id = ?", (self.results(), self.jobId))    
         log.debug("Job %d complete" % self.jobId)
     
     
@@ -260,7 +261,6 @@ class EngineBase(object):
                 pass
         else:
             jobResults.statisticsByTime = self.statisticsByTime
-            db.execute("UPDATE jobs SET results = ? WHERE id = ?", (jobResults, self.jobId))
         
         return jobResults
     

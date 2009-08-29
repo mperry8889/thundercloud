@@ -10,5 +10,5 @@ class EngineFactory(object):
             return BenchmarkEngine(jobId, jobSpec)
         elif jobSpec.profile == JobSpec.JobProfile.HAMMER:
             return HammerEngine(jobId, jobSpec)
-        elif jobSpec.profile == JobSpec.JobProfile._DUMMY:
+        elif jobSpec.profile == JobSpec.JobProfile.DUMMY:
             return DummyEngine(jobId, jobSpec)

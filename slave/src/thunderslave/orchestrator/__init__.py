@@ -6,6 +6,9 @@ import logging
 
 log = logging.getLogger("orchestrator")
 
+class InvalidJob(Exception):
+    pass
+
 # Tracks and operates on jobs in the system, maintaining an instance
 # of Engine for each job
 class _Orchestrator(object):
@@ -18,23 +21,23 @@ class _Orchestrator(object):
         db.execute("UPDATE jobSeqNo SET jobNo = ?", (jobNo + 1,))
         return jobNo
     
-    def listJobs(self):
-        return self.jobs.keys()
-
-    def listJobsByState(self, state):
-        jobs = self.listJobs()
-        jobsInState = []
-        for job in jobs:
-            if self.jobs[job].state == state:
-                jobsInState.append(job)
-        return jobsInState
-
-    def listActiveJobs(self):
-        return self.listJobsByState(JobState.RUNNING)
-
-    def listCompleteJobs(self):
-        return self.listJobsByState(JobState.COMPLETE)        
+    def _kick(self, jobId):
+        try:
+            self.jobs.pop(jobId)
+        except KeyError:
+            pass
     
+    def _getJob(self, jobId):
+        # if job is in memory
+        try:
+            return self.jobs[jobId]
+        except KeyError:
+            anonObj = type("", (), {})
+            anonObj.profile = JobSpec.JobProfile.DUMMY
+            dummy = EngineFactory.createFactory(jobId, anonObj)
+            return dummy
+            
+            
     def createJob(self, jobSpec):
         jobNo = self._getAndUpdateJobSeqNo()
 
@@ -44,43 +47,44 @@ class _Orchestrator(object):
 
     def startJob(self, jobId):
         log.info("Starting job %d" % jobId)
-        self.jobs[jobId].start()
+        self._getJob(jobId).start()
 
     def pauseJob(self, jobId):
         log.info("Pausing job %d" % jobId)
-        self.jobs[jobId].pause()
+        self._getJob(jobId).pause()
     
     def resumeJob(self, jobId):
         log.info("Resuming job %d" % jobId)
-        self.jobs[jobId].resume()
+        self._getJob(jobId).resume()
     
     def stopJob(self, jobId):
         log.info("Stopping job %d" % jobId)
-        self.jobs[jobId].stop()
+        self._getJob(jobId).stop()
+        self._kick(jobId)
 
     def removeJob(self, jobId):
         log.info("Removing job %s" % jobId)
         try:
-            self.jobs[jobId].stop()
+            self._getJob(jobId).stop()
         except:
-            pass
-        try:
-            self.jobs.pop(jobId)
-        except KeyError:
             pass
     
     def jobState(self, jobId):
-        return self.jobs[jobId].state
+        state = self._getJob(jobId).state
+        
+        # if the job is done, kick the engine out from memory
+        if state == JobState.COMPLETE:
+            self._kick(jobId)
+            
+        return state
     
     def jobResults(self, jobId, args):
-        try:
-            return self.jobs[jobId].results(args)
-        except KeyError:
-            try:
-                dummy = EngineFactory.createFactory(jobId, { "profile": JobSpec.JobProfile._DUMMY })
-                return dummy.results(args)
-            except:
-                return None
+        results = self._getJob(jobId).results(args)
+        
+        if results.state == JobState.COMPLETE:
+            self._kick(jobId)
+        
+        return results
             
     
 Orchestrator = _Orchestrator()

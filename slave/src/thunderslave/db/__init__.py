@@ -23,6 +23,6 @@ def dbInit():
                                            FOREIGN KEY (id) REFERENCES jobs(id))""")
     
 
-dbConnection = sqlite3.connect(":memory:", detect_types=sqlite3.PARSE_DECLTYPES)
+dbConnection = sqlite3.connect("database", detect_types=sqlite3.PARSE_DECLTYPES, isolation_level=None)
 dbConnection.row_factory = sqlite3.Row
-dbInit()
+#dbInit()
