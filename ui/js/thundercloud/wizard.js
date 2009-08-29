@@ -11,8 +11,9 @@ tc.ui.jobId = null;
 $(document).ready(function() {
 	/* OBJECT SETUP */
 	tc.ui.wizard.tabs = $("#main-tabs").tabs({
-		disabled: [2],
+		//disabled: [2],
 	});	
+	//tc.ui.wizard.tabs.tabs("select", 2);
 	
 	/* HELP BUTTONS */
 	$(".help-link-show").click(function() {

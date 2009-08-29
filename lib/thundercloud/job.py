@@ -1,7 +1,34 @@
 from zope.interface import Interface
 import jsonpickle
+import sqlite3
 
 from thundercloud import constants
+
+class JobState(object):
+    NEW = 0
+    RUNNING = 1
+    PAUSED = 2
+    COMPLETE = 3
+
+class IJob(Interface):
+    def start(self):
+        """Start"""
+    
+    def pause(self):
+        """Pause"""
+    
+    def resume(self):
+        """Resume"""
+    
+    def stop(self):
+        """Stop"""
+    
+    def state(self):
+        """Get job state"""
+    
+    def results(self):
+        """Get job results"""
+
 
 class InvalidJobSpec(Exception):
     def __init__(self, msg):
@@ -11,18 +38,45 @@ class JobSpec(object):
     class JobProfile:
         HAMMER = 0
         BENCHMARK = 1
+        _DUMMY = 99
+    
+    __attributes = {"requests": {"":{}},
+                    "duration": float("inf"),
+                    "transferLimit": float("inf"),
+                    "clientFunction": "1",
+                    "statsInterval": float("inf"),
+                    "userAgent": "thundercloud client/%s" % constants.VERSION,
+                    "profile": JobProfile.HAMMER,
+                    "state": JobState.NEW,
+    }                
 
     def __init__(self, json=None):
-        self.requests = {"":{}}
-        self.duration = float("inf")
-        self.transferLimit = float("inf")
-        self.clientFunction = "1"
-        self.statsInterval = float("inf")
-        self.userAgent = "thundercloud client/%s" % constants.VERSION
-        self.profile = JobSpec.JobProfile.HAMMER
-        self.state = JobState.NEW
+        for key in self.__attributes.keys():
+            setattr(self, key, self.__attributes[key])
         if json is not None: self.slurp(json)
+
+    # representation: dictionary object
+    def __repr__(self):
+        obj = {}
+        for key in self.__attributes.keys():
+            try:
+                obj.update({ key: getattr(self, key) })
+            except AttributeError:
+                pass
+        return obj
     
+    # string representation: stringified JSON
+    def __str__(self):
+        return "%s" % self.toJson()
+    
+    # used for SQLite adaptation
+    def __conform__(self, protocol):
+        if protocol == sqlite3.PrepareProtocol:
+            return self.__str__()
+
+    # json representation
+    def toJson(self):
+        return jsonpickle.Pickler(unpicklable=True).flatten(self.__repr__())    
     
     # conveniently import JSON
     def slurp(self, json):
@@ -66,64 +120,55 @@ class JobSpec(object):
         # if everything is ok...
         return True
 
+sqlite3.register_converter("jobSpec", JobSpec.__init__)
 
-    # json representation
-    def toJson(self):
-        return jsonpickle.Pickler(unpicklable=True).flatten(self.__repr__())
-
-
-    # string representation: JSON object
-    def __repr__(self):
-        return {
-            "requests": self.requests,
-            "duration": self.duration,
-            "transferLimit": self.transferLimit,
-            "clientFunction": self.clientFunction,
-            "statsInterval": self.statsInterval,
-            "userAgent": self.userAgent,
-            "profile": self.profile,
-            "state": self.state,
-        }
-    
-    
-    def __str__(self):
-        return "%s" % self.toJson()
 
 
 class JobResults(object):
-    def __init__(self):
-        self.jobId = 0
-        self.iterations = 0
-        self.transferLimit = 0
-        self.bytesTransferred = 0
-        self.duration = 0
-        self.elapsedTime = 0
-        self.statisticsByTime = {}
-        self.errors = {}     
+    __attributes = {     
+        "jobId": 0,
+        "state": None,
+        "iterations": 0,
+        "transferLimit": 0,
+        "bytesTransferred": 0,
+        "duration": 0,
+        "elapsedTime": 0,
+        "statisticsByTime": {},
+        "errors": {},
+    }
 
+    def __init__(self, json=None):
+        for key in self.__attributes.keys():
+            setattr(self, key, self.__attributes[key])
+        if json is not None: self.slurp(json)
 
-class JobState(object):
-    NEW = 0
-    RUNNING = 1
-    PAUSED = 2
-    COMPLETE = 3
+    # representation: dictionary object
+    def __repr__(self):
+        obj = {}
+        for key in self.__attributes.keys():
+            try:
+                obj.update({ key: getattr(self, key) })
+            except AttributeError:
+                pass
+        return obj
+    
+    # string representation: stringified JSON
+    def __str__(self):
+        return "%s" % self.toJson()
+    
+    # used for SQLite adaptation
+    def __conform__(self, protocol):
+        if protocol == sqlite3.PrepareProtocol:
+            return self.__str__()
 
+    # json representation
+    def toJson(self):
+        return jsonpickle.Pickler(unpicklable=True).flatten(self.__repr__())    
+    
+    # conveniently import JSON
+    def slurp(self, json):
+        if json is None: return
+        for key in json.keys():
+            setattr(self, key, json[key])
 
-class IJob(Interface):
-    def start(self):
-        """Start"""
-    
-    def pause(self):
-        """Pause"""
-    
-    def resume(self):
-        """Resume"""
-    
-    def stop(self):
-        """Stop"""
-    
-    def state(self):
-        """Get job state"""
-    
-    def results(self):
-        """Get job results"""
+sqlite3.register_converter("jobResults", JobResults.__init__)

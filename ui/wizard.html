@@ -13,6 +13,7 @@
         </script>
         <script type="text/javascript" src="js/jquery/jquery.flot.pack.js">
         </script>
+        <!--[if IE]><script language="javascript" type="text/javascript" src="js/jquery/excanvas.pack.js"></script><![endif]-->
         <script type="text/javascript" src="js/json/json_sans_eval.pack.js">
         </script>
         <script type="text/javascript" src="js/thundercloud/wizard.js">
@@ -56,7 +57,7 @@
                                 <a href="#wizard-parameters">Step 2: Parameters</a>
                             </li>
                             <li>
-                                <a href="#wizard-url">Step 3: Add URLs</a>
+                                <a href="#wizard-url">Step 3: URLs</a>
                             </li>
                             <li>
                                 <a href="#wizard-confirm">Step 4: Review &amp; Confirm</a>
@@ -318,6 +319,12 @@
                             </div>
                             <div id="dashboard-buttons">
                                 <input type="button" id="dashboard-button-start" value="Start"><input type="button" id="dashboard-button-pause" value="Pause"><input type="button" id="dashboard-button-stop" value="Stop">
+                            </div>
+                            <div id="dashboard-graphs">
+                                <div id="dashboard-graphs-requestsPerSecond" style="width: 650px; height: 300px;">
+                                </div>
+                                <div id="dashboard-graphs-responseTime" style="width: 650px; height: 300px;">
+                                </div>
                             </div>
                         </div>
                         <div id="main-tabs-account">

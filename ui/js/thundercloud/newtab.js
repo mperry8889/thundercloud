@@ -81,6 +81,9 @@ tc.ui.newtab.reset = function() {
  		},
  	});
  	wizard_tabs.tabs("select", 0);
+	wizard_tabs.tabs("disable", 1);
+	wizard_tabs.tabs("disable", 2);
+	wizard_tabs.tabs("disable", 3);
  	
 	$(":input[name='jobspec-profile-input']").click(function() {
 		switch ($(":input[@name='jobspec-profile-input']:checked").val()) {
@@ -111,7 +114,6 @@ tc.ui.newtab.reset = function() {
 	tc.ui.newtab.resetClientFunction();
 	
 	
-	/* JOB CREATION */
 	$("#wizard-create-job-link").click(function() {
 		var jobSpec = tc.ui.newtab.createJobSpec();
 		if (tc.ui.newtab.validate(jobSpec)) {

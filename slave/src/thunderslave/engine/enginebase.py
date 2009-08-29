@@ -3,14 +3,17 @@ from zope.interface import Interface, Attribute, implements
 import time
 import math
 import logging
+import datetime
 
 from twisted.web.client import HTTPClientFactory, _parse
 from twisted.internet import reactor
 
 from thundercloud import constants
-from thundercloud.job import IJob, JobSpec, JobState, JobResults
+from thundercloud.job import IJob, JobState, JobResults
 
-log = logging.getLogger("engineBase")
+from ..db import dbConnection as db
+
+log = logging.getLogger("engine")
 
 class IEngine(Interface):
     clients = Attribute("""foo""")
@@ -85,6 +88,9 @@ class EngineBase(object):
                                              url, 
                                              self.requests[url]["postdata"],
                                              self.requests[url]["cookies"]])
+        
+        db.execute("INSERT INTO jobs (id, startTime, spec) VALUES (?, ?, ?)", 
+                    (self.jobId, datetime.datetime.now(), self.jobSpec))
 
   
     # start the engine.  set the current time and set the job state as running,
@@ -117,7 +123,7 @@ class EngineBase(object):
             self.bytesTransferred = self.bytesTransferred + len(cookies)
             self.bytesTransferred = self.bytesTransferred + len(postdata)
         except TypeError:
-                pass
+            pass
         
 
     # mark a job as paused.  derived class' iteration loops should be
@@ -155,6 +161,7 @@ class EngineBase(object):
         self.endTime = time.time()
         self._generateStats(force=True)
         
+        db.execute("UPDATE jobs SET endTime = ? WHERE id = ?", (datetime.datetime.now(), self.jobId))      
         log.debug("Job %d complete" % self.jobId)
     
     
@@ -196,11 +203,19 @@ class EngineBase(object):
                 # from time t, i guess
                 if self.elapsedTime - self._statsBookmark < 1.0:
                     self.statisticsByTime[self.elapsedTime]["requestsPerSec"] = self.statisticsByTime[self._statsBookmark]["requestsPerSec"]
+               
                 
+                db.execute("UPDATE accounting SET elapsedTime = ?, bytesTransferred = ? WHERE id = ?", 
+                              (self.elapsedTime, self.bytesTransferred, self.jobId))
                 
                 self._statsBookmark = self.elapsedTime
             except ZeroDivisionError:
                 pass
+
+   # _c.execute("""CREATE TABLE jobResults (id INTEGER NOT NULL PRIMARY KEY,
+   #                                        timestamp TIMESTAMP,
+   #                                        bytesTransferred INTEGER,
+   #                                        elapsedTime REAL)""")
     
     
     # default callback which handles bookkeeping.  derived classes
@@ -245,22 +260,7 @@ class EngineBase(object):
                 pass
         else:
             jobResults.statisticsByTime = self.statisticsByTime
+            db.execute("UPDATE jobs SET results = ? WHERE id = ?", (jobResults, self.jobId))
         
         return jobResults
-
-
-    # dump job information to the console.  useful for debugging.
-    def dump(self):
-        print "state: %s" % self.state
-        print "start time: %s, end time: %s, elapsed time: %s" % (self.startTime, self.endTime, self.elapsedTime)
-        print "bytes transferred: %s" % self.bytesTransferred
-        print "iterations: %s" % self.iterations
-        print "elapsed time: %s" % self.elapsedTime
-        print "paused time: %s" % self.pausedTime
-        print "stats last: %s" % self.statisticsByTime[sorted(self.statisticsByTime.keys())[-1]]
-        print "stats total:"
-        for key in sorted(self.statisticsByTime.keys()):
-            print "t=%s" % key
-            print self.statisticsByTime[key]
-        print "errors:"
-        print self.errors
+    

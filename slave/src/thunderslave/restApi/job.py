@@ -1,6 +1,6 @@
 from zope.interface import Interface, implements
 import jsonpickle
-import simplejson
+import simplejson as json
 import logging
 
 from nodes import RootNode
@@ -36,7 +36,7 @@ class Job(RootNode):
     # create a new job based on the given JSON job spec
     def POST(self, request):
         request.content.seek(0, 0)
-        jobSpecObj = JobSpec(simplejson.loads(request.content.read()))
+        jobSpecObj = JobSpec(json.loads(request.content.read()))
         if not jobSpecObj.validate():
             raise Http400, "Invalid request"
         
@@ -125,12 +125,12 @@ class JobNode(LeafNode):
         short = None
         try:
             if args.has_key("short"):
-                short = simplejson.loads(args["short"][0])
+                short = json.loads(args["short"][0])
         except AttributeError:
             pass            
             
         try:
-            return jsonpickle.Pickler(unpicklable=True).flatten(Orchestrator.jobResults(jobId, short))
+            return Orchestrator.jobResults(jobId, short).toJson()
         except:
             raise Http400
 

@@ -1,5 +1,7 @@
 from thundercloud.job import JobSpec, JobState
 from ..engine import EngineFactory
+from ..db import dbConnection as db
+
 import logging
 
 log = logging.getLogger("orchestrator")
@@ -10,7 +12,11 @@ class _Orchestrator(object):
     
     def __init__(self):
         self.jobs = {}
-        self._jobSeqNo = 0
+    
+    def _getAndUpdateJobSeqNo(self):
+        jobNo = db.execute("SELECT jobNo FROM jobSeqNo").fetchone()["jobNo"]
+        db.execute("UPDATE jobSeqNo SET jobNo = ?", (jobNo + 1,))
+        return jobNo
     
     def listJobs(self):
         return self.jobs.keys()
@@ -30,32 +36,30 @@ class _Orchestrator(object):
         return self.listJobsByState(JobState.COMPLETE)        
     
     def createJob(self, jobSpec):
-        self._jobSeqNo = self._jobSeqNo + 1
-        # this makes things slow.
-        #while self.jobs.has_key(self._jobSeqNo):
-        #    self._jobSeqNo = self._jobSeqNo + 1
-        
-        log.debug("Creating job %s; jobspec: %s" % (self._jobSeqNo, str(jobSpec)))
-        self.jobs[self._jobSeqNo] = EngineFactory.createFactory(self._jobSeqNo, jobSpec)
-        return self._jobSeqNo       
+        jobNo = self._getAndUpdateJobSeqNo()
+
+        log.info("Creating job %s; jobspec: %s" % (jobNo, str(jobSpec)))
+        self.jobs[jobNo] = EngineFactory.createFactory(jobNo, jobSpec)
+        return jobNo
 
     def startJob(self, jobId):
-        log.debug("Starting job %d" % jobId)
+        log.info("Starting job %d" % jobId)
         self.jobs[jobId].start()
 
     def pauseJob(self, jobId):
-        log.debug("Pausing job %d" % jobId)
+        log.info("Pausing job %d" % jobId)
         self.jobs[jobId].pause()
     
     def resumeJob(self, jobId):
-        log.debug("Resuming job %d" % jobId)
+        log.info("Resuming job %d" % jobId)
         self.jobs[jobId].resume()
     
     def stopJob(self, jobId):
-        log.debug("Stopping job %d" % jobId)
+        log.info("Stopping job %d" % jobId)
         self.jobs[jobId].stop()
 
     def removeJob(self, jobId):
+        log.info("Removing job %s" % jobId)
         try:
             self.jobs[jobId].stop()
         except:
@@ -69,6 +73,14 @@ class _Orchestrator(object):
         return self.jobs[jobId].state
     
     def jobResults(self, jobId, args):
-        return self.jobs[jobId].results(args)
+        try:
+            return self.jobs[jobId].results(args)
+        except KeyError:
+            try:
+                dummy = EngineFactory.createFactory(jobId, { "profile": JobSpec.JobProfile._DUMMY })
+                return dummy.results(args)
+            except:
+                return None
+            
     
 Orchestrator = _Orchestrator()
