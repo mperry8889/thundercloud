@@ -18,7 +18,7 @@ def dbInit():
     # much bandwidth.  this should be separate from the main job tracking table since
     # this data may get updated at a different frequency than jobs.jobResults
     _c.execute("""CREATE TABLE accounting (id INTEGER NOT NULL,
-                                           elapsedTime DATE NOT NULL,
+                                           elapsedTime INTEGER NOT NULL,
                                            bytesTransferred INTEGER NOT NULL,
                                            FOREIGN KEY (id) REFERENCES jobs(id))""")
     

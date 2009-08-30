@@ -193,6 +193,7 @@ tc.ui.newtab.createJobSpec = function() {
 	jobSpec.transferLimit = parseInt($("#jobspec-transferLimit-input").val() * $("#jobspec-transferLimit-multiplier").val());
 	jobSpec.clientFunction = $(":input[name='jobspec-clientFunction-input']:checked").val() + " + " + parseInt($("#jobspec-clients-input").val()).toString();
 	jobSpec.statsInterval = parseInt(tc.ui.newtab.statsSlider.slider("value"));
+	jobSpec.timeout = parseInt($("#jobspec-timeout-input").val());
 	jobSpec.requests = {};
 	for (var i in tc.ui.newtab.urls) {
 		jobSpec.requests[tc.ui.newtab.urls[i]] = { method: "GET", postdata: null, cookies: [] };
@@ -231,8 +232,9 @@ tc.ui.newtab.reviewParameters = function() {
 		["Test Type", testType],
 		["Duration", $("#jobspec-duration-input").val() + " " + $("#jobspec-duration-multiplier :selected").html()],
 		["Max Transfer", $("#jobspec-transferLimit-input").val() + " " + $("#jobspec-transferLimit-multiplier :selected").html()],
-		["Statistics Interval", jobSpec.statsInterval + " seconds"],	
 		[clientStr, clientVal],
+		["Client Timeout", jobSpec.timeout + " seconds"],
+		["Statistics Interval", jobSpec.statsInterval + " seconds"],	
 		["URLs", urls],				
 	]);
 	
@@ -260,7 +262,10 @@ tc.ui.newtab.validate = function(jobSpec) {
 	if (jobSpec.clientFunction == "0 + NaN" || typeof jobSpec.clientFunction != "string") {
 		throw "Invalid concurrent client settings";
 	}
-
+	if (jobSpec.timeout <= 0 || isNaN(jobSpec.timeout) || typeof jobSpec.timeout != "number") {
+		throw "Invalid timeout";
+	}
+	
 	// no good way to get the listing of keys in a request object
 	var jsKeys = 0;
 	for (var i in jobSpec.requests) {

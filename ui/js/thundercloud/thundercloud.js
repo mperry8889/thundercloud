@@ -22,6 +22,7 @@ tc.api.JobSpec = function() {
 	this.statsInterval = null;
 	this.transferLimit = null;
 	this.profile = null;
+	this.timeout = null;
 }
 
 

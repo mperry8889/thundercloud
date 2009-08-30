@@ -16,7 +16,7 @@ from ..db import dbConnection as db
 log = logging.getLogger("engine")
 
 class IEngine(Interface):
-    clients = Attribute("""foo""")
+    clients = Attribute("""(Theoretical) clients in the system""")
     
     def results(self):
         """Generate a JobResult object"""
@@ -39,6 +39,7 @@ class EngineBase(object):
         self.iterator = lambda: True
         self.httpClientRequestQueue = Queue()
         self.state = JobState.NEW
+        self.timeout = 10
     
         # attributes for time management
         self.duration = float("inf") #60
@@ -54,10 +55,13 @@ class EngineBase(object):
         
         # attributes for statistics generation    
         self.iterations = 0
+        self.requestsCompleted = 0
+        self.requestsFailed = 0
         self.errors = {
             "connectionLost": 0,
             "serviceNotAvailable": 0,
-            "unknown": 0,      
+            "unknown": 0,
+            "timeout": 0,     
         }
         self._averageResponseTime = 0
         self.statisticsByTime = {
@@ -78,6 +82,7 @@ class EngineBase(object):
         self.duration = jobSpec.duration
         self.userAgent = jobSpec.userAgent
         self.statsInterval = jobSpec.statsInterval
+        self.timeout = jobSpec.timeout
         self.clientFunction = lambda t: eval(jobSpec.clientFunction)
         
         # dump the host/port/URLs to be fetched into a queue
@@ -91,6 +96,8 @@ class EngineBase(object):
         
         db.execute("INSERT INTO jobs (id, startTime, spec) VALUES (?, ?, ?)", 
                     (self.jobId, datetime.datetime.now(), self.jobSpec))
+        db.execute("INSERT INTO accounting (id, elapsedTime, bytesTransferred) VALUES (?, ?, ?)", 
+                    (self.jobId, 0, 0))
 
   
     # start the engine.  set the current time and set the job state as running,
@@ -115,7 +122,8 @@ class EngineBase(object):
                                     method=method,
                                     postdata=postdata,
                                     cookies=cookies, 
-                                    agent=self.userAgent)
+                                    agent=self.userAgent,
+                                    timeout=self.timeout)
         reactor.connectTCP(host, port, factory)
         factory.deferred.addCallback(self.callback, requestTime)
         factory.deferred.addErrback(self.errback, requestTime)
@@ -188,6 +196,8 @@ class EngineBase(object):
             try:
                 self.statisticsByTime[self.elapsedTime] = {
                     "iterations": self.iterations,
+                    "requestsCompleted": self.requestsCompleted,
+                    "requestsFailed": self.requestsFailed,
                     "requestsPerSec": float(self.iterations - self.statisticsByTime[self._statsBookmark]["iterations"])/float(self.elapsedTime - self._statsBookmark),
                     # XXX: this isn't entirely accurate. this gives f(t) but isn't the
                     # actual number of clients in the system
@@ -225,20 +235,24 @@ class EngineBase(object):
     def callback(self, value, requestTime):
         self._bookkeep(value, requestTime)
         self._generateStats()
+        self.requestsCompleted = self.requestsCompleted + 1
 
     
     # default errback -- see comments for callback()
     def errback(self, value, requestTime):
         self._bookkeep("", requestTime)
-        self.iterations = self.iterations - 1  # take away the iteration
-        self.errors["unknown"] = self.errors["unknown"] + 1
         self._generateStats()
+        self.requestsFailed = self.requestsFailed + 1
         
         # this is probably going to slow things down in a super high traffic environment
         # due to string searches, but there doesn't seem to be a better way.  errback 
         # handling is not very awesome, especially in terms of propagating exceptions
         if "Connection lost" in value.getErrorMessage():
             self.errors["connectionLost"] = self.errors["connectionLost"] + 1
+        elif "TimeoutError" in value.getErrorMessage():
+            self.errors["timeout"] = self.errors["timeout"] + 1
+        else:
+            self.errors["unknown"] = self.errors["unknown"] + 1
 
 
     # generate and fill in a JobResults object
@@ -252,6 +266,8 @@ class EngineBase(object):
         jobResults.duration = self.duration
         jobResults.elapsedTime = self.elapsedTime
         jobResults.errors = self.errors
+        jobResults.requestsCompleted = self.requestsCompleted
+        jobResults.requestsFailed = self.requestsFailed
         
         # don't attach statistics if the caller is looking for short results
         if short == True:

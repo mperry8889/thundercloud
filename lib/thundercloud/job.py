@@ -49,6 +49,7 @@ class JobSpec(object):
                     "userAgent": "thundercloud client/%s" % constants.VERSION,
                     "profile": JobProfile.HAMMER,
                     "state": JobState.NEW,
+                    "timeout": float("inf"),
     }                
 
     def __init__(self, json=None):
@@ -136,6 +137,8 @@ class JobResults(object):
         "elapsedTime": 0,
         "statisticsByTime": {},
         "errors": {},
+        "requestsCompleted": 0,
+        "requestsFailed": 0,
     }
 
     def __init__(self, json=None):
