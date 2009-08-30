@@ -6,7 +6,7 @@ import math
 from twisted.web.client import HTTPClientFactory
 from twisted.web.client import _parse
 
-from enginebase import EngineBase
+from base import EngineBase
 from thundercloud.job import JobState
 from thundercloud import constants
 

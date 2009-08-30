@@ -5,7 +5,7 @@ import random
 
 from twisted.internet import reactor
 
-from enginebase import EngineBase
+from base import EngineBase
 from thundercloud.job import JobState
 from thundercloud import constants
 

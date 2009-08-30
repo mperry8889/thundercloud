@@ -3,7 +3,7 @@ from zope.interface import Interface, Attribute, implements
 from thundercloud import constants
 from thundercloud.job import IJob, JobSpec, JobState, JobResults
 
-from enginebase import IEngine
+from base import IEngine
 from ..db import dbConnection as db
 
 class JobNotFound(Exception):
