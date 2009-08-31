@@ -5,9 +5,9 @@ def dbInit():
     
     # main job tracking table
     _c.execute("""CREATE TABLE jobs (id INTEGER UNIQUE NOT NULL PRIMARY KEY,
-                                     startTime date,
+                                     startTime date NOT NULL,
                                      endTime date,
-                                     spec jobSpec,
+                                     spec jobSpec NOT NULL,
                                      results jobResults)""")
     
     # job sequence number, for unique job IDs
@@ -17,12 +17,12 @@ def dbInit():
     # accounting table, to track which jobs have run for what amount of time and used how
     # much bandwidth.  this should be separate from the main job tracking table since
     # this data may get updated at a different frequency than jobs.jobResults
-    _c.execute("""CREATE TABLE accounting (id INTEGER NOT NULL,
+    _c.execute("""CREATE TABLE accounting (job INTEGER NOT NULL,
                                            elapsedTime INTEGER NOT NULL,
                                            bytesTransferred INTEGER NOT NULL,
-                                           FOREIGN KEY (id) REFERENCES jobs(id))""")
+                                           FOREIGN KEY (job) REFERENCES jobs(id))""")
     
 
-dbConnection = sqlite3.connect("database", detect_types=sqlite3.PARSE_DECLTYPES, isolation_level=None)
+dbConnection = sqlite3.connect(":memory:", detect_types=sqlite3.PARSE_DECLTYPES)
 dbConnection.row_factory = sqlite3.Row
-#dbInit()
+dbInit()

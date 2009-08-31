@@ -1,13 +1,14 @@
 from twisted.internet import reactor
 from thunderserver.restApi import createRestApi
+from thundercloud import constants
 import logging as log
 #import psyco
 #psyco.full()
 
-log.basicConfig(level=log.DEBUG)
+logging.basicConfig(level=logging.DEBUG)
+log = logging.getLogger("main")
 
-port = 7000
-log.debug("Listening on port %s, starting reactor" % port)
-reactor.listenTCP(port, createRestApi())
+log.debug("Listening on port %s, starting reactor" % constants.MASTER_PORT)
+reactor.listenTCP(constants.MASTER_PORT, createRestApi())
 
 reactor.run()

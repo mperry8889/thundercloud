@@ -96,7 +96,7 @@ class EngineBase(object):
         
         db.execute("INSERT INTO jobs (id, startTime, spec) VALUES (?, ?, ?)", 
                     (self.jobId, datetime.datetime.now(), self.jobSpec))
-        db.execute("INSERT INTO accounting (id, elapsedTime, bytesTransferred) VALUES (?, ?, ?)", 
+        db.execute("INSERT INTO accounting (job, elapsedTime, bytesTransferred) VALUES (?, ?, ?)", 
                     (self.jobId, 0, 0))
 
   
@@ -216,17 +216,12 @@ class EngineBase(object):
                     self.statisticsByTime[self.elapsedTime]["requestsPerSec"] = self.statisticsByTime[self._statsBookmark]["requestsPerSec"]
                
                 
-                db.execute("UPDATE accounting SET elapsedTime = ?, bytesTransferred = ? WHERE id = ?", 
+                db.execute("UPDATE accounting SET elapsedTime = ?, bytesTransferred = ? WHERE job = ?", 
                               (self.elapsedTime, self.bytesTransferred, self.jobId))
                 
                 self._statsBookmark = self.elapsedTime
             except ZeroDivisionError:
                 pass
-
-   # _c.execute("""CREATE TABLE jobResults (id INTEGER NOT NULL PRIMARY KEY,
-   #                                        timestamp TIMESTAMP,
-   #                                        bytesTransferred INTEGER,
-   #                                        elapsedTime REAL)""")
     
     
     # default callback which handles bookkeeping.  derived classes

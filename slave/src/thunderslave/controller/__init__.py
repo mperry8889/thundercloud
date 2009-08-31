@@ -31,11 +31,15 @@ class _Controller(object):
         # if job is in memory
         try:
             return self.jobs[jobId]
+        # otherwise check if it's in the DB
         except KeyError:
             anonObj = type("", (), {})
             anonObj.profile = JobSpec.JobProfile.DUMMY
             dummy = EngineFactory.createFactory(jobId, anonObj)
             return dummy
+        # if it's not in either then it doesn't exist
+        else:
+            raise InvalidJob
             
             
     def createJob(self, jobSpec):

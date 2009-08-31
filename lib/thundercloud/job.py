@@ -4,6 +4,7 @@ import jsonpickle
 import sqlite3
 
 from thundercloud import constants
+from thundercloud.util import DataObject
 
 class JobState(object):
     NEW = 0
@@ -35,57 +36,23 @@ class InvalidJobSpec(Exception):
     def __init__(self, msg):
         self.msg = msg
 
-class JobSpec(object):
+class JobSpec(DataObject):
     class JobProfile:
         HAMMER = 0
         BENCHMARK = 1
         DUMMY = 9999
     
-    __attributes = {"requests": {"":{}},
-                    "duration": float("inf"),
-                    "transferLimit": float("inf"),
-                    "clientFunction": "1",
-                    "statsInterval": float("inf"),
-                    "userAgent": "thundercloud client/%s" % constants.VERSION,
-                    "profile": JobProfile.HAMMER,
-                    "state": JobState.NEW,
-                    "timeout": float("inf"),
+    _attributes = {
+        "requests": {"":{}},
+        "duration": float("inf"),
+        "transferLimit": float("inf"),
+        "clientFunction": "1",
+        "statsInterval": float("inf"),
+        "userAgent": "thundercloud client/%s" % constants.VERSION,
+        "profile": JobProfile.HAMMER,
+        "state": JobState.NEW,
+        "timeout": float("inf"),
     }                
-
-    def __init__(self, json=None):
-        for key in self.__attributes.keys():
-            setattr(self, key, self.__attributes[key])
-        if json is not None: self.slurp(json)
-
-    # representation: dictionary object
-    def __repr__(self):
-        obj = {}
-        for key in self.__attributes.keys():
-            try:
-                obj.update({ key: getattr(self, key) })
-            except AttributeError:
-                pass
-        return obj
-    
-    # string representation: stringified JSON
-    def __str__(self):
-        return json.dumps(self.toJson())
-    
-    # used for SQLite adaptation
-    def __conform__(self, protocol):
-        if protocol == sqlite3.PrepareProtocol:
-            return self.__str__()
-
-    # json representation
-    def toJson(self):
-        return jsonpickle.Pickler(unpicklable=True).flatten(self.__repr__())    
-    
-    # conveniently import JSON
-    def slurp(self, json):
-        if json is None: return
-        for key in json.keys():
-            setattr(self, key, json[key])
-
 
     # verify rules for job specs are adhered to
     def validate(self):
@@ -126,8 +93,8 @@ sqlite3.register_converter("jobSpec", lambda s: JobSpec(json.loads(s)))
 
 
 
-class JobResults(object):
-    __attributes = {     
+class JobResults(DataObject):
+    _attributes = {     
         "jobId": 0,
         "state": None,
         "iterations": 0,
@@ -140,39 +107,5 @@ class JobResults(object):
         "requestsCompleted": 0,
         "requestsFailed": 0,
     }
-
-    def __init__(self, json=None):
-        for key in self.__attributes.keys():
-            setattr(self, key, self.__attributes[key])
-        if json is not None: self.slurp(json)
-
-    # representation: dictionary object
-    def __repr__(self):
-        obj = {}
-        for key in self.__attributes.keys():
-            try:
-                obj.update({ key: getattr(self, key) })
-            except AttributeError:
-                pass
-        return obj
-    
-    # string representation: stringified JSON
-    def __str__(self):
-        return json.dumps(self.toJson())
-    
-    # used for SQLite adaptation
-    def __conform__(self, protocol):
-        if protocol == sqlite3.PrepareProtocol:
-            return self.__str__()
-
-    # json representation
-    def toJson(self):
-        return jsonpickle.Pickler(unpicklable=True).flatten(self.__repr__())    
-    
-    # conveniently import JSON
-    def slurp(self, json):
-        if json is None: return
-        for key in json.keys():
-            setattr(self, key, json[key])
 
 sqlite3.register_converter("jobResults", lambda s: JobResults(json.loads(s)))
