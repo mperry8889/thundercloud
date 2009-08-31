@@ -3,16 +3,16 @@ import sqlite3
 def dbInit():
     _c = dbConnection.cursor()
     
-    _c.execute(""""CREATE TABLE users (id INTEGER PRIMARY KEY NOT NULL,
+    _c.execute(""""CREATE TABLE users (id INTEGER PRIMARY KEY,
                                        username TEXT NOT NULL,
                                        password TEXT NOT NULL)""")
     
-    _c.execute("""CREATE TABLE jobs (id INTEGER PRIMARY KEY NOT NULL,
+    _c.execute("""CREATE TABLE jobs (id INTEGER PRIMARY KEY,
                                      startTime date NOT NULL,
                                      endTime date,
                                      spec jobSpec NOT NULL)""")
     
-    _c.execute("""CREATE TABLE slaves (id INTEGER PRIMARY KEY NOT NULL,
+    _c.execute("""CREATE TABLE slaves (id INTEGER PRIMARY KEY,
                                        host TEXT,
                                        port INTEGER NOT NULL,
                                        path TEXT)""")   

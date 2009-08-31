@@ -14,12 +14,7 @@ log = logging.getLogger("restApi.job")
 
 # Handle requests sent to /job
 class Job(RootNode):    
-    # return some summary information about the list of
-    # jobs in the system
-    def GET(self, request):
-        jobs = Controller.listJobs()
-        return [{id: "/job/%s" % id} for id in jobs]
-    
+
     # create a new job based on the given JSON job spec
     def POST(self, request):
         request.content.seek(0, 0)
