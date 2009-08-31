@@ -4,14 +4,14 @@ from ..db import dbConnection as db
 
 import logging
 
-log = logging.getLogger("orchestrator")
+log = logging.getLogger("controller")
 
 class InvalidJob(Exception):
     pass
 
 # Tracks and operates on jobs in the system, maintaining an instance
 # of Engine for each job
-class _Orchestrator(object):
+class _Controller(object):
     
     def __init__(self):
         self.jobs = {}
@@ -87,4 +87,4 @@ class _Orchestrator(object):
         return results
             
     
-Orchestrator = _Orchestrator()
+Controller = _Controller()

@@ -1,8 +1,6 @@
 from nodes import RootNode
 from nodes import LeafNode
 
-from ..orchestrator import Orchestrator
-
 class HeartBeat(LeafNode):
     def GET(self, request):
         return True

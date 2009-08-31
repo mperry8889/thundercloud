@@ -7,30 +7,17 @@ from nodes import RootNode
 from nodes import LeafNode
 from nodes import Http400, Http404
 
-from ..orchestrator import Orchestrator
+from ..controller import Controller
 from thundercloud.job import IJob, JobSpec, JobResults
 
 log = logging.getLogger("restApi.job")
-
-# List only active jobs, /job/active
-class ActiveJobs(RootNode):
-    def GET(self, request):
-        jobs = Orchestrator.listActiveJobs()
-        return [{id: "/job/%s" % id} for id in jobs]
-
-# List only inactive jobs, /job/inactive
-class CompleteJobs(RootNode):
-    def GET(self, request):
-        jobs = Orchestrator.listCompleteJobs()
-        return [{id: "/job/%s" % id} for id in jobs]
-
 
 # Handle requests sent to /job
 class Job(RootNode):    
     # return some summary information about the list of
     # jobs in the system
     def GET(self, request):
-        jobs = Orchestrator.listJobs()
+        jobs = Controller.listJobs()
         return [{id: "/job/%s" % id} for id in jobs]
     
     # create a new job based on the given JSON job spec
@@ -40,7 +27,7 @@ class Job(RootNode):
         if not jobSpecObj.validate():
             raise Http400, "Invalid request"
         
-        jobId = Orchestrator.createJob(jobSpecObj)
+        jobId = Controller.createJob(jobSpecObj)
         self.putChild("%d" % jobId, JobNode())
         return jobId
 
@@ -70,36 +57,23 @@ class JobNode(LeafNode):
     
     # start a new job
     def start(self, jobId, args):
-        try:
-            Orchestrator.startJob(jobId)
-            return True
-        except Exception, e:
-            print e
-            raise Http400
+        Controller.startJob(jobId)
+        return True
     
-    # pause an existing jo
+    # pause an existing job
     def pause(self, jobId, args):
-        try:
-            Orchestrator.pauseJob(jobId)
-            return True
-        except:
-            raise Http400
+        Controller.pauseJob(jobId)
+        return True
     
     # resume an existing job
     def resume(self, jobId, args):
-        try:
-            Orchestrator.resumeJob(jobId)
-            return True
-        except:
-            raise Http400
+        Controller.resumeJob(jobId)
+        return True
             
     # stop a running job
     def stop(self, jobId, args):
-        try:
-            Orchestrator.stopJob(jobId)
-            return True
-        except:
-            raise Http400
+        Controller.stopJob(jobId)
+        return True
     
     # modify some properties of a running job
     def modify(self, jobId, args):
@@ -107,18 +81,12 @@ class JobNode(LeafNode):
     
     # status of a job in the system
     def state(self, jobId, args):
-        try:
-            return Orchestrator.jobState(jobId)
-        except:
-            raise Http400
+        return Controller.jobState(jobId)
 
     # remove job from the system
     def remove(self, jobId, args):
-        try:
-            Orchestrator.removeJob(jobId)
-            return True
-        except:
-            raise Http400
+        Controller.removeJob(jobId)
+        return True
     
     # get a job's statistics
     def results(self, jobId, args):
@@ -129,12 +97,9 @@ class JobNode(LeafNode):
         except AttributeError:
             pass            
             
-        try:
-            return Orchestrator.jobResults(jobId, short).toJson()
-        except:
-            raise Http400
+        return Controller.jobResults(jobId, short).toJson()
 
+
+# Build the API URL hierarchy
 JobApiTree = Job()
 JobApiTree.putChild("", Job())
-JobApiTree.putChild("active", ActiveJobs())
-JobApiTree.putChild("complete", CompleteJobs())

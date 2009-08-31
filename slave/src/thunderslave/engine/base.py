@@ -105,7 +105,7 @@ class EngineBase(object):
     def start(self):
         # only start once
         if self.state != JobState.NEW:
-            raise Exception, "Job not new"
+            return
         
         log.debug("Starting job %d" % self.jobId)
         
