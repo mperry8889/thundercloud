@@ -1,9 +1,13 @@
 from thundercloud.slave import SlaveSpec
 from thundercloud.job import JobSpec, JobState
 
+from twisted.internet.defer import Deferred, DeferredList
+
 from ..db import dbConnection as db
 from perspectives import JobPerspective, SlavePerspective
 from restApiClient import RestApiClient
+
+import simplejson as json
 
 import logging
 
@@ -33,13 +37,26 @@ class _Orchestrator(object):
     def unregisterSlave(self, slaveId):
         pass
     
-    def _createJobCallback(self, remoteJobId, localJobId, slave):
-        print "calling back, jobid = %s/%s slave = %s" % (remoteJobId, localJobId, slave)
-        self.jobs[localJobId].addSlave(slave, int(remoteJobId))
+
+    
+    # create a job perspective object locally, and create a job on
+    # all remote servers.
+    
+    def createJobSlaveCallback(self, result, slave):
+        return result, slave
+    
+    def createJobCallback(self, results, jobId, deferred):
+        for (success, (remoteJobId, slave)) in results:
+            remoteJobId = int(json.loads(remoteJobId))
+            self.jobs[jobId].addSlave(slave, remoteJobId)
+            
+        deferred.callback(jobId)
     
     def createJob(self, jobSpec):
         jobNo = self._getJobNo()
         job = JobPerspective(jobNo)
+        self.jobs[jobNo] = job
+        deferred = Deferred()
         
         # allocate a bunch of slaves here. for now we'll just use the set of
         # all slaves
@@ -50,12 +67,19 @@ class _Orchestrator(object):
         modifiedJobSpec = JobSpec(jobSpec.toJson())
         modifiedJobSpec.clientFunction = clientFunctionPerSlave
         
+        slaveRequests = []
         for slave in slaves:
-            deferred = slave.createJob(modifiedJobSpec)
-            deferred.addCallback(self._createJobCallback, jobNo, slave)
-
-        self.jobs[jobNo] = job        
-        return jobNo
+            request = slave.createJob(modifiedJobSpec)
+            request.addCallback(self.createJobSlaveCallback, slave)
+            slaveRequests.append(request)
+        
+        deferredList = DeferredList(slaveRequests)
+        deferredList.addCallback(self.createJobCallback, jobNo, deferred)
+        
+        return deferred
+    
+    
+    
     
     def startJob(self, jobId):
         self.jobs[jobId].start()

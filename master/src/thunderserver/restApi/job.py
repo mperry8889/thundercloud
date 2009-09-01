@@ -1,4 +1,5 @@
 from zope.interface import Interface, implements
+from twisted.web.server import NOT_DONE_YET
 import jsonpickle
 import simplejson as json
 import logging
@@ -13,7 +14,11 @@ from thundercloud.job import IJob, JobSpec, JobResults
 log = logging.getLogger("restApi.job")
 
 # Handle requests sent to /job
-class Job(RootNode):    
+class Job(RootNode):
+
+    def postCallback(self, jobId, request):
+        self.putChild("%d" % jobId, JobNode())
+        self.writeJson(request, jobId)
 
     # create a new job based on the given JSON job spec
     def POST(self, request):
@@ -22,9 +27,9 @@ class Job(RootNode):
         if not jobSpecObj.validate():
             raise Http400, "Invalid request"
         
-        jobId = Orchestrator.createJob(jobSpecObj)
-        self.putChild("%d" % jobId, JobNode())
-        return jobId
+        deferred = Orchestrator.createJob(jobSpecObj)
+        deferred.addCallback(self.postCallback, request)
+        return NOT_DONE_YET
 
 
 # Handle requests for /job/n[/operation] URLs
