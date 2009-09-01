@@ -2,7 +2,7 @@ if (tc == null) {
 	var tc = new Object();
 }
 tc.api = new Object();
-tc.api.backend = "/api"
+tc.api.backend = "/master"
 tc.api.JobState = {
 	"NEW": 0,
     "RUNNING": 1,

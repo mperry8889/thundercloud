@@ -5,10 +5,9 @@ import logging
 
 from nodes import RootNode
 from nodes import LeafNode
-from nodes import Http400
+from nodes import Http400, Http404
 
 from ..orchestrator import Orchestrator
-
 from thundercloud.job import IJob, JobSpec, JobResults
 
 log = logging.getLogger("restApi.job")
@@ -53,19 +52,23 @@ class JobNode(LeafNode):
     
     # start a new job
     def start(self, jobId, args):
-        pass
+        Orchestrator.startJob(jobId)
+        return True
     
     # pause an existing job
     def pause(self, jobId, args):
-        pass
+        Orchestrator.pauseJob(jobId)
+        return True
     
     # resume an existing job
     def resume(self, jobId, args):
-        pass
+        Orchestrator.resumeJob(jobId)
+        return True
             
     # stop a running job
     def stop(self, jobId, args):
-        pass
+        Orchestrator.stopJob(jobId)
+        return True
     
     # modify some properties of a running job
     def modify(self, jobId, args):
@@ -73,15 +76,23 @@ class JobNode(LeafNode):
     
     # status of a job in the system
     def state(self, jobId, args):
-        pass
+        return Orchestrator.jobState(jobId)
 
     # remove job from the system
     def remove(self, jobId, args):
-        pass
+        Orchestrator.removeJob(jobId)
+        return True
     
     # get a job's statistics
     def results(self, jobId, args):
-        pass
+        short = None
+        try:
+            if args.has_key("short"):
+                short = json.loads(args["short"][0])
+        except AttributeError:
+            pass            
+            
+        return Orchestrator.jobResults(jobId, short).toJson()
 
 
 # Build the API URL hierarchy

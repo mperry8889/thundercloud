@@ -1,7 +1,7 @@
 from twisted.internet import reactor
 from thunderserver.restApi import createRestApi
 from thundercloud import constants
-import logging as log
+import logging
 #import psyco
 #psyco.full()
 
