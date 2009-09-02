@@ -79,33 +79,23 @@ class _Orchestrator(object):
         return deferred
     
     
-    
-    
     def startJob(self, jobId):
-        self.jobs[jobId].start()
+        return self.jobs[jobId].start()
     
     def pauseJob(self, jobId):
-        self.jobs[jobId].pause()
+        return self.jobs[jobId].pause()
     
     def resumeJob(self, jobId):
-        self.jobs[jobId].resume()
+        return self.jobs[jobId].resume()
     
     def stopJob(self, jobId):
-        self.jobs[jobId].stop()
+        return self.jobs[jobId].stop()
 
     def jobState(self, jobId):
-        pass
+        return self.jobs[jobId].state()
     
-    def jobResults(self, jobId, args):
-        pass
+    def jobResults(self, jobId, short):
+        return self.jobs[jobId].results(short)
    
-   
-    def pollCallback(self, value, jobId):
-        pass
-    
-    def poll(self, jobId):
-        pass
-    
-    
 
 Orchestrator = _Orchestrator()
