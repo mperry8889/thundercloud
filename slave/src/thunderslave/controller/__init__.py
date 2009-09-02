@@ -93,8 +93,8 @@ class _Controller(object):
             
         return state
     
-    def jobResults(self, jobId, args):
-        results = self._getJob(jobId).results(args)
+    def jobResults(self, jobId, short):
+        results = self._getJob(jobId).results(short)
         
         if results.state == JobState.COMPLETE:
             self._kick(jobId)

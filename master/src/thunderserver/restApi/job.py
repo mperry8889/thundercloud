@@ -57,7 +57,6 @@ class JobNode(LeafNode):
     
     # start a new job
     def startCallback(self, value, request):
-        print value
         self.writeJson(request, True)        
         
     def start(self, jobId, request):
@@ -67,7 +66,6 @@ class JobNode(LeafNode):
     
     # pause an existing job
     def pauseCallback(self, value, request):
-        print value
         self.writeJson(request, True)
         
     def pause(self, jobId, request):
@@ -77,7 +75,6 @@ class JobNode(LeafNode):
     
     # resume an existing job
     def resumeCallback(self, value, request):
-        print value
         self.writeJson(request, True)
         
     def resume(self, jobId, request):
@@ -87,7 +84,6 @@ class JobNode(LeafNode):
             
     # stop an existing job
     def stopCallback(self, value, request):
-        print value
         self.writeJson(request, True)
         
     def stop(self, jobId, request):
@@ -123,7 +119,7 @@ class JobNode(LeafNode):
     
     def resultsCallback(self, value, request):
         print "results final val: %s" % value
-        self.writeJson(request, value)
+        self.writeJson(request, value.toJson())
         
     def results(self, jobId, request):
         short = None

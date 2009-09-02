@@ -6,6 +6,8 @@ from thundercloud.job import IJob, JobSpec, JobState, JobResults
 from base import IEngine
 from ..db import dbConnection as db
 
+import copy
+
 class JobNotFound(Exception):
     pass
 
@@ -54,4 +56,12 @@ class DummyEngine(object):
 
     # generate and fill in a JobResults object
     def results(self, short=False):
+        if short == True:
+            results = copy.copy(self.jobResults)
+            try:
+                del(results.statisticsByTime)
+            except AttributeError:
+                pass
+            return results
+        
         return self.jobResults

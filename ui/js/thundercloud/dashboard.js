@@ -25,7 +25,7 @@ $(document).ready(function() {
 							$("#dashboard-button-pause").attr("disabled", false);
 							$("#dashboard-button-stop").attr("disabled", false);
 							$("#dashboard-button-start").attr("disabled", true);
-							//tc.api.poll(tc.ui.jobId, tc.ui.dashboard.pollInterval, tc.ui.dashboard.update);
+							tc.api.poll(tc.ui.jobId, tc.ui.dashboard.pollInterval, tc.ui.dashboard.update);
 						},
 						tc.ui.dashboard.errback
 		);

@@ -11,6 +11,7 @@ class JobState(object):
     RUNNING = 1
     PAUSED = 2
     COMPLETE = 3
+    UNKNOWN = 9999
 
 class IJob(Interface):
     def start(self):
@@ -102,7 +103,7 @@ class JobResults(DataObject):
         "bytesTransferred": 0,
         "duration": 0,
         "elapsedTime": 0,
-        "statisticsByTime": {},
+        "statisticsByTime": {"":{}},
         "errors": {},
         "requestsCompleted": 0,
         "requestsFailed": 0,

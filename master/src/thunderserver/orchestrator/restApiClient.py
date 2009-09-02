@@ -11,7 +11,7 @@ class RestApiClient(object):
     implements(IJob)
     
     @classmethod
-    def _request(self, url, method, postdata=None, cookies=[], timeout=10):
+    def _request(cls, url, method, postdata=None, cookies=[], timeout=10):
         if postdata is not None:
             postdata = json.dumps(postdata)
 
@@ -26,29 +26,29 @@ class RestApiClient(object):
         return factory
 
     @classmethod    
-    def POST(self, url, postdata=None, cookies=[], timeout=10):
-        request = self._request(url, "POST", postdata, cookies, timeout)
+    def POST(cls, url, postdata=None, cookies=[], timeout=10):
+        request = cls._request(url, "POST", postdata, cookies, timeout)
         return request.deferred
     
     @classmethod    
-    def GET(self, url):
-        request = self._request(url, "GET")
+    def GET(cls, url):
+        request = cls._request(url, "GET")
         return request.deferred
 
     @classmethod    
-    def start(self, jobSpec):
-        deferred = self.POST("", postdata=jobSpec.toJson())
+    def start(cls, jobSpec):
+        deferred = cls.POST("", postdata=jobSpec.toJson())
         deferred.addCallback()
         deferred.addErrback()
     
     @classmethod
-    def pause(self, jobId):
+    def pause(cls, jobId):
         pass
     
     @classmethod    
-    def resume(self, jobId):
+    def resume(cls, jobId):
         pass
 
     @classmethod    
-    def stop(self, jobId):
+    def stop(cls, jobId):
         pass
