@@ -43,9 +43,7 @@ class _Orchestrator(object):
     
     def unregisterSlave(self, slaveId):
         pass
-    
 
-    
     # create a job perspective object locally, and create a job on
     # all remote servers.
     

@@ -2,8 +2,6 @@ from twisted.internet import reactor
 from thunderserver.restApi import createRestApi
 from thundercloud import constants
 import logging
-#import psyco
-#psyco.full()
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger("main")

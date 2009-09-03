@@ -7,71 +7,83 @@ from thundercloud.util import mergeDict
 
 import simplejson as json
 
-class AggregateJobResults(JobResults):
-    
-    @classmethod
-    def _merge(cls, lhs, rhs):
-        if type(lhs) == type(rhs) == dict:
-            if sorted(lhs.keys()) == sorted(rhs.keys()):
-                result = {}
-                for k in result.iterkeys():
-                    result[k] = lhs[k] + rhs[k]
-                return result
-            else:
-                return mergeDict(lhs, rhs)
-        else:
-            return lhs + rhs
-    
-    @classmethod
-    def _aggregateState(cls, states):
-        # just get unique states
-        stateSet = list(set(states))
-        
-        # if all states are the same, return it. this
-        # should be the usual case, since we wait for
-        # all jobs to change state before returning a value
-        if len(stateSet) == 1:
-            return stateSet[0]
-    
-        # if any slave job is unknown, the whole thing is unknown
-        if JobState.UNKNOWN in stateSet:
-            return JobState.UNKNOWN
-        
-        # if any slave job is still running, the entire job is still running
-        if JobState.RUNNING in stateSet:
-            return JobState.RUNNING
-    
 
-    @classmethod
-    def _aggregateStatisticsByTime(cls, statsList, statsInterval):
-        result = {}
-        for stat in statsList:
-            sortedKeys = sorted(stat.keys(), lambda a, b: int(float(a)-float(b)))
-            for i in range(0, int(float(sortedKeys[-1]))+1, statsInterval):
-                try:
-                    result[i]
-                except KeyError:
-                    result[i] = {}
-                        
-                for k in sortedKeys:
-                    if i - statsInterval <= float(k) < i + statsInterval:
-                        distance = (statsInterval - abs(float(k) - i))
-                        weight = distance / statsInterval
-                        for v in ["requestsCompleted", "requestsFailed", "requestsPerSec", "clients", "iterations"]:
-                            try:
-                                result[i][v] += stat[k][v] * weight
-                            except KeyError:
-                                result[i][v] = stat[k][v] * weight
+# Cython compatibility
+def AggregateJobResults_merge(cls, lhs, rhs):
+    if type(lhs) == type(rhs) == dict:
+         if sorted(lhs.keys()) == sorted(rhs.keys()):
+             result = {}
+             for k in result.iterkeys():
+                 result[k] = lhs[k] + rhs[k]
+             return result
+         else:
+             return mergeDict(lhs, rhs)
+    else:
+         return lhs + rhs
 
+ 
+ 
+def AggregateJobResults_aggregateState(cls, states):
+    # just get unique states
+    stateSet = list(set(states))
+    
+    # if all states are the same, return it. this
+    # should be the usual case, since we wait for
+    # all jobs to change state before returning a value
+    if len(stateSet) == 1:
+        return stateSet[0]
+    
+    # if any slave job is unknown, the whole thing is unknown
+    if JobState.UNKNOWN in stateSet:
+        return JobState.UNKNOWN
+    
+    # if any slave job is still running, the entire job is still running
+    if JobState.RUNNING in stateSet:
+        return JobState.RUNNING
+
+ 
+
+def AggregateJobResults_aggregateStatisticsByTimeSort(cls, a, b):
+    return int(float(a)-float(b))
+
+
+def AggregateJobResults_aggregateStatisticsByTime(cls, statsList, statsInterval):
+    result = {}
+    for stat in statsList:
+        sortedKeys = sorted(stat.keys(), AggregateJobResults._aggregateStatisticsByTimeSort)
+        for i in range(0, int(float(sortedKeys[-1]))+1, statsInterval):
+            try:
+                result[i]
+            except KeyError:
+                result[i] = {}
+                    
+            for k in sortedKeys:
+                if i - statsInterval <= float(k) < i + statsInterval:
+                    distance = (statsInterval - abs(float(k) - i))
+                    weight = distance / statsInterval
+                    for v in ["requestsCompleted", "requestsFailed", "requestsPerSec", "clients", "iterations"]:
                         try:
-                            result[i]["averageResponseTime"] += stat[k]["averageResponseTime"]
+                            result[i][v] += stat[k][v] * weight
                         except KeyError:
-                            result[i]["averageResponseTime"] = 0
-    
-        return result
+                            result[i][v] = stat[k][v] * weight
 
+                    try:
+                        result[i]["averageResponseTime"] += stat[k]["averageResponseTime"]
+                    except KeyError:
+                        result[i]["averageResponseTime"] = 0
+
+    return result
+ 
+
+class AggregateJobResults(JobResults):
+
+    # Cython compatibility for static methods
+    _merge = classmethod(AggregateJobResults_merge)
+    _aggregateState = classmethod(AggregateJobResults_aggregateState)
+    _aggregateStatisticsByTimeSort = classmethod(AggregateJobResults_aggregateStatisticsByTimeSort)
+    _aggregateStatisticsByTime = classmethod(AggregateJobResults_aggregateStatisticsByTime)   
     
-    def aggregate(self, jobResults, statsInterval, short=False):
+    def aggregate(self, jobResults, statsInterval, shortResults):
         for attr in self._attributes:
             # don't change the job ID, since we want the job ID in the
             # master server and not the slave servers
@@ -103,8 +115,8 @@ class AggregateJobResults(JobResults):
         # aggregate the job state separately    
         self.state = AggregateJobResults._aggregateState([jobResult.state for jobResult in jobResults])
         
-        # statisticsByTime might not exist if the results are short. if it's there, aggregate some results
-        if short != True:
+        # statisticsByTime might not exist if the results are shortResults. if it's there, aggregate some results
+        if shortResults != True:
             self.statisticsByTime = AggregateJobResults._aggregateStatisticsByTime([jobResult.statisticsByTime for jobResult in jobResults], statsInterval)
         
         
@@ -163,7 +175,7 @@ class JobPerspective(object):
     
     
     
-    def resultsCallback(self, results, deferred, short):
+    def resultsCallback(self, results, deferred, shortResults):
         aggregateResults = AggregateJobResults()
         
         # decode all json
@@ -174,10 +186,10 @@ class JobPerspective(object):
         
         # combine and add results from all the slave servers.  this 
         # aggregates things like bytes transferred, requests completed, etc.
-        aggregateResults.aggregate([result for (status, result) in decodedResults], self.jobSpec.statsInterval, short=short)
+        aggregateResults.aggregate([result for (status, result) in decodedResults], self.jobSpec.statsInterval, shortResults)
         
         # if we're doing no stats, cut out statisticsByTime complete
-        if short == True:
+        if shortResults == True:
             try:
                 del(aggregateResults.statisticsByTime)
             except AttributeError:
@@ -185,15 +197,15 @@ class JobPerspective(object):
         
         deferred.callback(aggregateResults)
     
-    def results(self, short):
+    def results(self, shortResults):
         deferred = Deferred()
         
         requests = []
         for slave in self.mapping.keys():
-            requests.append(slave.jobResults(self.mapping[slave], short))
+            requests.append(slave.jobResults(self.mapping[slave], shortResults))
 
         deferredList = DeferredList(requests)
-        deferredList.addCallback(self.resultsCallback, deferred, short)
+        deferredList.addCallback(self.resultsCallback, deferred, shortResults)
 
         return deferred   
         
@@ -223,9 +235,9 @@ class SlavePerspective(object):
     def jobState(self, jobId):
         return RestApiClient.GET(self.url+"/job/"+str(jobId)+"/state")
     
-    def jobResults(self, jobId, short):
+    def jobResults(self, jobId, shortResults):
         url = self.url+"/job/"+str(jobId)+"/results"
-        if short == True:
+        if shortResults == True:
             url += "?short=true"
         return RestApiClient.GET(url) 
     
