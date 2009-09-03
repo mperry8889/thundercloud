@@ -44,11 +44,16 @@ class AggregateJobResults(JobResults):
 
     @classmethod
     def _aggregateStatisticsByTime(cls, statsList, statsInterval):
+        print statsList
         result = {}
         for stat in statsList:
             sortedKeys = sorted(stat.keys(), lambda a, b: int(float(a)-float(b)))
             for i in range(0, int(float(sortedKeys[-1]))+1, statsInterval):
-                result[i] = {}       
+                try:
+                    result[i]
+                except KeyError:
+                    result[i] = {}
+                        
                 for k in sortedKeys:
                     if i - statsInterval <= float(k) < i + statsInterval:
                         distance = (statsInterval - abs(float(k) - i))
@@ -63,7 +68,7 @@ class AggregateJobResults(JobResults):
                             result[i]["averageResponseTime"] += stat[k]["averageResponseTime"]
                         except KeyError:
                             result[i]["averageResponseTime"] = 0
-
+    
         return result
 
     

@@ -101,7 +101,6 @@ class JobNode(LeafNode):
     
     # status of a job in the system
     def stateCallback(self, value, request):
-        print value
         self.writeJson(request, value)
         
     def state(self, jobId, request):
@@ -118,7 +117,6 @@ class JobNode(LeafNode):
     # get a job's statistics
     
     def resultsCallback(self, value, request):
-        print "results final val: %s" % value
         self.writeJson(request, value.toJson())
         
     def results(self, jobId, request):
