@@ -26,6 +26,13 @@ class _Orchestrator(object):
         slaveOne.url = "http://localhost:8080/slave"
         self.slaves.append(slaveOne)
         
+        slaveTwo = SlavePerspective(None)
+        slaveTwo.host = "192.168.1.100"
+        slaveTwo.port = "7000"
+        slaveTwo.path = "/"
+        slaveTwo.url = "http://192.168.1.100:7000"
+        self.slaves.append(slaveTwo)
+        
     def _getJobNo(self):
         jobNo = db.execute("SELECT jobNo FROM jobno").fetchone()["jobNo"]
         db.execute("UPDATE jobno SET jobNo = ?", (jobNo + 1,))
@@ -46,15 +53,19 @@ class _Orchestrator(object):
         return result, slave
     
     def createJobCallback(self, results, jobId, deferred):
-        for (success, (remoteJobId, slave)) in results:
-            remoteJobId = int(json.loads(remoteJobId))
-            self.jobs[jobId].addSlave(slave, remoteJobId)
-            
+        for (success, result) in results:
+            if success == True:
+                (remoteJobId, slave) = result
+                remoteJobId = int(json.loads(remoteJobId))
+                self.jobs[jobId].addSlave(slave, remoteJobId)
+            else:
+                deferred.errback(jobId)
+                break
         deferred.callback(jobId)
     
     def createJob(self, jobSpec):
         jobNo = self._getJobNo()
-        job = JobPerspective(jobNo)
+        job = JobPerspective(jobNo, jobSpec)
         self.jobs[jobNo] = job
         deferred = Deferred()
         

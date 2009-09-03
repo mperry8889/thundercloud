@@ -3,9 +3,6 @@ from twisted.internet import reactor
 import time
 import math
 
-from twisted.web.client import HTTPClientFactory
-from twisted.web.client import _parse
-
 from base import EngineBase
 from thundercloud.job import JobState
 from thundercloud import constants

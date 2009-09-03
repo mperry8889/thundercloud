@@ -3,6 +3,7 @@ if (tc == null) {
 }
 tc.api = new Object();
 tc.api.backend = "/master"
+//tc.api.backend = "/slave"
 tc.api.JobState = {
 	"NEW": 0,
     "RUNNING": 1,

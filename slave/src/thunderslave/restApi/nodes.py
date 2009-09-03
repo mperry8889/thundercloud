@@ -27,24 +27,14 @@ class Node(Resource):
     # and details of json output
 
     def render_GET(self, request):
-        try:
-            request.setHeader("Content-Type", "text/plain")
-            response = json.dumps(self.GET(request))
-            return response
-        except Http400:
-            request.setResponseCode(400)
-        except Http404:
-            request.setResponseCode(404)
+        request.setHeader("Content-Type", "text/plain")
+        response = json.dumps(self.GET(request))
+        return response
         
     def render_POST(self, request):
-        try:
-            request.setHeader("Content-Type", "text/plain")
-            response = json.dumps(self.POST(request))
-            return response
-        except Http400:
-            request.setResponseCode(400)
-        except Http404:
-            request.setResponseCode(404)
+        request.setHeader("Content-Type", "text/plain")
+        response = json.dumps(self.POST(request))
+        return response
     
     def render_PUT(self, request):
         pass

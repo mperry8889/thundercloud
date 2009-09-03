@@ -11,7 +11,7 @@ class RestApiClient(object):
     implements(IJob)
     
     @classmethod
-    def _request(cls, url, method, postdata=None, cookies=[], timeout=10):
+    def _request(cls, url, method, postdata=None, cookies={}, timeout=10):
         if postdata is not None:
             postdata = json.dumps(postdata)
 
@@ -21,12 +21,12 @@ class RestApiClient(object):
                              cookies=cookies, 
                              timeout=timeout)
         
-        scheme, host, port, path = _parse(url)
+        scheme, host, port, path = _parse(str(url))
         reactor.connectTCP(host, port, factory)
         return factory
 
     @classmethod    
-    def POST(cls, url, postdata=None, cookies=[], timeout=10):
+    def POST(cls, url, postdata=None, cookies={}, timeout=10):
         request = cls._request(url, "POST", postdata, cookies, timeout)
         return request.deferred
     
@@ -34,21 +34,3 @@ class RestApiClient(object):
     def GET(cls, url):
         request = cls._request(url, "GET")
         return request.deferred
-
-    @classmethod    
-    def start(cls, jobSpec):
-        deferred = cls.POST("", postdata=jobSpec.toJson())
-        deferred.addCallback()
-        deferred.addErrback()
-    
-    @classmethod
-    def pause(cls, jobId):
-        pass
-    
-    @classmethod    
-    def resume(cls, jobId):
-        pass
-
-    @classmethod    
-    def stop(cls, jobId):
-        pass

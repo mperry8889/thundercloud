@@ -42,19 +42,36 @@ class AggregateJobResults(JobResults):
             return JobState.RUNNING
     
 
-    # XXX
-    # instead of doing something fancy and numerical to aggregate all the stats,
-    # just use the indices of when stats were taken. this can skew pretty bad
-    # but for now don't worry about it.
     @classmethod
-    def _aggregateStatisticsByTime(cls, statsList):
-        result = {}
+    def _aggregateStatisticsByTime(cls, statsList, statsInterval):
+        if statsList == [{"": {}}]:
+            return
+        
+        result = {}        
+        for stat in statsList:
+            sortedKeys = sorted(stat.keys(), lambda a, b: int(float(a)-float(b)))
+            for i in range(0, int(float(sortedKeys[-1]))+1, statsInterval):
+                result[i] = {}       
+                for k in sortedKeys:
+                    if i - statsInterval <= float(k) < i + statsInterval:
+                        distance = (statsInterval - abs(float(k) - i))
+                        weight = distance / statsInterval
+                        for v in ["requestsCompleted", "requestsFailed", "requestsPerSec", "clients", "iterations"]:
+                            try:
+                                result[i][v] += stat[k][v] * weight
+                            except KeyError:
+                                result[i][v] = stat[k][v] * weight
+
+                        try:
+                            result[i]["averageResponseTime"] += stat[k]["averageResponseTime"]
+                        except KeyError:
+                            result[i]["averageResponseTime"] = 0
 
         return result
 
         
     
-    def aggregate(self, jobResults):
+    def aggregate(self, jobResults, statsInterval):
         for attr in self._attributes:
             # don't change the job ID, since we want the job ID in the
             # master server and not the slave servers
@@ -86,21 +103,17 @@ class AggregateJobResults(JobResults):
         # aggregate the job state separately    
         self.state = AggregateJobResults._aggregateState([jobResult.state for jobResult in jobResults])
         
-        # statisticsByTime might not exist if the results are short, so if it's not there
-        # then just keep on trucking
-        try:
-            self.statisticsByTime = AggregateJobResults._aggregateStatisticsByTime([jobResult.statisticsByTime for jobResult in jobResults])
-        except AttributeError:
-            pass
-
+        # statisticsByTime might not exist if the results are short. if it's there, aggregate some results
+        self.statisticsByTime = AggregateJobResults._aggregateStatisticsByTime([jobResult.statisticsByTime for jobResult in jobResults], statsInterval)
+        
+        
 # Job perspective: local job ID corresponds to multiple remote job IDs on
 # multiple slave servers
 class JobPerspective(object):
-    def __init__(self, jobId):
+    def __init__(self, jobId, jobSpec):
         self.jobId = jobId
+        self.jobSpec = jobSpec
         self.mapping = {}
-        self.pausedTime = 0
-        self.elapsedTime = 0
     
     def addSlave(self, slave, remoteJobId):
         self.mapping[slave] = remoteJobId
@@ -160,7 +173,7 @@ class JobPerspective(object):
         
         # combine and add results from all the slave servers.  this 
         # aggregates things like bytes transferred, requests completed, etc.
-        aggregateResults.aggregate([result for (status, result) in decodedResults])
+        aggregateResults.aggregate([result for (status, result) in decodedResults], self.jobSpec.statsInterval)
         
         # if we're doing no stats, cut out statisticsByTime complete
         if short == True:

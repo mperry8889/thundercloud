@@ -27,7 +27,7 @@ tc.ui.newtab.reset = function() {
 	$("#jobspec-duration-input").val("");
 	$("#jobspec-transferLimit-input").val("");	
 	tc.ui.newtab.statsSlider = $("#jobspec-statsInterval").slider({
-		value: 30,
+		value: 5,
 		min: 1,
 		max: 120,
 		step: 1,
@@ -196,7 +196,7 @@ tc.ui.newtab.createJobSpec = function() {
 	jobSpec.timeout = parseInt($("#jobspec-timeout-input").val());
 	jobSpec.requests = {};
 	for (var i in tc.ui.newtab.urls) {
-		jobSpec.requests[tc.ui.newtab.urls[i]] = { method: "GET", postdata: null, cookies: [] };
+		jobSpec.requests[tc.ui.newtab.urls[i]] = { method: "GET", postdata: null, cookies: {} };
 	}
 	return jobSpec;
 }

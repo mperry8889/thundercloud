@@ -67,6 +67,8 @@ class EngineBase(object):
         self.statisticsByTime = {
             0: {
                 "iterations": 0,
+                "requestsCompleted": 0,
+                "requestsFailed": 0,
                 "requestsPerSec": 0,
                 "clients": 0,
                 "averageResponseTime": 0,
@@ -87,7 +89,7 @@ class EngineBase(object):
         
         # dump the host/port/URLs to be fetched into a queue
         for url in self.requests.keys():
-            scheme, host, port, path = _parse(url)
+            scheme, host, port, path = _parse(str(url))
             self.httpClientRequestQueue.put([host, port, 
                                              self.requests[url]["method"], 
                                              url, 
