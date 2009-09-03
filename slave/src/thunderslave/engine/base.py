@@ -92,7 +92,7 @@ class EngineBase(object):
             scheme, host, port, path = _parse(str(url))
             self.httpClientRequestQueue.put([host, port, 
                                              self.requests[url]["method"], 
-                                             url, 
+                                             str(url), 
                                              self.requests[url]["postdata"],
                                              self.requests[url]["cookies"]])
         
