@@ -4,7 +4,7 @@ import jsonpickle
 import sqlite3
 
 from thundercloud import constants
-from thundercloud.util import DataObject
+from thundercloud.dataobject import DataObject
 
 class JobState(object):
     NEW = 0

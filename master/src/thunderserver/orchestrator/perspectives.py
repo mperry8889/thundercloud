@@ -44,7 +44,6 @@ class AggregateJobResults(JobResults):
 
     @classmethod
     def _aggregateStatisticsByTime(cls, statsList, statsInterval):
-        print statsList
         result = {}
         for stat in statsList:
             sortedKeys = sorted(stat.keys(), lambda a, b: int(float(a)-float(b)))

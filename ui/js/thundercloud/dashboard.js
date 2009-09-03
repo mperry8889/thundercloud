@@ -6,7 +6,7 @@ if (tc.ui == null) {
 }
 tc.ui.dashboard = new Object();
 tc.ui.dashboard.urls = [];
-tc.ui.dashboard.pollInterval = 1000; // milliseconds
+tc.ui.dashboard.pollInterval = 5000; // milliseconds
 
 
 $(document).ready(function() {
