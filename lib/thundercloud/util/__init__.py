@@ -22,7 +22,7 @@ class DataObject(object):
     
     # string representation: stringified JSON
     def __str__(self):
-        return json.dumps(self.toJson())
+        return str(json.dumps(self.toJson()))
     
     # used for SQLite adaptation
     def __conform__(self, protocol):
@@ -31,7 +31,7 @@ class DataObject(object):
 
     # json representation
     def toJson(self):
-        return jsonpickle.Pickler(unpicklable=True).flatten(self.__repr__())    
+        return jsonpickle.Pickler(unpicklable=True).flatten(self.__repr__())
     
     # conveniently import JSON
     def slurp(self, json):

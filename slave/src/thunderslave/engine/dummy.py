@@ -17,9 +17,7 @@ class JobHasNoResults(Exception):
 class DummyEngine(object):
     implements(IEngine, IJob)
   
-    def __init__(self, jobId, jobSpec):
-
-        
+    def __init__(self, jobId, jobSpec):       
         results = db.execute("SELECT id, spec, results FROM jobs WHERE id = ?", (jobId,)).fetchone()   
         if results is None:
             raise JobNotFound
@@ -57,7 +55,7 @@ class DummyEngine(object):
     # generate and fill in a JobResults object
     def results(self, short=False):
         if short == True:
-            results = copy.copy(self.jobResults)
+            results = self.jobResults
             try:
                 del(results.statisticsByTime)
             except AttributeError:

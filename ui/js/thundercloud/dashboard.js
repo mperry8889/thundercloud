@@ -8,6 +8,7 @@ tc.ui.dashboard = new Object();
 tc.ui.dashboard.urls = [];
 tc.ui.dashboard.pollInterval = 1000; // milliseconds
 
+
 $(document).ready(function() {
     
     tc.ui.dashboard.progressbar = $("#dashboard-progress").progressbar({ value: 0 });  

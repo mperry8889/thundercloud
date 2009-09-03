@@ -49,7 +49,7 @@ class JobSpec(DataObject):
         "transferLimit": float("inf"),
         "clientFunction": "1",
         "statsInterval": float("inf"),
-        "userAgent": "thundercloud client/%s" % constants.VERSION,
+        "userAgent": str("thundercloud client/%s" % constants.VERSION),
         "profile": JobProfile.HAMMER,
         "state": JobState.NEW,
         "timeout": float("inf"),

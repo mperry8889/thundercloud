@@ -35,7 +35,7 @@ class EngineBase(object):
         # attributes which configure the engine
         self.clientFunction = lambda self, t: 1
         self.requests = {"":{}}
-        self.userAgent = "thundercloud client/%s" % constants.VERSION
+        self.userAgent = str("thundercloud client/%s" % constants.VERSION)
         self.iterator = lambda: True
         self.httpClientRequestQueue = Queue()
         self.state = JobState.NEW
@@ -91,7 +91,7 @@ class EngineBase(object):
         for url in self.requests.keys():
             scheme, host, port, path = _parse(str(url))
             self.httpClientRequestQueue.put([host, port, 
-                                             self.requests[url]["method"], 
+                                             str(self.requests[url]["method"]), 
                                              str(url), 
                                              self.requests[url]["postdata"],
                                              self.requests[url]["cookies"]])
@@ -124,7 +124,7 @@ class EngineBase(object):
                                     method=method,
                                     postdata=postdata,
                                     cookies=cookies, 
-                                    agent=self.userAgent,
+                                    agent=str(self.userAgent),
                                     timeout=self.timeout)
         reactor.connectTCP(host, port, factory)
         factory.deferred.addCallback(self.callback, requestTime)

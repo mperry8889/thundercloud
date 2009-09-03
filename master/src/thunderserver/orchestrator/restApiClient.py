@@ -15,7 +15,7 @@ class RestApiClient(object):
         if postdata is not None:
             postdata = json.dumps(postdata)
 
-        factory = HTTPClientFactory(url,
+        factory = HTTPClientFactory(str(url),
                              method=method,
                              postdata=postdata,
                              cookies=cookies, 

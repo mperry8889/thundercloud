@@ -44,10 +44,7 @@ class AggregateJobResults(JobResults):
 
     @classmethod
     def _aggregateStatisticsByTime(cls, statsList, statsInterval):
-        if statsList == [{"": {}}]:
-            return
-        
-        result = {}        
+        result = {}
         for stat in statsList:
             sortedKeys = sorted(stat.keys(), lambda a, b: int(float(a)-float(b)))
             for i in range(0, int(float(sortedKeys[-1]))+1, statsInterval):
@@ -69,9 +66,8 @@ class AggregateJobResults(JobResults):
 
         return result
 
-        
     
-    def aggregate(self, jobResults, statsInterval):
+    def aggregate(self, jobResults, statsInterval, short=False):
         for attr in self._attributes:
             # don't change the job ID, since we want the job ID in the
             # master server and not the slave servers
@@ -104,7 +100,8 @@ class AggregateJobResults(JobResults):
         self.state = AggregateJobResults._aggregateState([jobResult.state for jobResult in jobResults])
         
         # statisticsByTime might not exist if the results are short. if it's there, aggregate some results
-        self.statisticsByTime = AggregateJobResults._aggregateStatisticsByTime([jobResult.statisticsByTime for jobResult in jobResults], statsInterval)
+        if short != True:
+            self.statisticsByTime = AggregateJobResults._aggregateStatisticsByTime([jobResult.statisticsByTime for jobResult in jobResults], statsInterval)
         
         
 # Job perspective: local job ID corresponds to multiple remote job IDs on
@@ -173,7 +170,7 @@ class JobPerspective(object):
         
         # combine and add results from all the slave servers.  this 
         # aggregates things like bytes transferred, requests completed, etc.
-        aggregateResults.aggregate([result for (status, result) in decodedResults], self.jobSpec.statsInterval)
+        aggregateResults.aggregate([result for (status, result) in decodedResults], self.jobSpec.statsInterval, short=short)
         
         # if we're doing no stats, cut out statisticsByTime complete
         if short == True:
