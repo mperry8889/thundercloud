@@ -105,6 +105,3 @@ class _Orchestrator(object):
     
     def jobResults(self, jobId, short):
         return self.jobs[jobId].results(short)
-   
-
-Orchestrator = _Orchestrator()

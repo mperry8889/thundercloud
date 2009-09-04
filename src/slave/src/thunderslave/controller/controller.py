@@ -100,6 +100,3 @@ class _Controller(object):
             self._kick(jobId)
         
         return results
-            
-    
-Controller = _Controller()
