@@ -11,15 +11,15 @@ import simplejson as json
 # Cython compatibility
 def AggregateJobResults_merge(cls, lhs, rhs):
     if type(lhs) == type(rhs) == dict:
-         if sorted(lhs.keys()) == sorted(rhs.keys()):
-             result = {}
-             for k in result.iterkeys():
-                 result[k] = lhs[k] + rhs[k]
-             return result
-         else:
-             return mergeDict(lhs, rhs)
+        if sorted(lhs.keys()) == sorted(rhs.keys()):
+            result = {}
+            for k in result.iterkeys():
+                result[k] = lhs[k] + rhs[k]
+            return result
+        else:
+            return mergeDict(lhs, rhs)
     else:
-         return lhs + rhs
+        return lhs + rhs
 
  
  
@@ -96,6 +96,10 @@ class AggregateJobResults(JobResults):
             # this too
             if attr == "statisticsByTime":
                 continue
+        
+            # elapsed time shouldn't be added
+            if attr == "elapsedTime":
+                continue
             
             for jobResult in jobResults:
                 # if we're using a default value and the job result has something
@@ -110,7 +114,10 @@ class AggregateJobResults(JobResults):
                 elif type(getattr(self, attr)) == int:
                     setattr(self, attr, getattr(self, attr) + getattr(jobResult, attr))
                 elif type(getattr(self, attr)) == float:
-                    setattr(self, attr, getattr(self, attr) + getattr(jobResult, attr))      
+                    setattr(self, attr, getattr(self, attr) + getattr(jobResult, attr))
+        
+        # elapsed time
+        self.elapsedTime = jobResults[0].elapsedTime
         
         # aggregate the job state separately    
         self.state = AggregateJobResults._aggregateState([jobResult.state for jobResult in jobResults])

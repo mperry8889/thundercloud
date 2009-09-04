@@ -86,6 +86,7 @@ class EngineBase(object):
         self.statsInterval = jobSpec.statsInterval
         self.timeout = jobSpec.timeout
         self.clientFunction = lambda t: eval(jobSpec.clientFunction)
+        self.nodes = 1
         
         # dump the host/port/URLs to be fetched into a queue
         for url in self.requests.keys():
@@ -237,6 +238,8 @@ class EngineBase(object):
     
     # default errback -- see comments for callback()
     def errback(self, value, requestTime):
+        print "FIRING ERRBACK"
+        print value
         self._bookkeep("", requestTime)
         self._generateStats()
         self.requestsFailed = self.requestsFailed + 1
