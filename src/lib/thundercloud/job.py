@@ -107,7 +107,7 @@ class JobResults(DataObject):
         "errors": {},
         "requestsCompleted": 0,
         "requestsFailed": 0,
-        "nodes": 1,
+        "nodes": 0,
     }
 
 sqlite3.register_converter("jobResults", lambda s: JobResults(json.loads(s)))

@@ -84,11 +84,11 @@ class AggregateJobResults(JobResults):
     _aggregateStatisticsByTime = classmethod(AggregateJobResults_aggregateStatisticsByTime)   
     
     _manuallyAggregate = ["jobId", "state", "statisticsByTime"]
-    _aggregateByAddition = ["iterations", "requestsCompleted", "requestsFailed", "bytesTransferred", "errors", "nodes"]
+    _aggregateByAdding = ["iterations", "requestsCompleted", "requestsFailed", "bytesTransferred", "errors", "nodes"]
     _aggregateByAveraging = ["elapsedTime", "transferLimit", "duration", "timeout"]
     
     def aggregate(self, jobResults, statsInterval, shortResults):
-        for attr in self._attributes:
+        for attr in self._attributes:                
             # don't change the job ID, since we want the job ID in the
             # master server and not the slave servers
             if attr in self._manuallyAggregate:
@@ -98,7 +98,7 @@ class AggregateJobResults(JobResults):
             if attr in self._aggregateByAveraging:
                 setattr(self, attr, getattr(jobResults[0], attr))
         
-            if attr in self._aggregateByAddition:           
+            if attr in self._aggregateByAdding:           
                 for jobResult in jobResults:
                     # if we're using a default value and the job result has something
                     # legit, just use it
