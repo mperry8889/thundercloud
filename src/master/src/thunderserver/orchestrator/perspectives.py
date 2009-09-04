@@ -83,38 +83,36 @@ class AggregateJobResults(JobResults):
     _aggregateStatisticsByTimeSort = classmethod(AggregateJobResults_aggregateStatisticsByTimeSort)
     _aggregateStatisticsByTime = classmethod(AggregateJobResults_aggregateStatisticsByTime)   
     
+    _manuallyAggregate = ["jobId", "state", "statisticsByTime"]
+    _aggregateByAddition = ["iterations", "requestsCompleted", "requestsFailed", "bytesTransferred", "errors", "nodes"]
+    _aggregateByAveraging = ["elapsedTime", "transferLimit", "duration", "timeout"]
+    
     def aggregate(self, jobResults, statsInterval, shortResults):
         for attr in self._attributes:
             # don't change the job ID, since we want the job ID in the
             # master server and not the slave servers
-            if attr == "jobId":
-                continue
-            
-            # job state needs to be aggregated separately
-            if attr == "state":
-                continue            
-            # this too
-            if attr == "statisticsByTime":
+            if attr in self._manuallyAggregate:
                 continue
         
-            # elapsed time shouldn't be added
-            if attr == "elapsedTime":
-                continue
-            
-            for jobResult in jobResults:
-                # if we're using a default value and the job result has something
-                # legit, just use it
-                if getattr(self, attr) == self._attributes[attr]:
-                    setattr(self, attr, getattr(jobResult, attr))
-                    continue
-                
-                # otherwise selectively do stuff by type
-                elif type(getattr(self, attr)) == dict:
-                    setattr(self, attr, mergeDict(getattr(self, attr), getattr(jobResult, attr), AggregateJobResults._merge))
-                elif type(getattr(self, attr)) == int:
-                    setattr(self, attr, getattr(self, attr) + getattr(jobResult, attr))
-                elif type(getattr(self, attr)) == float:
-                    setattr(self, attr, getattr(self, attr) + getattr(jobResult, attr))
+            # XXX
+            if attr in self._aggregateByAveraging:
+                setattr(self, attr, getattr(jobResults[0], attr))
+        
+            if attr in self._aggregateByAddition:           
+                for jobResult in jobResults:
+                    # if we're using a default value and the job result has something
+                    # legit, just use it
+                    if getattr(self, attr) == self._attributes[attr]:
+                        setattr(self, attr, getattr(jobResult, attr))
+                        continue
+                    
+                    # otherwise selectively do stuff by type
+                    elif type(getattr(self, attr)) == dict:
+                        setattr(self, attr, mergeDict(getattr(self, attr), getattr(jobResult, attr), AggregateJobResults._merge))
+                    elif type(getattr(self, attr)) == int:
+                        setattr(self, attr, getattr(self, attr) + getattr(jobResult, attr))
+                    elif type(getattr(self, attr)) == float:
+                        setattr(self, attr, getattr(self, attr) + getattr(jobResult, attr))
         
         # elapsed time
         self.elapsedTime = jobResults[0].elapsedTime
