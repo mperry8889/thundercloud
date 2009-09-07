@@ -10,6 +10,7 @@ from restApiClient import RestApiClient
 import simplejson as json
 
 import logging
+import datetime
 
 log = logging.getLogger("orchestrator")
 
@@ -18,26 +19,24 @@ class _Orchestrator(object):
     def __init__(self):
         self.slaves = []
         self.jobs = {}
-        
-        slaveOne = SlavePerspective(None)
-        slaveOne.host = "localhost"
-        slaveOne.port = "8080"
-        slaveOne.path = "/slave"
-        slaveOne.url = "http://localhost:8080/slave"
-        self.slaves.append(slaveOne)
-        
-        slaveTwo = SlavePerspective(None)
-        slaveTwo.host = "192.168.1.100"
-        slaveTwo.port = "7000"
-        slaveTwo.path = "/"
-        slaveTwo.url = "http://192.168.1.100:7000"
-        self.slaves.append(slaveTwo)
+ 
+
+        for i in range(1,4):
+           slaveSpec = SlavePerspective(None)
+           slaveSpec.host = "192.168.1.15%s" % i
+           slaveSpec.port = "7000"
+           slaveSpec.url = "http://192.168.1.15%s:7000" % i
+           self.slaves.append(slaveSpec)
         
     def _getJobNo(self):
         jobNo = db.execute("SELECT jobNo FROM jobno").fetchone()["jobNo"]
         db.execute("UPDATE jobno SET jobNo = ?", (jobNo + 1,))
         return jobNo
-   
+
+    def _logToDb(self, jobId, operation):
+        db.execute("INSERT INTO orchestrator (job, operation, timestamp) VALUES (?, ?, ?)", 
+                    (jobId, operation, datetime.datetime.now()))  
+
     def registerSlave(self, slaveSpec):
         pass
     
@@ -59,6 +58,8 @@ class _Orchestrator(object):
             else:
                 deferred.errback(jobId)
                 break
+            
+        self._logToDb(jobId, "create")
         deferred.callback(jobId)
     
     def createJob(self, jobSpec):
@@ -89,15 +90,19 @@ class _Orchestrator(object):
     
     
     def startJob(self, jobId):
+        self._logToDb(jobId, "start")
         return self.jobs[jobId].start()
     
     def pauseJob(self, jobId):
+        self._logToDb(jobId, "pause")
         return self.jobs[jobId].pause()
     
     def resumeJob(self, jobId):
+        self._logToDb(jobId, "resume")
         return self.jobs[jobId].resume()
     
     def stopJob(self, jobId):
+        self._logToDb(jobId, "stop")
         return self.jobs[jobId].stop()
 
     def jobState(self, jobId):

@@ -86,7 +86,6 @@ class EngineBase(object):
         self.statsInterval = jobSpec.statsInterval
         self.timeout = jobSpec.timeout
         self.clientFunction = lambda t: eval(jobSpec.clientFunction)
-        self.nodes = 1
         
         # dump the host/port/URLs to be fetched into a queue
         for url in self.requests.keys():

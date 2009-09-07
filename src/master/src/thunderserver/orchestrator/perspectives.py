@@ -7,6 +7,10 @@ from thundercloud.util import mergeDict
 
 import simplejson as json
 
+import logging
+
+log = logging.getLogger("orchestrator.perspectives")
+
 
 # Cython compatibility
 def AggregateJobResults_merge(cls, lhs, rhs):
@@ -183,9 +187,19 @@ class JobPerspective(object):
     def resultsCallback(self, results, deferred, shortResults):
         aggregateResults = AggregateJobResults()
         
-        # decode all json
-        decodedResults = [(status, JobResults(json.loads(result))) for (status, result) in results]
-        
+        # decode all json.  for speed's sake, try once as a list comprehension, but if one is
+        # false then the list comprehension will fail -- fall back to a for loop,
+        # rejecting failed responses
+        decodedResults = []
+        try:
+            decodedResults = [(status, JobResults(json.loads(result))) for (status, result) in results]
+        except:
+            log.debug("Could not decode results. results: %s" % results)
+       
+            for (status, result) in results:
+                if status == True:
+                    decodedResults.append((status, JobResults(json.loads(result))))
+           
         # set the job ID to the master's job ID
         aggregateResults.jobId = self.jobId
         

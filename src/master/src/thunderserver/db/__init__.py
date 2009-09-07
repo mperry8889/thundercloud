@@ -27,6 +27,11 @@ def dbInit():
                                         results jobResults,                                        
                                         FOREIGN KEY (job) REFERENCES jobs(id),
                                         FOREIGN KEY (slave) REFERENCES slaves(id))""")
+
+    _c.execute("""CREATE TABLE orchestrator (job INTEGER NOT NULL,
+                                             operation TEXT NOT NULL,
+                                             timestamp date NOT NULL,
+                                             FOREIGN KEY (job) REFERENCES jobs(id))""")
  
     _c.execute("""CREATE TABLE accounting (job INTEGER NOT NULL,
                                            user INTEGER NOT NULL,

@@ -9,32 +9,11 @@ from base import EngineBase
 from thundercloud.job import JobState
 from thundercloud import constants
 
-class DelayFactory(object):
-    @classmethod
-    def createFactory(self, delay):
-        if type(delay) == float or type(delay) == int:
-            return FloatDelay(float(delay))
-        else:
-            return RandomDelay(delay)
-
-class FloatDelay(object):
-    def __init__(self, delay):
-        self.delay = delay
-    def __call__(self):
-        return self.delay
-
-class RandomDelay(object):
-    def __init__(self, boundary):
-        self.boundary = boundary
-    def __call__(self):
-        return random.uniform(0, self.boundary)
-
 class BenchmarkEngine(EngineBase):
 
     def __init__(self, jobId, jobSpec):
         super(BenchmarkEngine, self).__init__(jobId, jobSpec)
         self.iterator = self._loop
-        self.delay = DelayFactory.createFactory(0.0)
         self.clients = 0
 
     # find out the number of clients needed at the current time, and add clients
@@ -64,7 +43,7 @@ class BenchmarkEngine(EngineBase):
                         return
                     self.httpClientRequestQueue.put(request)
                     self.clients = self.clients + 1
-                    reactor.callLater(self.delay(), self._request, 
+                    reactor.callLater(0, self._request, 
                                       request[0], request[1], request[2],
                                       request[3], request[4], request[5])
                         
