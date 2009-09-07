@@ -6,6 +6,10 @@ import simplejson as json
 
 from thundercloud.job import IJob
 
+import logging
+
+log = logging.getLogger("orchestrator.restApiClient")
+
 
 class RestApiClient(object):
     implements(IJob)
@@ -15,6 +19,7 @@ class RestApiClient(object):
         if postdata is not None:
             postdata = json.dumps(postdata)
 
+        #log.debug("Requesting %s on %s" % (method, url))
         factory = HTTPClientFactory(str(url),
                              method=method,
                              postdata=postdata,

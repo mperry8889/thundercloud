@@ -18,20 +18,14 @@ class _Orchestrator(object):
     def __init__(self):
         self.slaves = []
         self.jobs = {}
-        
-        slaveOne = SlavePerspective(None)
-        slaveOne.host = "localhost"
-        slaveOne.port = "8080"
-        slaveOne.path = "/slave"
-        slaveOne.url = "http://localhost:8080/slave"
-        self.slaves.append(slaveOne)
-        
-        slaveTwo = SlavePerspective(None)
-        slaveTwo.host = "192.168.1.100"
-        slaveTwo.port = "7000"
-        slaveTwo.path = "/"
-        slaveTwo.url = "http://192.168.1.100:7000"
-        self.slaves.append(slaveTwo)
+ 
+
+        for i in range(1,4):
+           slaveSpec = SlavePerspective(None)
+           slaveSpec.host = "192.168.1.15%s" % i
+           slaveSpec.port = "7000"
+           slaveSpec.url = "http://192.168.1.15%s:7000" % i
+           self.slaves.append(slaveSpec)
         
     def _getJobNo(self):
         jobNo = db.execute("SELECT jobNo FROM jobno").fetchone()["jobNo"]

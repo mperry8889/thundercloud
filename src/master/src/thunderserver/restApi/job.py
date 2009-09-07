@@ -16,6 +16,9 @@ log = logging.getLogger("restApi.job")
 # Handle requests sent to /job
 class Job(RootNode):
 
+    def GET(self, request):
+       return "WORKING"
+
     def postCallback(self, jobId, request):
         self.putChild("%d" % jobId, JobNode())
         self.writeJson(request, jobId)
