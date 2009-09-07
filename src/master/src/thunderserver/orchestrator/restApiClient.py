@@ -15,7 +15,7 @@ def RestApiClient__request(cls, url, method, postdata=None, cookies={}, timeout=
     if postdata is not None:
         postdata = json.dumps(postdata)
 
-	log.debug("Requesting %s on %s" % (method, url))
+    log.debug("REST API Request: (%s) %s" % (method, url))
     factory = HTTPClientFactory(str(url),
                          method=method,
                          postdata=postdata,

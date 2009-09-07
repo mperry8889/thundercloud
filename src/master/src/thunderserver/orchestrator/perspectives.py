@@ -234,29 +234,35 @@ class JobPerspective(object):
 class SlavePerspective(object):
     def __init__(self, slaveSpec):
         self.slaveSpec = slaveSpec
-        self.url = ""
+    
+    def url(self, path=None):
+        if path is None:
+            return str("%s://%s:%s/%s" % (self.slaveSpec.scheme, self.slaveSpec.host, self.slaveSpec.port, self.slaveSpec.path))
+        else:
+            if path[0] == "/":
+                path = path[1:]
+            return str("%s://%s:%s/%s/%s" % (self.slaveSpec.scheme, self.slaveSpec.host, self.slaveSpec.port, self.slaveSpec.path, path))
     
     def createJob(self, jobSpec):
-        return RestApiClient.POST(self.url+"/job", postdata=jobSpec.toJson())
+        return RestApiClient.POST(self.url("/job"), postdata=jobSpec.toJson())
            
     def startJob(self, jobId):
-        return RestApiClient.POST(self.url+"/job/"+str(jobId)+"/start")
+        return RestApiClient.POST(self.url("/job/%d/start" % jobId))
 
     def pauseJob(self, jobId):
-        return RestApiClient.POST(self.url+"/job/"+str(jobId)+"/pause")
+        return RestApiClient.POST(self.url("/job/%d/pause" % jobId))
     
     def resumeJob(self, jobId):
-        return RestApiClient.POST(self.url+"/job/"+str(jobId)+"/resume")
+        return RestApiClient.POST(self.url("/job/%d/resume" % jobId))
     
     def stopJob(self, jobId):
-        return RestApiClient.POST(self.url+"/job/"+str(jobId)+"/stop")
+        return RestApiClient.POST(self.url("/job/%d/stop" % jobId))
     
     def jobState(self, jobId):
-        return RestApiClient.GET(self.url+"/job/"+str(jobId)+"/state")
+        return RestApiClient.GET(self.url("/job/%d/state" % jobId))
     
     def jobResults(self, jobId, shortResults):
-        url = self.url+"/job/"+str(jobId)+"/results"
         if shortResults == True:
-            url += "?short=true"
-        return RestApiClient.GET(url) 
-    
+            return RestApiClient.GET(self.url("/job/%d/results?short=true" % jobId))
+        else:
+            return RestApiClient.GET(self.url("/job/%d/results" % jobId))

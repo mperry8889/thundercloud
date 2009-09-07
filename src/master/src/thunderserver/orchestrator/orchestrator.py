@@ -20,13 +20,14 @@ class _Orchestrator(object):
         self.slaves = []
         self.jobs = {}
  
+        _slaves = ["192.168.1.151","192.168.1.152","192.168.1.153"]
 
-        for i in range(1,4):
-           slaveSpec = SlavePerspective(None)
-           slaveSpec.host = "192.168.1.15%s" % i
-           slaveSpec.port = "7000"
-           slaveSpec.url = "http://192.168.1.15%s:7000" % i
-           self.slaves.append(slaveSpec)
+        for i in _slaves:
+            slaveSpec = SlaveSpec()
+            slaveSpec.host = i
+            slaveSpec.port = "7000"
+            slaveSpec.path = "/"
+            self.slaves.append(slaveSpec)
         
     def _getJobNo(self):
         jobNo = db.execute("SELECT jobNo FROM jobno").fetchone()["jobNo"]
