@@ -6,12 +6,15 @@ def dbInit():
     _c.execute("""CREATE TABLE users (id INTEGER PRIMARY KEY,
                                       username TEXT NOT NULL,
                                       password TEXT NOT NULL)""")
+    _c.execute("""INSERT INTO users (id, username, password) VALUES (0, "foo", "foo")""")
     
     _c.execute("""CREATE TABLE jobs (id INTEGER PRIMARY KEY,
+                                     user INT NOT NULL,
                                      startTime date NOT NULL,
                                      endTime date,
                                      spec jobSpec NOT NULL,
-                                     results jobResults)""")
+                                     results jobResults,
+                                     FOREIGN KEY (user) REFERENCES users(id))""")
 
     # job sequence number, for unique job IDs
     _c.execute("CREATE TABLE jobno (jobNo INTEGER NOT NULL)")

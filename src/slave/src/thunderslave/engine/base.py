@@ -237,8 +237,7 @@ class EngineBase(object):
     
     # default errback -- see comments for callback()
     def errback(self, value, requestTime):
-        print "FIRING ERRBACK"
-        print value
+        log.debug("Firing errback.  Error: %s" % value)
         self._bookkeep("", requestTime)
         self._generateStats()
         self.requestsFailed = self.requestsFailed + 1
@@ -250,6 +249,8 @@ class EngineBase(object):
             self.errors["connectionLost"] = self.errors["connectionLost"] + 1
         elif "TimeoutError" in value.getErrorMessage():
             self.errors["timeout"] = self.errors["timeout"] + 1
+        elif "ConnectBindError" in value.getErrorMessage():
+            self.errors["unknown"] = self.errors["unknown"] + 1 
         else:
             self.errors["unknown"] = self.errors["unknown"] + 1
 
