@@ -204,7 +204,7 @@ class EngineBase(object):
                     "requestsPerSec": float(self.iterations - self.statisticsByTime[self._statsBookmark]["iterations"])/float(self.elapsedTime - self._statsBookmark),
                     # XXX: this isn't entirely accurate. this gives f(t) but isn't the
                     # actual number of clients in the system
-                    "clients": min(config.CLIENT_UPPER_BOUND, abs(int(math.ceil(self.clientFunction(time.time()))))),
+                    "clients": min(int(config.parameter("network", "clients.max")), abs(int(math.ceil(self.clientFunction(time.time()))))),
                     "averageResponseTime": self._averageResponseTime,
                 }
                 

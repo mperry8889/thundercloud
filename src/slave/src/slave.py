@@ -2,11 +2,18 @@ from twisted.internet import reactor
 from thunderslave.restApi import createRestApi
 from thundercloud import config
 import logging
+import sys
 
-logging.basicConfig(level=logging.DEBUG)
+try:
+    config.readConfig(sys.argv[1])
+except:
+    print "No config file specified, exiting"
+    sys.exit(1)
+
+logging.basicConfig(level=eval("logging.%s" % config.parameter("log", "level")))
 log = logging.getLogger("main")
 
-log.debug("Listening on port %s, starting reactor" % config.SLAVE_PORT)
-reactor.listenTCP(config.SLAVE_PORT, createRestApi())
+log.debug("Listening on port %s, starting reactor" % config.parameter("network", "port"))
+reactor.listenTCP(int(config.parameter("network", "port")), createRestApi())
 
 reactor.run()
