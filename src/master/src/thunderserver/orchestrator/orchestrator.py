@@ -1,11 +1,11 @@
 from thundercloud.slave import SlaveSpec
-from thundercloud.job import JobSpec, JobState
+from thundercloud.job import JobSpec
 
 from twisted.internet.defer import Deferred, DeferredList
 
 from ..db import dbConnection as db
-from perspectives import JobPerspective, SlavePerspective
-from restApiClient import RestApiClient
+from job import JobPerspective
+from slave import SlaveAllocator
 
 import simplejson as json
 
@@ -14,10 +14,10 @@ import datetime
 
 log = logging.getLogger("orchestrator")
 
+
 # Handle the multitide of jobs and slaves in the system
 class _Orchestrator(object):
     def __init__(self):
-        self.slaves = []
         self.jobs = {}
  
         _slaves = ["192.168.1.151","192.168.1.152","192.168.1.153"]
@@ -27,7 +27,7 @@ class _Orchestrator(object):
             slaveSpec.host = i
             slaveSpec.port = "7000"
             slaveSpec.path = "/"
-            self.slaves.append(slaveSpec)
+            self.registerSlave(slaveSpec)
         
     def _getJobNo(self):
         jobNo = db.execute("SELECT jobNo FROM jobno").fetchone()["jobNo"]
@@ -39,14 +39,13 @@ class _Orchestrator(object):
                     (jobId, operation, datetime.datetime.now()))  
 
     def registerSlave(self, slaveSpec):
-        pass
+        SlaveAllocator.addSlave(slaveSpec)
     
-    def unregisterSlave(self, slaveId):
-        pass
+    def unregisterSlave(self, slave):
+        SlaveAllocator.removeSlave(slave)
 
     # create a job perspective object locally, and create a job on
-    # all remote servers.
-    
+    # all remote servers.    
     def createJobSlaveCallback(self, result, slave):
         return result, slave
     
@@ -61,6 +60,7 @@ class _Orchestrator(object):
                 break
             
         self._logToDb(jobId, "create")
+        db.execute("INSERT INTO jobs (id, user, spec) VALUES (?, ?, ?)", (jobId, 0, self.jobs[jobId].jobSpec))
         deferred.callback(jobId)
     
     def createJob(self, jobSpec):
@@ -69,9 +69,9 @@ class _Orchestrator(object):
         self.jobs[jobNo] = job
         deferred = Deferred()
         
-        # allocate a bunch of slaves here. for now we'll just use the set of
-        # all slaves
-        slaves = self.slaves
+        # allocate a bunch of slaves here
+        slaves = SlaveAllocator.recommend(jobSpec)
+        SlaveAllocator.allocate(slaves)
         
         # divide the client function to spread the load over all slaves in the set
         clientFunctionPerSlave = "(%s)/%s" % (jobSpec.clientFunction, len(slaves))

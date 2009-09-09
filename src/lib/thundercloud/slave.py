@@ -6,4 +6,14 @@ class SlaveSpec(DataObject):
         "host": None,
         "port": None,
         "path": None,
+        
+        "connectionSpeed": None,
+        "maxRequestsPerSec": None,
+        
+        "location": {
+            "latitude": None,
+            "longitude": None,
+            "city": None,
+            "state": None,
+        },
     }

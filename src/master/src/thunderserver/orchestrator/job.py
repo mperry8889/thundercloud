@@ -26,7 +26,6 @@ def AggregateJobResults_merge(cls, lhs, rhs):
         return lhs + rhs
 
  
- 
 def AggregateJobResults_aggregateState(cls, states):
     # just get unique states
     stateSet = list(set(states))
@@ -45,7 +44,6 @@ def AggregateJobResults_aggregateState(cls, states):
     if JobState.RUNNING in stateSet:
         return JobState.RUNNING
 
- 
 
 def AggregateJobResults_aggregateStatisticsByTimeSort(cls, a, b):
     return int(float(a)-float(b))
@@ -77,7 +75,7 @@ def AggregateJobResults_aggregateStatisticsByTime(cls, statsList, statsInterval)
                         result[i]["averageResponseTime"] = 0
 
     return result
- 
+
 
 class AggregateJobResults(JobResults):
 
@@ -109,7 +107,7 @@ class AggregateJobResults(JobResults):
                     if getattr(self, attr) == self._attributes[attr]:
                         setattr(self, attr, getattr(jobResult, attr))
                         continue
-                    
+
                     # otherwise selectively do stuff by type
                     elif type(getattr(self, attr)) == dict:
                         setattr(self, attr, mergeDict(getattr(self, attr), getattr(jobResult, attr), AggregateJobResults._merge))
@@ -142,6 +140,23 @@ class JobPerspective(object):
     
     def removeSlave(self, slave):
         self.mapping.pop(slave)
+
+    # shortcut methods
+    def _jobOpCallback(self, results, deferred):
+        deferred.callback(results)
+    
+    def _jobOp(self, operation):
+        deferred = Deferred()
+        
+        requests = []
+        for slave, remoteId in self.mapping.iteritems():
+            requests.append(getattr(slave, "%s" % operation)(remoteId))
+
+        deferredList = DeferredList(requests)
+        deferredList.addCallback(self._jobOpCallback, deferred)
+
+        return deferred
+
     
     def start(self):
         return self._jobOp("startJob")
@@ -155,21 +170,6 @@ class JobPerspective(object):
     def stop(self):
         return self._jobOp("stopJob")
 
-    def _jobOpCallback(self, results, deferred):
-        deferred.callback(results)
-        
-    def _jobOp(self, operation):
-        deferred = Deferred()
-        
-        requests = []
-        for slave, remoteId in self.mapping.iteritems():
-            requests.append(getattr(slave, "%s" % operation)(remoteId))
-
-        deferredList = DeferredList(requests)
-        deferredList.addCallback(self._jobOpCallback, deferred)
-
-        return deferred        
-
 
     def stateCallback(self, results, deferred):
         states = []
@@ -181,9 +181,8 @@ class JobPerspective(object):
         deferred = self._jobOp("jobState")
         deferred.addCallback(self.stateCallback, deferred)
         return deferred
-    
-    
-    
+
+
     def resultsCallback(self, results, deferred, shortResults):
         aggregateResults = AggregateJobResults()
         
@@ -226,43 +225,4 @@ class JobPerspective(object):
         deferredList = DeferredList(requests)
         deferredList.addCallback(self.resultsCallback, deferred, shortResults)
 
-        return deferred   
-        
-
-
-# Slave perspective: send vanilla commands to slave servers
-class SlavePerspective(object):
-    def __init__(self, slaveSpec):
-        self.slaveSpec = slaveSpec
-    
-    def url(self, path=None):
-        if path is None:
-            return str("%s://%s:%s/%s" % (self.slaveSpec.scheme, self.slaveSpec.host, self.slaveSpec.port, self.slaveSpec.path))
-        else:
-            if path[0] == "/":
-                path = path[1:]
-            return str("%s://%s:%s/%s/%s" % (self.slaveSpec.scheme, self.slaveSpec.host, self.slaveSpec.port, self.slaveSpec.path, path))
-    
-    def createJob(self, jobSpec):
-        return RestApiClient.POST(self.url("/job"), postdata=jobSpec.toJson())
-           
-    def startJob(self, jobId):
-        return RestApiClient.POST(self.url("/job/%d/start" % jobId))
-
-    def pauseJob(self, jobId):
-        return RestApiClient.POST(self.url("/job/%d/pause" % jobId))
-    
-    def resumeJob(self, jobId):
-        return RestApiClient.POST(self.url("/job/%d/resume" % jobId))
-    
-    def stopJob(self, jobId):
-        return RestApiClient.POST(self.url("/job/%d/stop" % jobId))
-    
-    def jobState(self, jobId):
-        return RestApiClient.GET(self.url("/job/%d/state" % jobId))
-    
-    def jobResults(self, jobId, shortResults):
-        if shortResults == True:
-            return RestApiClient.GET(self.url("/job/%d/results?short=true" % jobId))
-        else:
-            return RestApiClient.GET(self.url("/job/%d/results" % jobId))
+        return deferred
