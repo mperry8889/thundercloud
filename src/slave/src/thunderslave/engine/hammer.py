@@ -5,7 +5,7 @@ import math
 
 from base import EngineBase
 from thundercloud.job import JobState
-from thundercloud import constants
+from thundercloud import config
 
 class HammerEngine(EngineBase):
 
@@ -27,7 +27,7 @@ class HammerEngine(EngineBase):
             return
         
         if self.state == JobState.RUNNING:
-            numRequests = min(constants.CLIENT_UPPER_BOUND, abs(int(math.ceil(self.clientFunction(time.time())))))
+            numRequests = min(int(config.parameter("network", "clients.max")), abs(int(math.ceil(self.clientFunction(time.time())))))
             try:
                 timeBetween = 1.0/numRequests
             except ZeroDivisionError:
