@@ -1,7 +1,5 @@
 from twisted.internet.defer import Deferred, DeferredList
 
-from restApiClient import RestApiClient
-
 from thundercloud.job import JobResults, JobState
 from thundercloud.util import mergeDict
 

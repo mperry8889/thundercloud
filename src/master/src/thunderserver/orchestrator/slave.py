@@ -1,5 +1,5 @@
 from ..db import dbConnection as db
-from restApiClient import RestApiClient
+from thundercloud.restApiClient import RestApiClient
 
 # Slave perspective: send vanilla commands to slave servers
 class SlavePerspective(object):

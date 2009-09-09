@@ -4,11 +4,9 @@ from twisted.internet import reactor
 
 import simplejson as json
 
-from thundercloud.job import IJob
-
 import logging
 
-log = logging.getLogger("orchestrator.restApiClient")
+log = logging.getLogger("restApiClient")
 
 # Cython compatibility
 def RestApiClient__request(cls, url, method, postdata=None, cookies={}, timeout=10):
@@ -36,8 +34,6 @@ def RestApiClient_GET(cls, url):
 
 
 class RestApiClient(object):
-    implements(IJob)
-
     _request = classmethod(RestApiClient__request)
     POST = classmethod(RestApiClient_POST)
     GET = classmethod(RestApiClient_GET)
