@@ -4,10 +4,10 @@ test-reverse-proxy:
 	cd util && python reverseProxy.py
 
 test-master:
-	cd src/master/src && python master.py
+	cd src/master/src && python master.py ../master-sample.ini
 
 test-slave:
-	cd src/test/src && python slave.py
+	cd src/test/src && python slave.py ../slave-sample.ini
 
 
 clean:
