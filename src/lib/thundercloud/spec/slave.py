@@ -1,4 +1,4 @@
-from thundercloud.dataobject import DataObject
+from thundercloud.spec.dataobject import DataObject
 
 class SlaveSpec(DataObject):
     _attributes = {
