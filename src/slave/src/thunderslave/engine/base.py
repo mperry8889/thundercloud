@@ -10,7 +10,7 @@ from twisted.internet import reactor
 
 from thundercloud import constants
 from thundercloud import config
-from thundercloud.job import IJob, JobState, JobResults
+from thundercloud.spec.job import IJob, JobState, JobResults
 
 from ..db import dbConnection as db
 

@@ -1,6 +1,6 @@
 from twisted.internet.defer import Deferred, DeferredList
 
-from thundercloud.job import JobResults, JobState
+from thundercloud.spec.job import JobResults, JobState
 from thundercloud.util import mergeDict
 
 import simplejson as json

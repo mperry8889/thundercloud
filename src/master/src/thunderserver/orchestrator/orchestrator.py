@@ -1,5 +1,5 @@
 from thundercloud.spec.slave import SlaveSpec
-from thundercloud.job import JobSpec
+from thundercloud.spec.job import JobSpec
 
 from twisted.internet.defer import Deferred, DeferredList
 

@@ -4,7 +4,7 @@ import time
 import math
 
 from base import EngineBase
-from thundercloud.job import JobState
+from thundercloud.spec.job import JobState
 from thundercloud import config
 
 class HammerEngine(EngineBase):

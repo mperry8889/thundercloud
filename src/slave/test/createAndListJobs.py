@@ -4,7 +4,7 @@ import jsonpickle
 import sys
 import urllib
 
-from thundercloud.job import JobSpec, JobResults
+from thundercloud.spec.job import JobSpec, JobResults
 
 j = JobSpec()
 j.requests = {

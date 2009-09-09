@@ -9,15 +9,12 @@ from nodes import LeafNode
 from nodes import Http400, Http404
 
 from ..orchestrator import Orchestrator
-from thundercloud.job import IJob, JobSpec, JobResults
+from thundercloud.spec.job import IJob, JobSpec, JobResults
 
 log = logging.getLogger("restApi.job")
 
 # Handle requests sent to /job
 class Job(RootNode):
-
-    def GET(self, request):
-       return "WORKING"
 
     def postCallback(self, jobId, request):
         self.putChild("%d" % jobId, JobNode())

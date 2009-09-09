@@ -1,4 +1,4 @@
-from thundercloud.job import JobSpec, JobState
+from thundercloud.spec.job import JobSpec, JobState
 from ..engine import EngineFactory
 from ..db import dbConnection as db
 

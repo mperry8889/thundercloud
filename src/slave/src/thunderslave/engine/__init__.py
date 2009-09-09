@@ -1,7 +1,7 @@
 from benchmark import BenchmarkEngine
 from hammer import HammerEngine
 from dummy import DummyEngine
-from thundercloud.job import JobSpec
+from thundercloud.spec.job import JobSpec
 
 class EngineFactory(object):
     @staticmethod

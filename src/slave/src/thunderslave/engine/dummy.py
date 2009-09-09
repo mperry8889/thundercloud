@@ -1,6 +1,6 @@
 from zope.interface import implements
 
-from thundercloud.job import IJob
+from thundercloud.spec.job import IJob
 
 from base import IEngine
 from ..db import dbConnection as db
