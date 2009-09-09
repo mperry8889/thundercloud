@@ -7,7 +7,7 @@ from twisted.internet import reactor
 
 from base import EngineBase
 from thundercloud.job import JobState
-from thundercloud import constants
+from thundercloud import config
 
 class BenchmarkEngine(EngineBase):
 
@@ -21,7 +21,7 @@ class BenchmarkEngine(EngineBase):
     def _loop(self):
         if self.state == JobState.RUNNING:
             # calculates client function at time t
-            clientFunctionResult = min(constants.CLIENT_UPPER_BOUND, abs(int(math.ceil(self.clientFunction(time.time())))))
+            clientFunctionResult = min(config.CLIENT_UPPER_BOUND, abs(int(math.ceil(self.clientFunction(time.time())))))
             
             # only add clients if clientFunc(t) calls for more clients than are
             # currently in the system.  this may not always be the case -- if a 

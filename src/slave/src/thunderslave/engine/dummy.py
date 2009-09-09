@@ -1,7 +1,6 @@
-from zope.interface import Interface, Attribute, implements
+from zope.interface import implements
 
-from thundercloud import constants
-from thundercloud.job import IJob, JobSpec, JobState, JobResults
+from thundercloud.job import IJob
 
 from base import IEngine
 from ..db import dbConnection as db
