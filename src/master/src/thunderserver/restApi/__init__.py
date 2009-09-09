@@ -4,6 +4,7 @@ from twisted.internet import reactor
 
 from nodes import RootNode
 from job import JobApiTree
+from slave import SlaveApiTree
 
 class Die(RootNode):
     def GET(self, request):
@@ -16,4 +17,5 @@ def createRestApi():
     siteRoot.putChild("", RootNode())
     siteRoot.putChild("job", JobApiTree)
     siteRoot.putChild("die", Die()) # XXX
+    siteRoot.putChild("slave", SlaveApiTree)
     return server.Site(siteRoot)

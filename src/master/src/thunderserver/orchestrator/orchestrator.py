@@ -19,16 +19,7 @@ log = logging.getLogger("orchestrator")
 class _Orchestrator(object):
     def __init__(self):
         self.jobs = {}
- 
-        _slaves = ["192.168.1.151","192.168.1.152","192.168.1.153"]
-
-        for i in _slaves:
-            slaveSpec = SlaveSpec()
-            slaveSpec.host = i
-            slaveSpec.port = "7000"
-            slaveSpec.path = "/"
-            self.registerSlave(slaveSpec)
-        
+         
     def _getJobNo(self):
         jobNo = db.execute("SELECT jobNo FROM jobno").fetchone()["jobNo"]
         db.execute("UPDATE jobno SET jobNo = ?", (jobNo + 1,))
@@ -38,8 +29,18 @@ class _Orchestrator(object):
         db.execute("INSERT INTO orchestrator (job, operation, timestamp) VALUES (?, ?, ?)", 
                     (jobId, operation, datetime.datetime.now()))  
 
+    def registerSlaveCallback(self, slaveId, deferred):
+        log.debug("Slave %d connected" % slaveId)
+        deferred.callback(slaveId) 
+
     def registerSlave(self, slaveSpec):
-        SlaveAllocator.addSlave(slaveSpec)
+        log.debug("Connecting slave.  Spec: %s" % slaveSpec)
+        deferred = Deferred()
+        
+        d = SlaveAllocator.addSlave(slaveSpec)
+        d.addCallback(self.registerSlaveCallback, deferred)
+        
+        return deferred
     
     def unregisterSlave(self, slave):
         SlaveAllocator.removeSlave(slave)

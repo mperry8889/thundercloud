@@ -1,5 +1,7 @@
 from ..db import dbConnection as db
-from thundercloud.restApiClient import RestApiClient
+from thundercloud.util.restApiClient import RestApiClient
+from twisted.internet.defer import Deferred
+from twisted.internet import reactor
 
 # Slave perspective: send vanilla commands to slave servers
 class SlavePerspective(object):
@@ -48,9 +50,17 @@ class _SlaveAllocator(object):
     def __init__(self):
         self.slaves = {}
 
+
+    def addSlaveCallback(self, value, deferred):
+        deferred.callback(value)
+
     def addSlave(self, slaveSpec):
+        deferred = Deferred()
         slave = SlavePerspective(slaveSpec)
         self.slaves[slave] = SlaveStatus()
+        # XXX hack
+        reactor.callLater(0.25, self.addSlaveCallback, 1, deferred)
+        return deferred
     
     def removeSlave(self, slave):
         self.slaves.pop(slave)

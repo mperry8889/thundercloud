@@ -17,3 +17,6 @@ class SlaveSpec(DataObject):
             "state": None,
         },
     }
+
+    def validate(self):
+        return True

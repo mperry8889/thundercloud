@@ -1,13 +1,31 @@
 from twisted.internet.defer import Deferred, DeferredList
 
 from thundercloud.spec.job import JobResults, JobState
-from thundercloud.util import mergeDict
 
 import simplejson as json
 
 import logging
 
 log = logging.getLogger("orchestrator.perspectives")
+
+def _mergeDict(lhs, rhs, merge=lambda l, r: l):
+    if type(lhs) != type(rhs) != dict:
+        raise AttributeError
+
+    if lhs == {}:
+        return dict(rhs)
+    
+    if rhs == {}:
+        return dict(lhs)
+    
+    result = dict(lhs)
+    for k, v in rhs.iteritems():
+        if lhs.has_key(k):
+            result[k] = merge(lhs[k], rhs[k])
+        else:
+            result[k] = v
+    
+    return result
 
 
 # Cython compatibility
@@ -19,7 +37,7 @@ def AggregateJobResults_merge(cls, lhs, rhs):
                 result[k] = lhs[k] + rhs[k]
             return result
         else:
-            return mergeDict(lhs, rhs)
+            return _mergeDict(lhs, rhs)
     else:
         return lhs + rhs
 
@@ -108,7 +126,7 @@ class AggregateJobResults(JobResults):
 
                     # otherwise selectively do stuff by type
                     elif type(getattr(self, attr)) == dict:
-                        setattr(self, attr, mergeDict(getattr(self, attr), getattr(jobResult, attr), AggregateJobResults._merge))
+                        setattr(self, attr, _mergeDict(getattr(self, attr), getattr(jobResult, attr), AggregateJobResults._merge))
                     elif type(getattr(self, attr)) == int:
                         setattr(self, attr, getattr(self, attr) + getattr(jobResult, attr))
                     elif type(getattr(self, attr)) == float:

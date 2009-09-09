@@ -7,3 +7,6 @@ class MasterSpec(DataObject):
         "port": None,
         "path": None,
     }
+    
+    def validate(self):
+        return True
