@@ -91,14 +91,6 @@ class JobNode(LeafNode):
         deferred.addCallback(self.stopCallback, request)
         return NOT_DONE_YET
     
-    # modify some properties of a running job
-    def modify(self, jobId, args):
-        pass
-    # remove job from the system
-    def remove(self, jobId, args):
-        Orchestrator.removeJob(jobId)
-        return True
-    
     # status of a job in the system
     def stateCallback(self, value, request):
         self.writeJson(request, value)

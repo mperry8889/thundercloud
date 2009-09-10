@@ -10,7 +10,7 @@ def dbInit():
     
     _c.execute("""CREATE TABLE jobs (id INTEGER PRIMARY KEY,
                                      user INT NOT NULL,
-                                     startTime date NOT NULL,
+                                     startTime date,
                                      endTime date,
                                      spec jobSpec NOT NULL,
                                      results jobResults,
@@ -19,6 +19,10 @@ def dbInit():
     # job sequence number, for unique job IDs
     _c.execute("CREATE TABLE jobno (jobNo INTEGER NOT NULL)")
     _c.execute("INSERT INTO jobno VALUES (1)")
+
+    # slave sequence number
+    _c.execute("CREATE TABLE slaveno (slaveNo INTEGER NOT NULL)")
+    _c.execute("INSERT INTO slaveno VALUES (1)")
     
     _c.execute("""CREATE TABLE slaves (id INTEGER PRIMARY KEY,
                                        host TEXT,

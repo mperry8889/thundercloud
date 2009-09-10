@@ -3,6 +3,10 @@ from thundercloud.util.restApiClient import RestApiClient
 from twisted.internet.defer import Deferred
 from twisted.internet import reactor
 
+import logging
+
+log = logging.getLogger("orchestrator.slave")
+
 # Slave perspective: send vanilla commands to slave servers
 class SlavePerspective(object):
     def __init__(self, slaveSpec):
@@ -17,6 +21,7 @@ class SlavePerspective(object):
             return str("%s://%s:%s/%s/%s" % (self.slaveSpec.scheme, self.slaveSpec.host, self.slaveSpec.port, self.slaveSpec.path, path))
     
     def createJob(self, jobSpec):
+        log.debug("Creating job with spec %s" % jobSpec)
         return RestApiClient.POST(self.url("/job"), postdata=jobSpec.toJson())
            
     def startJob(self, jobId):
@@ -45,43 +50,52 @@ class SlaveStatus(object):
     def __init__(self):
         self.inUse = False
 
+class SlaveAlreadyConnected(Exception):
+    pass
+
 
 class _SlaveAllocator(object):
     def __init__(self):
         self.slaves = {}
 
+    def _getSlaveNo(self):
+        slaveNo = db.execute("SELECT slaveNo FROM slaveno").fetchone()["slaveNo"]
+        db.execute("UPDATE slaveno SET slaveNo = ?", (slaveNo + 1,))
+        return slaveNo
 
     def addSlaveCallback(self, value, deferred):
         deferred.callback(value)
+    
+    def addSlaveErrback(self, value, deferred):
+        deferred.errback(value)
 
     def addSlave(self, slaveSpec):
         deferred = Deferred()
+        
+        for (connectedSlave, status) in self.slaves.itervalues():
+            if connectedSlave.slaveSpec.host == slaveSpec.host:
+                raise SlaveAlreadyConnected
+        
+        slaveNo = self._getSlaveNo()
         slave = SlavePerspective(slaveSpec)
-        self.slaves[slave] = SlaveStatus()
+        status = SlaveStatus()
+        self.slaves[slaveNo] = (slave, status)
         # XXX hack
-        reactor.callLater(0.25, self.addSlaveCallback, 1, deferred)
+        reactor.callLater(0.25, self.addSlaveCallback, slaveNo, deferred)
         return deferred
     
-    def removeSlave(self, slave):
-        self.slaves.pop(slave)
+    def removeSlave(self, slaveId):
+        self.slaves.pop(slaveId)
     
-    def getSlaveByHost(self, host):
-        for slave in self.slaves:
-            if slave.host == host:
-                return slave
-    
-    def recommend(self, jobSpec):
-        return self.slaves.keys()
-    
-    def allocate(self, allocation):
-        for slave in allocation:
-            self.slaves[slave].inUse = True
+    def allocate(self, jobSpec):
+        slaves = []
+        for (slave, status) in self.slaves.itervalues():
+            status.inUse = True
+            slaves.append(slave)
+        return slaves
 
-    def release(self, allocation):
-        for slave in allocation:
-            self.slaves[slave].inUse = False
-    
-
+    def release(self, slaveList):
+        pass
     
 
 SlaveAllocator = _SlaveAllocator()

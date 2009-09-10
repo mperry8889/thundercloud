@@ -2,7 +2,7 @@ from thundercloud.spec.dataobject import DataObject
 
 class SlaveSpec(DataObject):
     _attributes = {
-        "scheme:": "http",
+        "scheme": "http",
         "host": None,
         "port": None,
         "path": None,

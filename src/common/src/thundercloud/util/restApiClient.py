@@ -35,7 +35,7 @@ def _RestApiClient__request(cls, url, method, postdata=None, cookies={}, timeout
     reactor.connectTCP(host, port, factory)
     return factory
 
-def _RestApiClient_POST(cls, url, postdata=None, cookies={}, timeout=10):
+def _RestApiClient_POST(cls, url, postdata=None, cookies={}, timeout=600):
     request = cls._request(url, "POST", postdata, cookies, timeout)
     return request.deferred
 

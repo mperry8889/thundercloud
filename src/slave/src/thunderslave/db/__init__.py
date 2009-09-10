@@ -11,7 +11,7 @@ def dbInit():
     
     # main job tracking table
     _c.execute("""CREATE TABLE jobs (id INTEGER PRIMARY KEY,
-                                     startTime date NOT NULL,
+                                     startTime date,
                                      endTime date,
                                      spec jobSpec NOT NULL,
                                      results jobResults)""")
