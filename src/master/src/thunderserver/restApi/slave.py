@@ -13,7 +13,7 @@ from thundercloud.spec.slave import SlaveSpec
 
 log = logging.getLogger("restApi.slave")
 
-# Handle requests sent to /job
+# Handle requests sent to /slave
 class Slave(RootNode):
 
     def postCallback(self, slaveId, request):

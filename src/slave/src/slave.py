@@ -34,7 +34,7 @@ path = config.parameter("master", "path")
 if config.parameter("misc", "standalone", type=bool) != True:
     slaveSpec = SlaveSpec()
     slaveSpec.host = socket.gethostname()
-    slaveSpec.port = config.parameter("master", "port", type=int)
+    slaveSpec.port = config.parameter("network", "port", type=int)
     slaveSpec.path = ""
     
     masterUrl = "%s://%s:%d/%s/slave" % (scheme, host, port, path)
