@@ -48,11 +48,9 @@ class _Orchestrator(object):
     # create a job perspective object locally, and create a job on
     # all remote servers.    
     def createJobSlaveCallback(self, result, slave):
-        log.debug("Firing per-slave callback")
         return result, slave
     
     def createJobCallback(self, results, jobId, deferred):
-        log.debug("Firing create job callback")
         for (success, result) in results:
             if success == True:
                 (remoteJobId, slave) = result

@@ -25,6 +25,14 @@ except:
 logging.basicConfig(level=eval("logging.%s" % config.parameter("log", "level")))
 log = logging.getLogger("main")
 
+# try the epoll reactor if it's available
+try:
+    from twisted.internet import epollreactor
+    epollreactor.install()
+    log.debug("Using epoll reactor")
+except:
+    log.debug("Using default select reactor")
+
 # connect to master server in INI file
 scheme = config.parameter("master", "scheme")
 host = config.parameter("master", "host")
