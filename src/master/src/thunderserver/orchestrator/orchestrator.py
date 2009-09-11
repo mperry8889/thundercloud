@@ -15,7 +15,7 @@ import datetime
 log = logging.getLogger("orchestrator")
 
 
-# Handle the multitide of jobs and slaves in the system
+# Handle the multitude of jobs and slaves in the system
 class _Orchestrator(object):
     def __init__(self):
         self.jobs = {}
@@ -95,7 +95,7 @@ class _Orchestrator(object):
     
     
     def startJob(self, jobId):
-        self._logToDb(jobId, "start")
+        #self._logToDb(jobId, "start")
         return self.jobs[jobId].start()
     
     def pauseJob(self, jobId):

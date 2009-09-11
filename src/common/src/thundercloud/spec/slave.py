@@ -1,5 +1,12 @@
 from thundercloud.spec.dataobject import DataObject
 
+class SlaveState(object):
+    DISCONNECTED = 0
+    CONNECTED = 1
+    IDLE = 2
+    WORKING = 3
+    UNKNOWN = 9999
+
 class SlaveSpec(DataObject):
     _attributes = {
         "scheme": "http",

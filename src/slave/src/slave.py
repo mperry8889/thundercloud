@@ -8,6 +8,8 @@ import logging
 import sys
 import socket
 
+from twisted.python import log as twistedLog
+
 def registerMasterCallback(value):
     log.info("Connected to master.  This server is slave ID %d" % int(value))
 
@@ -49,11 +51,13 @@ if config.parameter("misc", "standalone", type=bool) != True:
     
     log.info("Connecting to master: %s" % masterUrl)
     
-    d = RestApiClient.POST(str(masterUrl), slaveSpec.toJson(), timeout=10)
+    d = RestApiClient.POST(str(masterUrl), slaveSpec.toJson(), timeout=10, credentials=("foo", "foo"))
     d.addCallback(registerMasterCallback)
     d.addErrback(registerMasterErrback)
 
 
 reactor.listenTCP(config.parameter("network", "port", type=int), createRestApi())
 log.debug("Listening on port %s, starting reactor" % config.parameter("network", "port"))
+twistedLog.startLogging(sys.stderr)
+
 reactor.run()

@@ -7,6 +7,8 @@ from twisted.internet.defer import DeferredList
 import logging
 import sys
 
+from twisted.python import log as twistedLog
+
 try:
     config.readConfig(sys.argv[1])
 except:
@@ -60,5 +62,6 @@ deferredList.addCallback(registerSlaveCallback)
 
 log.debug("Listening on port %s, starting reactor" % config.parameter("network", "port"))
 reactor.listenTCP(config.parameter("network", "port", type=int), createRestApi())
+twistedLog.startLogging(sys.stderr)
 
 reactor.run()

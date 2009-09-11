@@ -1,15 +1,22 @@
 import sqlite3
+import crypt
 
 def dbInit():
     _c = dbConnection.cursor()
     
+    
+    _c.execute("""CREATE TABLE groups (id INTEGER PRIMARY KEY,
+                                       name TEXT)""")
+    
     _c.execute("""CREATE TABLE users (id INTEGER PRIMARY KEY,
                                       username TEXT NOT NULL,
                                       password TEXT NOT NULL)""")
-    _c.execute("""INSERT INTO users (id, username, password) VALUES (0, "foo", "foo")""")
+    
+    _c.execute("INSERT INTO users (id, username, password) VALUES (0, \"SLAVE\", ?)", (crypt.crypt("slave", "sl"),))
+    _c.execute("INSERT INTO users (id, username, password) VALUES (1, \"foo\", ?)", (crypt.crypt("foo", "12"),))
     
     _c.execute("""CREATE TABLE jobs (id INTEGER PRIMARY KEY,
-                                     user INT NOT NULL,
+                                     user INTEGER NOT NULL,
                                      startTime date,
                                      endTime date,
                                      spec jobSpec NOT NULL,

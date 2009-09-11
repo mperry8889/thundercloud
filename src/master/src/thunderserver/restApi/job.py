@@ -15,6 +15,9 @@ log = logging.getLogger("restApi.job")
 
 # Handle requests sent to /job
 class Job(RootNode):
+    
+    def GET(self, request):
+        return ""
 
     def postCallback(self, jobId, request):
         self.putChild("%d" % jobId, JobNode())
@@ -30,7 +33,6 @@ class Job(RootNode):
         deferred = Orchestrator.createJob(jobSpecObj)
         deferred.addCallback(self.postCallback, request)
         return NOT_DONE_YET
-
 
 # Handle requests for /job/n[/operation] URLs
 class JobNode(LeafNode):
@@ -122,8 +124,3 @@ class JobNode(LeafNode):
         deferred = Orchestrator.jobResults(jobId, short)
         deferred.addCallback(self.resultsCallback, request)
         return NOT_DONE_YET
-
-
-# Build the API URL hierarchy
-JobApiTree = Job()
-JobApiTree.putChild("", Job())

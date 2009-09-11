@@ -1,4 +1,4 @@
-export PYTHONPATH := $(shell pwd)/src/lib:$(shell pwd)/src/master/src:$(shell pwd)/src/slave/src
+export PYTHONPATH := $(shell pwd)/src/common/src:$(shell pwd)/src/master/src:$(shell pwd)/src/slave/src
 
 test-reverse-proxy:
 	cd util && python reverseProxy.py
@@ -7,7 +7,7 @@ test-master:
 	cd src/master/src && python master.py ../master-sample.ini
 
 test-slave:
-	cd src/test/src && python slave.py ../slave-sample.ini
+	cd src/slave/src && python slave.py ../slave-sample.ini
 
 
 clean:

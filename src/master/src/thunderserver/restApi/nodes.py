@@ -4,6 +4,8 @@ from zope.interface import Interface, implements
 import simplejson as json
 import logging
 
+from twisted.web.vhost import VHostMonsterResource
+
 log = logging.getLogger("restApi.node")
 
 class Http400(Exception):
@@ -19,7 +21,7 @@ class INode(Interface):
     def POST(self, request):
         """POST operation"""
     
-class Node(Resource):
+class Node(VHostMonsterResource):
     implements(INode)
     
     # there's a bit of indirection here having child nodes implement
