@@ -59,16 +59,16 @@ $(document).ready(function() {
 });
 
 tc.ui.dashboard.update = function(response) {
-	var percentage = Math.min(100, 100 * (response.elapsedTime / response.duration));
-	var timeleft = Math.max(0, response.duration - response.elapsedTime);
+	var percentage = Math.min(100, 100 * (response.time_elapsed / response.limits_duration));
+	var timeleft = Math.max(0, response.limits_duration - response.time_elapsed);
 	tc.ui.dashboard.progressbar.progressbar("value", percentage);
-	$("#dashboard-status").html(tc.api.JobStateToText[response.state]);
+	$("#dashboard-status").html(tc.api.JobStateToText[response.job_state]);
 	$("#dashboard-percent-complete").html(percentage);
-	$("#dashboard-time-elapsed").html(response.elapsedTime);
+	$("#dashboard-time-elapsed").html(response.time_elapsed);
 	$("#dashboard-time-remaining").html(timeleft);
-	$("#dashboard-stats-current-iterations").html(response.iterations);
-	$("#dashboard-stats-current-elapsedTime").html(response.elapsedTime);
-	$("#dashboard-stats-current-bytesTransferred").html(response.bytesTransferred);
+	$("#dashboard-stats-current-iterations").html(response.iterations_total);
+	$("#dashboard-stats-current-elapsedTime").html(response.time_elapsed);
+	$("#dashboard-stats-current-bytesTransferred").html(response.transfer_total);
 	
 	if (response.state == tc.api.JobState.COMPLETE) {
 		tc.ui.dashboard.jobComplete();
@@ -81,7 +81,7 @@ tc.ui.dashboard.jobComplete = function() {
 	$("#dashboard-button-stop").attr("disabled", true);
 	$("#dashboard-button-pause").attr("disabled", true);
 	tc.api.jobResults(tc.ui.jobId, false, function(data, statusText) {
-		tc.ui.dashboard.plot(jsonParse(data).statisticsByTime);
+		tc.ui.dashboard.plot(jsonParse(data).results_byTime);
 	});	
 	tc.ui.wizard.tabs.tabs("enable", 0);
 	tc.ui.newtab.reset();
@@ -173,7 +173,7 @@ tc.ui.dashboard.plotResponseTime = function(data) {
 	for (var i = 1; i < keys.length; i++) {
 		var j = keys[i];
 		var x = parseFloat(j);
-		var y = parseFloat(data[j]["averageResponseTime"]*1000);
+		var y = parseFloat(data[j]["responseTime"]*1000);
 		
 		xMax = (x > xMax ? x : xMax);
 		yMax = (y > yMax ? y : yMax);

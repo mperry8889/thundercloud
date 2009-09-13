@@ -58,7 +58,7 @@ class _Orchestrator(object):
                 self.jobs[jobId].addSlave(slave, remoteJobId)
             else:
                 deferred.errback(jobId)
-                break
+                return
         log.info("Created job %d" % jobId)
             
         self._logToDb(jobId, "create")

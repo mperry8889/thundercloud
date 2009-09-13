@@ -79,16 +79,16 @@ def AggregateJobResults_aggregateStatisticsByTime(cls, statsList, statsInterval)
                 if i - statsInterval <= float(k) < i + statsInterval:
                     distance = (statsInterval - abs(float(k) - i))
                     weight = distance / statsInterval
-                    for v in ["requestsCompleted", "requestsFailed", "requestsPerSec", "clients", "iterations"]:
+                    for v in ["iterations_total", "iterations_complete", "iterations_fail", "requestsPerSec"]:
                         try:
                             result[i][v] += stat[k][v] * weight
                         except KeyError:
                             result[i][v] = stat[k][v] * weight
 
                     try:
-                        result[i]["averageResponseTime"] += stat[k]["averageResponseTime"]
+                        result[i]["responseTime"] += stat[k]["responseTime"]
                     except KeyError:
-                        result[i]["averageResponseTime"] = 0
+                        result[i]["responseTime"] = 0
 
     return result
 
@@ -101,9 +101,9 @@ class AggregateJobResults(JobResults):
     _aggregateStatisticsByTimeSort = classmethod(AggregateJobResults_aggregateStatisticsByTimeSort)
     _aggregateStatisticsByTime = classmethod(AggregateJobResults_aggregateStatisticsByTime)   
     
-    _manuallyAggregate = ["jobId", "state", "statisticsByTime"]
-    _aggregateByAdding = ["iterations", "requestsCompleted", "requestsFailed", "bytesTransferred", "errors", "nodes"]
-    _aggregateByAveraging = ["elapsedTime", "transferLimit", "duration", "timeout"]
+    _manuallyAggregate = ["job_id", "job_state", "results_byTime"]
+    _aggregateByAdding = ["job_nodes", "iterations_total", "iterations_complete", "iterations_fail", "transfer_total",  "results_errors"]
+    _aggregateByAveraging = ["time_elapsed", "time_paused", "limits_transfer", "limits_duration"]
     
     def aggregate(self, jobResults, statsInterval, shortResults):
         for attr in self._attributes:                
@@ -133,14 +133,14 @@ class AggregateJobResults(JobResults):
                         setattr(self, attr, getattr(self, attr) + getattr(jobResult, attr))
         
         # elapsed time
-        self.elapsedTime = jobResults[0].elapsedTime
+        self.time_elapsed = jobResults[0].time_elapsed
         
         # aggregate the job state separately    
-        self.state = AggregateJobResults._aggregateState([jobResult.state for jobResult in jobResults])
+        self.job_state = AggregateJobResults._aggregateState([jobResult.job_state for jobResult in jobResults])
         
         # statisticsByTime might not exist if the results are shortResults. if it's there, aggregate some results
         if shortResults != True:
-            self.statisticsByTime = AggregateJobResults._aggregateStatisticsByTime([jobResult.statisticsByTime for jobResult in jobResults], statsInterval)
+            self.results_ByTime = AggregateJobResults._aggregateStatisticsByTime([jobResult.results_byTime for jobResult in jobResults], statsInterval)
         
         
 # Job perspective: local job ID corresponds to multiple remote job IDs on
@@ -216,7 +216,7 @@ class JobPerspective(object):
                     decodedResults.append((status, JobResults(json.loads(result))))
            
         # set the job ID to the master's job ID
-        aggregateResults.jobId = self.jobId
+        aggregateResults.job_id = self.jobId
         
         # combine and add results from all the slave servers.  this 
         # aggregates things like bytes transferred, requests completed, etc.
@@ -225,7 +225,7 @@ class JobPerspective(object):
         # if we're doing no stats, cut out statisticsByTime complete
         if shortResults == True:
             try:
-                del(aggregateResults.statisticsByTime)
+                del(aggregateResults.results_byTime)
             except AttributeError:
                 pass     
         

@@ -67,12 +67,11 @@ class EngineBase(object):
         self._averageResponseTime = 0
         self.statisticsByTime = {
             0: {
-                "iterations": 0,
-                "requestsCompleted": 0,
-                "requestsFailed": 0,
+                "iterations_total": 0,
+                "iterations_complete": 0,
+                "iterations_fail": 0,
                 "requestsPerSec": 0,
-                "clients": 0,
-                "averageResponseTime": 0,
+                "responseTime": 0,
             }
         }
         self.statsInterval = 60
@@ -189,7 +188,7 @@ class EngineBase(object):
     
         if self.bytesTransferred >= self.transferLimit:
             self.stop()        
-    
+
     
     # generate statistics
     def _generateStats(self, force=False):
@@ -198,14 +197,14 @@ class EngineBase(object):
         if (self.elapsedTime - self._statsBookmark >= self.statsInterval) or force:
             try:
                 self.statisticsByTime[self.elapsedTime] = {
-                    "iterations": self.iterations,
-                    "requestsCompleted": self.requestsCompleted,
-                    "requestsFailed": self.requestsFailed,
-                    "requestsPerSec": float(self.iterations - self.statisticsByTime[self._statsBookmark]["iterations"])/float(self.elapsedTime - self._statsBookmark),
-                    # XXX: this isn't entirely accurate. this gives f(t) but isn't the
-                    # actual number of clients in the system
-                    "clients": min(int(config.parameter("network", "clients.max")), abs(int(math.ceil(self.clientFunction(time.time()))))),
-                    "averageResponseTime": self._averageResponseTime,
+                    "iterations_total": self.iterations,
+                    "iterations_success": self.requestsCompleted,
+                    "iterations_fail": self.requestsFailed,
+                    "timeToConnect": 0,
+                    "timeToFirstByte": 0,
+                    "responseTime": self._averageResponseTime,
+                    "requestsPerSec": float(self.iterations - self.statisticsByTime[self._statsBookmark]["iterations_total"])/float(self.elapsedTime - self._statsBookmark),
+                    "throughput": 0,
                 }
                 
                 # if it's been less than 1 second since the last stats
@@ -257,27 +256,29 @@ class EngineBase(object):
 
 
     # generate and fill in a JobResults object
-    def results(self, short=False):
+    def results(self, short=False):        
         jobResults = JobResults()
-        jobResults.jobId = self.jobId
-        jobResults.state = self.state
-        jobResults.iterations = self.iterations
-        jobResults.transferLimit = self.transferLimit
-        jobResults.bytesTransferred = self.bytesTransferred
-        jobResults.duration = self.duration
-        jobResults.elapsedTime = self.elapsedTime
-        jobResults.errors = self.errors
-        jobResults.requestsCompleted = self.requestsCompleted
-        jobResults.requestsFailed = self.requestsFailed
-        
+        jobResults.job_id = self.jobId
+        jobResults.job_state = self.state
+        jobResults.job_nodes = 1
+        jobResults.iterations_total = self.iterations
+        jobResults.iterations_success = self.requestsCompleted
+        jobResults.iterations_fail = self.requestsFailed
+        jobResults.limits_transfer = self.transferLimit
+        jobResults.limits_duration = self.duration
+        jobResults.time_elapsed = self.elapsedTime
+        jobResults.time_paused = self.pausedTime
+        jobResults.transfer_total = self.bytesTransferred
+        jobResults.results_errors = {}        
+
         # don't attach statistics if the caller is looking for short results
         if short == True:
             try:
-                del(jobResults.statisticsByTime)
+                del(jobResults.results_byTime)
             except AttributeError:
                 pass
         else:
-            jobResults.statisticsByTime = self.statisticsByTime
+            jobResults.results_byTime = self.statisticsByTime
         
         return jobResults
     

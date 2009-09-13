@@ -169,8 +169,8 @@ tc.api.poll = function(jobId, delay, callback, errback) {
 	tc.api.pollMap[jobId] = { delay: delay, timeoutId: null, callback: callback };
 	tc.api.jobResults(jobId, true, function(data, statusText) {
 		var response = jsonParse(data);
-		var state = parseInt(response.state);
-		var jobId = parseInt(response.jobId);
+		var state = parseInt(response.job_state);
+		var jobId = parseInt(response.job_id);
 		var delay = tc.api.pollMap[jobId]["delay"];
 		var callback = tc.api.pollMap[jobId]["callback"];
 		var errback = null;

@@ -95,19 +95,40 @@ sqlite3.register_converter("jobSpec", lambda s: JobSpec(json.loads(s)))
 
 
 class JobResults(DataObject):
-    _attributes = {     
-        "jobId": 0,
-        "state": None,
-        "iterations": 0,
-        "transferLimit": 0,
-        "bytesTransferred": 0,
-        "duration": 0,
-        "elapsedTime": 0,
-        "statisticsByTime": {"":{}},
-        "errors": {},
-        "requestsCompleted": 0,
-        "requestsFailed": 0,
-        "nodes": 0,
+    _attributes = {
+        "job_id": 0,
+        "job_state": None,
+        "job_nodes": 0,
+        
+        "iterations_total": 0,
+        "iterations_success": 0,
+        "iterations_fail": 0,
+        
+        "limits_transfer": 0,
+        "limits_duration": 0,
+        
+        "time_elapsed": 0,
+        "time_paused": 0,
+        
+        "transfer_total": 0,
+        
+        "results_errors": {
+            400: 0,
+            401: 0,
+            500: 0,
+        },
+        "results_byTime": {
+            "": {
+                "iterations_total": 0,
+                "iterations_success": 0,
+                "iterations_fail": 0,
+                "timeToConnect": 0,
+                "timeToFirstByte": 0,
+                "responseTime": 0,
+                "requestsPerSec": 0,
+                "throughput": 0,
+            },
+        },
     }
 
 sqlite3.register_converter("jobResults", lambda s: JobResults(json.loads(s)))
