@@ -6,7 +6,7 @@ import logging
 import datetime
 import copy
 
-from twisted.web.client import HTTPClientFactory, _parse
+from twisted.web.client import HTTPDownloader, _parse
 from twisted.internet import reactor
 
 from thundercloud import constants
@@ -17,18 +17,41 @@ from ..db import dbConnection as db
 
 log = logging.getLogger("engine")
 
-class IEngine(Interface):
-    clients = Attribute("""(Theoretical) clients in the system""")
+# This is our custom HTTP client factory.  Note that it's an old-style class.
+class StatisticalHTTPDownloader(HTTPDownloader):        
+    def __init__(self, url, fileOrName, method="GET", postdata=None, cookies=None, headers=None, agent=None, timeout=None):
+        HTTPDownloader.__init__(self, url, fileOrName, method=method, postdata=postdata, cookies=cookies, headers=headers, agent=agent, timeout=timeout)
+        self.value = {
+            "startTime": time.time(),
+            "timeToConnect": 0,
+            "timeToFirstByte": 0,
+            "elapsedTime": 0,
+            "bytesTransferred": 0,
+        }
     
-    def results(self):
-        """Generate a JobResult object"""
+    def startedConnecting(self, connector):
+        self.value["timeToConnect"] = time.time() - self.value["startTime"]
+        HTTPDownloader.startedConnecting(self, connector)
+        
+    def pageStart(self, partialContent):
+        self.value["timeToFirstByte"] = time.time() - self.value["startTime"]
+        HTTPDownloader.pageStart(self, partialContent)
+        
+    def pagePart(self, data):
+        self.value["bytesTransferred"] += len(data)
+        HTTPDownloader.pagePart(self, data)
+            
+    def pageEnd(self):
+        self.value["elapsedTime"] = time.time() - self.value["startTime"]
+        HTTPDownloader.pageEnd(self)
+
 
 # This class sets up the guidelines for how engines should work -- mostly
 # in terms of statistics gathering and ensuring basic functionality is 
 # consistent across implementations, and taking care of some muckwork that
 # doesn't need to be reproduced
 class EngineBase(object):
-    implements(IEngine, IJob)
+    implements(IJob)
   
     def __init__(self, jobId, jobSpec):
         self.jobId = jobId
@@ -60,8 +83,10 @@ class EngineBase(object):
         self.requestsCompleted = 0
         self.requestsFailed = 0
         self.errors = JobResults().results_errors
-        self._averageResponseTime = 0
         self.statisticsByTime = JobResults().results_byTime
+        self._averageTimeToConnect = 0
+        self._averageTimeToFirstByte = 0
+        self._averageResponseTime = 0
         self.statsInterval = 60
         self._statsBookmark = 0          # shortcut to last time stats were generated.
                                          # avoids listing/sorting statisticsByTime keys
@@ -107,16 +132,16 @@ class EngineBase(object):
     # handy method to set up a Deferred and set up callbacks.  this needs to be
     # a separate method so it can easily be triggered by reactor.callLater
     def _request(self, host, port, method, url, postdata, cookies):
-        requestTime = time.time()
-        factory = HTTPClientFactory(url,
-                                    method=method,
-                                    postdata=postdata,
-                                    cookies=cookies, 
-                                    agent=str(self.userAgent),
-                                    timeout=self.timeout)
+        factory = StatisticalHTTPDownloader(url,
+                                            "/dev/null",
+                                            method=method,
+                                            postdata=postdata,
+                                            cookies=cookies, 
+                                            agent=str(self.userAgent),
+                                            timeout=self.timeout)
         reactor.connectTCP(host, port, factory)
-        factory.deferred.addCallback(self.callback, requestTime)
-        factory.deferred.addErrback(self.errback, requestTime)
+        factory.deferred.addCallback(self.callback)
+        factory.deferred.addErrback(self.errback)
         try:
             self.bytesTransferred = self.bytesTransferred + len(cookies)
             self.bytesTransferred = self.bytesTransferred + len(postdata)
@@ -165,11 +190,13 @@ class EngineBase(object):
     
     
     # some bookkeeping
-    def _bookkeep(self, value, requestTime):
+    def _bookkeep(self, value):
         self.iterations = self.iterations + 1
-        self.bytesTransferred = self.bytesTransferred + len(value)
-        self.elapsedTime = time.time() - self.startTime - self.pausedTime
-        self._averageResponseTime = ((time.time() - requestTime) + ((self.iterations-1) * self._averageResponseTime))/self.iterations
+        self.bytesTransferred = self.bytesTransferred + value["bytesTransferred"]
+        self.elapsedTime += value["elapsedTime"]
+        self._averageTimeToConnect = (value["timeToConnect"] + ((self.iterations-1) * self._averageTimeToConnect))/self.iterations
+        self._averageTimeToFirstByte = (value["timeToFirstByte"] + ((self.iterations-1) * self._averageTimeToFirstByte))/self.iterations
+        self._averageResponseTime = (value["elapsedTime"] + ((self.iterations-1) * self._averageResponseTime))/self.iterations
     
         if self.elapsedTime >= self.duration:
             self.stop()
@@ -188,8 +215,8 @@ class EngineBase(object):
                     "iterations_total": self.iterations,
                     "iterations_success": self.requestsCompleted,
                     "iterations_fail": self.requestsFailed,
-                    "timeToConnect": 0,
-                    "timeToFirstByte": 0,
+                    "timeToConnect": self._averageTimeToConnect,
+                    "timeToFirstByte": self._averageTimeToFirstByte,
                     "responseTime": self._averageResponseTime,
                     "requestsPerSec": float(self.iterations - self.statisticsByTime[self._statsBookmark]["iterations_total"])/float(self.elapsedTime - self._statsBookmark),
                     "throughput": 0,
@@ -217,16 +244,16 @@ class EngineBase(object):
     # default callback which handles bookkeeping.  derived classes
     # can re-implement callback() but should probably call this method
     # via super(), or else duplicate the bookkeeping code
-    def callback(self, value, requestTime):
-        self._bookkeep(value, requestTime)
+    def callback(self, value):
+        self._bookkeep(value)
         self._generateStats()
         self.requestsCompleted = self.requestsCompleted + 1
 
     
     # default errback -- see comments for callback()
-    def errback(self, value, requestTime):
+    def errback(self, value):
         log.debug("Firing errback.  Error: %s" % value)
-        self._bookkeep("", requestTime)
+        self._bookkeep("")
         self._generateStats()
         self.requestsFailed = self.requestsFailed + 1
         

@@ -50,8 +50,8 @@ class BenchmarkEngine(EngineBase):
 
     # after each request is processed, do some calculations and spin up some
     # new requests if the test is going to continue
-    def callback(self, value, requestTime):
-        super(BenchmarkEngine, self).callback(value, requestTime)
+    def callback(self, value):
+        super(BenchmarkEngine, self).callback(value)
         self.clients = self.clients - 1
         
         # just bail if the job isn't running anymore
@@ -63,7 +63,7 @@ class BenchmarkEngine(EngineBase):
             self._loop()
 
 
-    def errback(self, value, requestTime):
-        super(BenchmarkEngine, self).errback(value, requestTime)
+    def errback(self, value):
+        super(BenchmarkEngine, self).errback(value)
         self.clients = self.clients - 1
     

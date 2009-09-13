@@ -157,6 +157,8 @@ tc.ui.dashboard.plotRequestsPerSec = function(data) {
 	);
 };
 tc.ui.dashboard.plotResponseTime = function(data) {
+	var timeToConnect = []
+	var timeToFirstByte = []
 	var responseTime = [];
 	var xMax = 0;
 	var yMax = 0;
@@ -173,21 +175,40 @@ tc.ui.dashboard.plotResponseTime = function(data) {
 	for (var i = 1; i < keys.length; i++) {
 		var j = keys[i];
 		var x = parseFloat(j);
-		var y = parseFloat(data[j]["responseTime"]*1000);
+		
+		var _ttc = parseFloat(data[j]["timeToConnect"])*1000;
+		var _ttfb = parseFloat(data[j]["timeToFirstByte"])*1000;
+		var _rt = parseFloat(data[j]["responseTime"])*1000;
+		
+		timeToConnect.push([x, _ttc]);
+		timeToFirstByte.push([x, _ttfb]);
+		responseTime.push([x, _rt]);
 		
 		xMax = (x > xMax ? x : xMax);
-		yMax = (y > yMax ? y : yMax);
-		responseTime.push([x, y]);
+		yMax = (Math.max(_ttc, _ttfb, _rt) > yMax ? Math.max(_ttc, _ttfb, _rt) : yMax);
 	}
 
 	$.plot($("#dashboard-graphs-responseTime"), 
         [
          { 
+        	label: "average time to connect (ms)", 
+        	points: { show: true }, 
+        	lines: { show: true },
+        	data: timeToConnect, 
+         },
+         { 
+        	label: "average time to first byte (ms)", 
+        	points: { show: true }, 
+        	lines: { show: true },
+        	data: timeToFirstByte,
+         },
+         { 
         	label: "average response time (ms)", 
         	points: { show: true }, 
         	lines: { show: true },
         	data: responseTime, 
-         },
+         },        
+         
         ],
         { 
         	xaxis: { max: xMax }, 

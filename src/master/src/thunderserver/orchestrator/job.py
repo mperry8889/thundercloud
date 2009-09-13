@@ -85,10 +85,13 @@ def AggregateJobResults_aggregateResultsByTime(cls, statsList, statsInterval):
                         except KeyError:
                             result[i][v] = stat[k][v] * weight
 
-                    try:
-                        result[i]["responseTime"] += stat[k]["responseTime"]
-                    except KeyError:
-                        result[i]["responseTime"] = 0
+                    # XXX this is summing when it really should be averaging
+                    for u in ["timeToConnect", "timeToFirstByte", "responseTime"]:
+                        try:
+                            result[i][u] += stat[k][u]
+                        except KeyError:
+                            result[i][u] = 0
+                        
 
     return result
 
