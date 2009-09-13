@@ -44,7 +44,7 @@ def createRestApi():
     # job tree needs its own authentication, unless authentication is disabled
     try:
         if config.parameter("network", "authentication", type=bool) == False:
-            log.warn("Authentication disabled for /job")
+            log.warn("HTTP Authentication disabled for /job")
             siteRoot.putChild("job", Job())
         else:
             raise
@@ -56,7 +56,7 @@ def createRestApi():
     # slave tree needs specific authentication
     try:
         if config.parameter("network", "authentication", type=bool) == False:
-            log.warn("Authentication disabled for /slave")
+            log.warn("HTTP Authentication disabled for /slave")
             siteRoot.putChild("slave", Slave())
         else:
             raise

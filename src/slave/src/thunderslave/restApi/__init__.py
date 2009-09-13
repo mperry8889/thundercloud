@@ -1,21 +1,30 @@
 from twisted.web import server
 from twisted.web import resource
 
-from status import StatusApiTree
-from job import JobApiTree
+from site import siteRoot
 
-from nodes import RootNode
+from thundercloud import config
 
-class Die(RootNode):
-    def GET(self, request):
-        from twisted.internet import reactor
-        reactor.stop()
+from ..db import dbConnection as db
+
+from ..authentication.root import RootRealm, RootDBChecker
+from twisted.web import guard
+from twisted.cred.portal import Portal
+
+import logging
+
+log = logging.getLogger("restApi")
+
 
 def createRestApi():
-    """Create the REST API URL hierarchy"""
-    siteRoot = RootNode()
-    siteRoot.putChild("", RootNode())
-    siteRoot.putChild("status", StatusApiTree)
-    siteRoot.putChild("job", JobApiTree)
-    siteRoot.putChild("die", Die()) # XXX
-    return server.Site(siteRoot)
+    try:
+        if config.parameter("network", "authentication", type=bool) == False:
+            log.warn("HTTP Authentication disabled")
+            return server.Site(siteRoot)
+        else:
+            raise
+    except:
+        rootWrapper = guard.HTTPAuthSessionWrapper(Portal(RootRealm(), [RootDBChecker(db)]), [guard.BasicCredentialFactory("thundercloud root management")])
+        return server.Site(rootWrapper)
+    
+

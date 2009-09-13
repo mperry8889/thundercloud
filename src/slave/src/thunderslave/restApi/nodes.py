@@ -40,10 +40,10 @@ class Node(Resource):
         pass
     
     def GET(self, request):
-        return None
+        raise NotImplementedError
     
     def POST(self, request):
-        return None
+        raise NotImplementedError
 
     
 class RootNode(Node):

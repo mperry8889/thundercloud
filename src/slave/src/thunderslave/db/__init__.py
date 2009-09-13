@@ -1,14 +1,22 @@
 import sqlite3
+import crypt
 
 def dbInit():
     _c = dbConnection.cursor()
+    
+    _c.execute("""CREATE TABLE users (id INTEGER PRIMARY KEY,
+                                      username TEXT NOT NULL,
+                                      password TEXT NOT NULL)""")
+    
+    _c.execute("INSERT INTO users (id, username, password) VALUES (0, \"SLAVE\", ?)", (crypt.crypt("slave", "sl"),))
+    _c.execute("INSERT INTO users (id, username, password) VALUES (1, \"foo\", ?)", (crypt.crypt("foo", "12"),))
     
     # master servers we're connected to
     _c.execute("""CREATE TABLE masters (id INTEGER PRIMARY KEY,
                                         host TEXT NOT NULL,
                                         port INTEGER NOT NULL,
                                         path TEXT NOT NULL)""")
-    
+
     # main job tracking table
     _c.execute("""CREATE TABLE jobs (id INTEGER PRIMARY KEY,
                                      startTime date,
