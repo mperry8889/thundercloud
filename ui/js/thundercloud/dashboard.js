@@ -70,7 +70,7 @@ tc.ui.dashboard.update = function(response) {
 	$("#dashboard-stats-current-elapsedTime").html(response.time_elapsed);
 	$("#dashboard-stats-current-bytesTransferred").html(response.transfer_total);
 	
-	if (response.state == tc.api.JobState.COMPLETE) {
+	if (response.job_state == tc.api.JobState.COMPLETE) {
 		tc.ui.dashboard.jobComplete();
 	}
 	
@@ -78,8 +78,8 @@ tc.ui.dashboard.update = function(response) {
 
 tc.ui.dashboard.jobComplete = function() {
 	$("#dashboard-button-start").attr("disabled", true);
-	$("#dashboard-button-stop").attr("disabled", true);
 	$("#dashboard-button-pause").attr("disabled", true);
+	$("#dashboard-button-stop").attr("disabled", true);
 	tc.api.jobResults(tc.ui.jobId, false, function(data, statusText) {
 		tc.ui.dashboard.plot(jsonParse(data).results_byTime);
 	});	

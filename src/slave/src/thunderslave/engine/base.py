@@ -4,6 +4,7 @@ import time
 import math
 import logging
 import datetime
+import copy
 
 from twisted.web.client import HTTPClientFactory, _parse
 from twisted.internet import reactor
@@ -58,22 +59,9 @@ class EngineBase(object):
         self.iterations = 0
         self.requestsCompleted = 0
         self.requestsFailed = 0
-        self.errors = {
-            "connectionLost": 0,
-            "serviceNotAvailable": 0,
-            "unknown": 0,
-            "timeout": 0,     
-        }
+        self.errors = JobResults().results_errors
         self._averageResponseTime = 0
-        self.statisticsByTime = {
-            0: {
-                "iterations_total": 0,
-                "iterations_complete": 0,
-                "iterations_fail": 0,
-                "requestsPerSec": 0,
-                "responseTime": 0,
-            }
-        }
+        self.statisticsByTime = JobResults().results_byTime
         self.statsInterval = 60
         self._statsBookmark = 0          # shortcut to last time stats were generated.
                                          # avoids listing/sorting statisticsByTime keys
@@ -269,7 +257,7 @@ class EngineBase(object):
         jobResults.time_elapsed = self.elapsedTime
         jobResults.time_paused = self.pausedTime
         jobResults.transfer_total = self.bytesTransferred
-        jobResults.results_errors = {}        
+        jobResults.results_errors = self.errors      
 
         # don't attach statistics if the caller is looking for short results
         if short == True:

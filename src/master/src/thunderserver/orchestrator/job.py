@@ -61,14 +61,14 @@ def AggregateJobResults_aggregateState(cls, states):
         return JobState.RUNNING
 
 
-def AggregateJobResults_aggregateStatisticsByTimeSort(cls, a, b):
+def AggregateJobResults_aggregateResultsByTimeSort(cls, a, b):
     return int(float(a)-float(b))
 
 
-def AggregateJobResults_aggregateStatisticsByTime(cls, statsList, statsInterval):
+def AggregateJobResults_aggregateResultsByTime(cls, statsList, statsInterval):
     result = {}
     for stat in statsList:
-        sortedKeys = sorted(stat.keys(), AggregateJobResults._aggregateStatisticsByTimeSort)
+        sortedKeys = sorted(stat.keys(), AggregateJobResults._aggregateResultsByTimeSort)
         for i in range(0, int(float(sortedKeys[-1]))+1, statsInterval):
             try:
                 result[i]
@@ -79,7 +79,7 @@ def AggregateJobResults_aggregateStatisticsByTime(cls, statsList, statsInterval)
                 if i - statsInterval <= float(k) < i + statsInterval:
                     distance = (statsInterval - abs(float(k) - i))
                     weight = distance / statsInterval
-                    for v in ["iterations_total", "iterations_complete", "iterations_fail", "requestsPerSec"]:
+                    for v in ["iterations_total", "iterations_success", "iterations_fail", "requestsPerSec"]:
                         try:
                             result[i][v] += stat[k][v] * weight
                         except KeyError:
@@ -98,8 +98,8 @@ class AggregateJobResults(JobResults):
     # Cython compatibility for static methods
     _merge = classmethod(AggregateJobResults_merge)
     _aggregateState = classmethod(AggregateJobResults_aggregateState)
-    _aggregateStatisticsByTimeSort = classmethod(AggregateJobResults_aggregateStatisticsByTimeSort)
-    _aggregateStatisticsByTime = classmethod(AggregateJobResults_aggregateStatisticsByTime)   
+    _aggregateResultsByTimeSort = classmethod(AggregateJobResults_aggregateResultsByTimeSort)
+    _aggregateResultsByTime = classmethod(AggregateJobResults_aggregateResultsByTime)   
     
     _manuallyAggregate = ["job_id", "job_state", "results_byTime"]
     _aggregateByAdding = ["job_nodes", "iterations_total", "iterations_complete", "iterations_fail", "transfer_total",  "results_errors"]
@@ -138,9 +138,9 @@ class AggregateJobResults(JobResults):
         # aggregate the job state separately    
         self.job_state = AggregateJobResults._aggregateState([jobResult.job_state for jobResult in jobResults])
         
-        # statisticsByTime might not exist if the results are shortResults. if it's there, aggregate some results
+        # results_byTime might not exist if the results are shortResults. if it's there, aggregate some results
         if shortResults != True:
-            self.results_ByTime = AggregateJobResults._aggregateStatisticsByTime([jobResult.results_byTime for jobResult in jobResults], statsInterval)
+            self.results_byTime = AggregateJobResults._aggregateResultsByTime([jobResult.results_byTime for jobResult in jobResults], statsInterval)
         
         
 # Job perspective: local job ID corresponds to multiple remote job IDs on
@@ -222,7 +222,7 @@ class JobPerspective(object):
         # aggregates things like bytes transferred, requests completed, etc.
         aggregateResults.aggregate([result for (status, result) in decodedResults], self.jobSpec.statsInterval, shortResults)
         
-        # if we're doing no stats, cut out statisticsByTime complete
+        # if we're doing no stats, cut out results_byTime complete
         if shortResults == True:
             try:
                 del(aggregateResults.results_byTime)

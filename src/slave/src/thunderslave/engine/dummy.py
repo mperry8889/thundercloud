@@ -49,14 +49,14 @@ class DummyEngine(object):
         return
 
     def state(self):
-        return self.jobResults.state
+        return self.jobResults.job_state
 
     # generate and fill in a JobResults object
     def results(self, short=False):
         if short == True:
             results = self.jobResults
             try:
-                del(results.statisticsByTime)
+                del(results.results_byTime)
             except AttributeError:
                 pass
             return results

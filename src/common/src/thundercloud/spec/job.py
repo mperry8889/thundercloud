@@ -118,7 +118,7 @@ class JobResults(DataObject):
             500: 0,
         },
         "results_byTime": {
-            "": {
+            0: {
                 "iterations_total": 0,
                 "iterations_success": 0,
                 "iterations_fail": 0,
