@@ -200,7 +200,7 @@ class EngineBase(object):
     def _bookkeep(self, value):
         self.iterations = self.iterations + 1
         self.bytesTransferred = self.bytesTransferred + value["bytesTransferred"]
-        self.elapsedTime += value["elapsedTime"]
+        self.elapsedTime = time.time() - self.startTime - self.pausedTime
         self._averageTimeToConnect = (value["timeToConnect"] + ((self.iterations-1) * self._averageTimeToConnect))/self.iterations
         self._averageTimeToFirstByte = (value["timeToFirstByte"] + ((self.iterations-1) * self._averageTimeToFirstByte))/self.iterations
         self._averageResponseTime = (value["elapsedTime"] + ((self.iterations-1) * self._averageResponseTime))/self.iterations

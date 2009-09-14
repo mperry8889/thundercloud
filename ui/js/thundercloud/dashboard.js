@@ -80,6 +80,7 @@ tc.ui.dashboard.jobComplete = function() {
 	$("#dashboard-button-start").attr("disabled", true);
 	$("#dashboard-button-pause").attr("disabled", true);
 	$("#dashboard-button-stop").attr("disabled", true);
+	
 	tc.api.jobResults(tc.ui.jobId, false, function(data, statusText) {
 		tc.ui.dashboard.plot(jsonParse(data).results_byTime);
 	});	

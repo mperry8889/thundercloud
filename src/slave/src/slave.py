@@ -58,6 +58,6 @@ if config.parameter("misc", "standalone", type=bool) != True:
 
 reactor.listenTCP(config.parameter("network", "port", type=int), createRestApi())
 log.debug("Listening on port %s, starting reactor" % config.parameter("network", "port"))
-twistedLog.startLogging(sys.stderr)
+#twistedLog.startLogging(sys.stderr)
 
 reactor.run()
