@@ -5,8 +5,6 @@ from thundercloud.spec.job import IJob
 from base import IEngine
 from ..db import dbConnection as db
 
-import copy
-
 class JobNotFound(Exception):
     pass
 

@@ -29,29 +29,36 @@ class StatisticalHTTPDownloader(HTTPDownloader):
             "bytesTransferred": 0,
         }
     
-    def startedConnecting(self, connector):
+    def buildProtocol(self, addr):
         self.value["timeToConnect"] = time.time() - self.value["startTime"]
-        HTTPDownloader.startedConnecting(self, connector)
+        return HTTPDownloader.buildProtocol(self, addr)
         
     def pageStart(self, partialContent):
         self.value["timeToFirstByte"] = time.time() - self.value["startTime"]
-        HTTPDownloader.pageStart(self, partialContent)
+        return HTTPDownloader.pageStart(self, partialContent)
         
     def pagePart(self, data):
         self.value["bytesTransferred"] += len(data)
-        HTTPDownloader.pagePart(self, data)
+        return HTTPDownloader.pagePart(self, data)
             
     def pageEnd(self):
         self.value["elapsedTime"] = time.time() - self.value["startTime"]
-        HTTPDownloader.pageEnd(self)
+        return HTTPDownloader.pageEnd(self)
 
+
+
+class IEngine(Interface):
+    clients = Attribute("""(Theoretical) clients in the system""")
+    
+    def results(self):
+        """Generate a JobResult object"""
 
 # This class sets up the guidelines for how engines should work -- mostly
 # in terms of statistics gathering and ensuring basic functionality is 
 # consistent across implementations, and taking care of some muckwork that
 # doesn't need to be reproduced
 class EngineBase(object):
-    implements(IJob)
+    implements(IEngine, IJob)
   
     def __init__(self, jobId, jobSpec):
         self.jobId = jobId
@@ -82,8 +89,8 @@ class EngineBase(object):
         self.iterations = 0
         self.requestsCompleted = 0
         self.requestsFailed = 0
-        self.errors = JobResults().results_errors
-        self.statisticsByTime = JobResults().results_byTime
+        self.errors = copy.deepcopy(JobResults().results_errors)
+        self.statisticsByTime = copy.deepcopy(JobResults().results_byTime)
         self._averageTimeToConnect = 0
         self._averageTimeToFirstByte = 0
         self._averageResponseTime = 0
