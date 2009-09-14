@@ -3,6 +3,11 @@ from thundercloud.util.restApiClient import RestApiClient
 from twisted.internet.defer import Deferred
 from twisted.internet import reactor
 
+from twisted.internet.defer import Deferred, DeferredList
+from twisted.internet.defer import deferredGenerator
+from twisted.internet.defer import inlineCallbacks
+from twisted.internet.defer import returnValue
+
 import logging
 
 log = logging.getLogger("orchestrator.slave")
@@ -63,15 +68,8 @@ class _SlaveAllocator(object):
         db.execute("UPDATE slaveno SET slaveNo = ?", (slaveNo + 1,))
         return slaveNo
 
-    def addSlaveCallback(self, value, deferred):
-        deferred.callback(value)
-    
-    def addSlaveErrback(self, value, deferred):
-        deferred.errback(value)
-
+    @inlineCallbacks
     def addSlave(self, slaveSpec):
-        deferred = Deferred()
-        
         for (connectedSlave, status) in self.slaves.itervalues():
             if connectedSlave.slaveSpec.host == slaveSpec.host:
                 raise SlaveAlreadyConnected
@@ -80,9 +78,10 @@ class _SlaveAllocator(object):
         slave = SlavePerspective(slaveSpec)
         status = SlaveStatus()
         self.slaves[slaveNo] = (slave, status)
-        # XXX hack
-        reactor.callLater(0.25, self.addSlaveCallback, slaveNo, deferred)
-        return deferred
+
+        # XXX there will be some handshaking or something going on here
+        
+        returnValue(slaveNo)
     
     def removeSlave(self, slaveId):
         self.slaves.pop(slaveId)

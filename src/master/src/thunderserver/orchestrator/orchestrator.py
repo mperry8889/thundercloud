@@ -2,6 +2,9 @@ from thundercloud.spec.slave import SlaveSpec
 from thundercloud.spec.job import JobSpec
 
 from twisted.internet.defer import Deferred, DeferredList
+from twisted.internet.defer import deferredGenerator
+from twisted.internet.defer import inlineCallbacks
+from twisted.internet.defer import returnValue
 
 from ..db import dbConnection as db
 from job import JobPerspective
@@ -29,19 +32,15 @@ class _Orchestrator(object):
         db.execute("INSERT INTO orchestrator (job, operation, timestamp) VALUES (?, ?, ?)", 
                     (jobId, operation, datetime.datetime.now()))  
 
-    def registerSlaveCallback(self, slaveId, deferred):
-        log.debug("Slave %d connected" % slaveId)
-        deferred.callback(slaveId) 
-
+    @inlineCallbacks
     def registerSlave(self, slaveSpec):
         log.debug("Connecting slave.  Spec: %s" % slaveSpec)
-        deferred = Deferred()
+        slaveId = SlaveAllocator.addSlave(slaveSpec)
+        yield slaveId
         
-        d = SlaveAllocator.addSlave(slaveSpec)
-        d.addCallback(self.registerSlaveCallback, deferred)
+        log.debug("Slave %d connected" % slaveId)
+        returnValue(slaveId)
         
-        return deferred
-    
     def unregisterSlave(self, slave):
         SlaveAllocator.removeSlave(slave)
 

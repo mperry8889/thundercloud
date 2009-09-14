@@ -2,6 +2,9 @@ from thundercloud.spec.job import JobSpec, JobState
 from ..engine import EngineFactory
 from ..db import dbConnection as db
 
+from twisted.internet.defer import deferredGenerator
+from twisted.internet.defer import inlineCallbacks
+
 import logging
 import datetime
 

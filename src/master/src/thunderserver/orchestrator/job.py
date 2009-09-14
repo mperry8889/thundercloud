@@ -2,6 +2,11 @@ from twisted.internet.defer import Deferred, DeferredList
 
 from thundercloud.spec.job import JobResults, JobState
 
+from twisted.internet.defer import Deferred, DeferredList
+from twisted.internet.defer import deferredGenerator
+from twisted.internet.defer import inlineCallbacks
+from twisted.internet.defer import returnValue
+
 import simplejson as json
 
 import logging
@@ -159,23 +164,15 @@ class JobPerspective(object):
     
     def removeSlave(self, slave):
         self.mapping.pop(slave)
-
-    # shortcut methods
-    def _jobOpCallback(self, results, deferred):
-        deferred.callback(results)
-    
-    def _jobOp(self, operation):
-        deferred = Deferred()
-        
+   
+    @inlineCallbacks
+    def _jobOp(self, operation):        
         requests = []
         for slave, remoteId in self.mapping.iteritems():
             requests.append(getattr(slave, "%s" % operation)(remoteId))
 
         deferredList = DeferredList(requests)
-        deferredList.addCallback(self._jobOpCallback, deferred)
-
-        return deferred
-
+        yield deferredList
     
     def start(self):
         return self._jobOp("startJob")
@@ -188,21 +185,28 @@ class JobPerspective(object):
     
     def stop(self):
         return self._jobOp("stopJob")
+    
+    @inlineCallbacks
+    def state(self):
+        results = self._jobOp("jobState")
+        yield results
 
-
-    def stateCallback(self, results, deferred):
         states = []
         for (result, state) in results:
             states.append(result)
-        deferred.callback(AggregateJobResults._aggregateState(states))
-    
-    def state(self):
-        deferred = self._jobOp("jobState")
-        deferred.addCallback(self.stateCallback, deferred)
-        return deferred
+        returnValue(AggregateJobResults._aggregateState(states))
+  
+  
+    @inlineCallbacks
+    def results(self, shortResults):
+        requests = []
+        for slave in self.mapping.keys():
+            requests.append(slave.jobResults(self.mapping[slave], shortResults))
 
-
-    def resultsCallback(self, results, deferred, shortResults):
+        deferredList = DeferredList(requests)
+        yield deferredList
+        
+        results = deferredList.result
         aggregateResults = AggregateJobResults()
         
         # decode all json.  for speed's sake, try once as a list comprehension, but if one is
@@ -232,16 +236,5 @@ class JobPerspective(object):
             except AttributeError:
                 pass     
         
-        deferred.callback(aggregateResults)
-    
-    def results(self, shortResults):
-        deferred = Deferred()
+        returnValue(aggregateResults)       
         
-        requests = []
-        for slave in self.mapping.keys():
-            requests.append(slave.jobResults(self.mapping[slave], shortResults))
-
-        deferredList = DeferredList(requests)
-        deferredList.addCallback(self.resultsCallback, deferred, shortResults)
-
-        return deferred
