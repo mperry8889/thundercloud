@@ -19,8 +19,9 @@ log = logging.getLogger("engine")
 
 # This is our custom HTTP client factory.  Note that it's an old-style class.
 class StatisticalHTTPDownloader(HTTPDownloader):        
-    def __init__(self, url, fileOrName, method="GET", postdata=None, cookies=None, headers=None, agent=None, timeout=None):
-        HTTPDownloader.__init__(self, url, fileOrName, method=method, postdata=postdata, cookies=cookies, headers=headers, agent=agent, timeout=timeout)
+    def __init__(self, url, fileOrName, method="GET", postdata=None, cookies={}, headers=None, agent=None, timeout=None):
+        # XXX re-add support for cookies and timeout to HTTPDownloader call
+        HTTPDownloader.__init__(self, url, fileOrName, method=method, postdata=postdata, headers=headers, agent=agent)
         self.value = {
             "startTime": time.time(),
             "timeToConnect": 0,
@@ -28,6 +29,8 @@ class StatisticalHTTPDownloader(HTTPDownloader):
             "elapsedTime": 0,
             "bytesTransferred": 0,
         }
+        self.cookies = cookies
+        self.timeout = timeout
     
     def buildProtocol(self, addr):
         self.value["timeToConnect"] = time.time() - self.value["startTime"]

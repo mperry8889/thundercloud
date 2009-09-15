@@ -21,18 +21,12 @@ import logging
 
 log = logging.getLogger("restApi")
 
+
+# XXX need to remove
 class Die(RootNode):
     def GET(self, request):
         from twisted.internet import reactor
         reactor.stop()
-
-
-## XXX this doesn't work
-class HTTPAuthSessionWrapperFixed(guard.HTTPAuthSessionWrapper):
-    pass
-    #def render(self, request):
-    #    interface, avatar, aspect = self._portal.realm.requestAvatar("DBChecker", None, IResource)
-    #    return avatar.render(request)
 
 
 def createRestApi():
@@ -49,7 +43,7 @@ def createRestApi():
         else:
             raise
     except:
-        jobWrapper = HTTPAuthSessionWrapperFixed(Portal(JobRealm(), [JobDBChecker(db)]), [guard.BasicCredentialFactory("thundercloud job management")])
+        jobWrapper = guard.HTTPAuthSessionWrapper(Portal(JobRealm(), [JobDBChecker(db)]), [guard.BasicCredentialFactory("thundercloud job management")])
         siteRoot.putChild("job", jobWrapper)
 
 
@@ -61,7 +55,7 @@ def createRestApi():
         else:
             raise
     except:
-        slaveWrapper = HTTPAuthSessionWrapperFixed(Portal(SlaveRealm(), [SlaveDBChecker(db)]), [guard.BasicCredentialFactory("thundercloud slave management")])
+        slaveWrapper = guard.HTTPAuthSessionWrapper(Portal(SlaveRealm(), [SlaveDBChecker(db)]), [guard.BasicCredentialFactory("thundercloud slave management")])
         siteRoot.putChild("slave", slaveWrapper)
 
     return server.Site(siteRoot)

@@ -94,7 +94,7 @@ class _Orchestrator(object):
     
     
     def startJob(self, jobId):
-        #self._logToDb(jobId, "start")
+        self._logToDb(jobId, "start")
         return self.jobs[jobId].start()
     
     def pauseJob(self, jobId):

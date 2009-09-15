@@ -12,6 +12,17 @@ class JobState(object):
     PAUSED = 2
     COMPLETE = 3
     UNKNOWN = 9999
+    
+    @classmethod
+    def _all(cls):
+        return [
+            cls.NEW,
+            cls.RUNNING,
+            cls.PAUSED,
+            cls.COMPLETE,
+            cls.UNKNOWN,
+        ]
+        
 
 class IJob(Interface):
     def start(self):
@@ -42,6 +53,14 @@ class JobSpec(DataObject):
         HAMMER = 0
         BENCHMARK = 1
         DUMMY = 9999
+        
+        @classmethod
+        def _all(cls):
+            return [
+                cls.HAMMER,
+                cls.BENCHMARK,
+                cls.DUMMY,
+            ]
     
     _attributes = {
         "requests": {"":{}},

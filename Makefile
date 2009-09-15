@@ -1,13 +1,19 @@
-export PYTHONPATH := $(shell pwd)/src/common/src:$(shell pwd)/src/master/src:$(shell pwd)/src/slave/src
+export PWD := $(shell pwd)
+export PYTHONPATH := $(PWD)/src/common/src:$(PWD)/src/common/test:$(PWD)/src/master/src:$(PWD)/src/master/test:$(PWD)/src/slave/src
+export PYTHON=/opt/local/bin/python2.6
 
-test-reverse-proxy:
-	cd util && python reverseProxy.py
+
+run-reverse-proxy:
+	cd util && $(PYTHON) reverseProxy.py
+
+run-master:
+	cd src/master/src && $(PYTHON) master.py ../master-sample.ini
 
 test-master:
-	cd src/master/src && python master.py ../master-sample.ini
+	cd src/master/test && $(PYTHON) test_slaveMgmt.py
 
-test-slave:
-	cd src/slave/src && python slave.py ../slave-sample.ini
+run-slave:
+	cd src/slave/src && $(PYTHON) slave.py ../slave-sample.ini
 
 
 clean:
