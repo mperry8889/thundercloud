@@ -6,9 +6,9 @@ from twisted.python import log
 import sys
 
 class BasicResource(Resource):
-    isLeaf = False
+    isLeaf = True
     def render_GET(self, request):
-        return "1"
+        return ""
 
 
 root = BasicResource()

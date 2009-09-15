@@ -88,7 +88,7 @@ class _Controller(object):
             pass
     
     def jobState(self, jobId):
-        state = self._getJob(jobId).job_state
+        state = self._getJob(jobId).state()
         
         # if the job is done, kick the engine out from memory
         if state == JobState.COMPLETE:

@@ -73,7 +73,7 @@ class EngineBase(object):
         self.userAgent = str("thundercloud client/%s" % constants.VERSION)
         self.iterator = lambda: True
         self.httpClientRequestQueue = Queue()
-        self.state = JobState.NEW
+        self.jobState = JobState.NEW
         self.timeout = 10
     
         # attributes for time management
@@ -129,13 +129,13 @@ class EngineBase(object):
     # then spin up all of the clients
     def start(self):
         # only start once
-        if self.state != JobState.NEW:
+        if self.jobState != JobState.NEW:
             return
         
         log.debug("Starting job %d" % self.jobId)
         
         self.startTime = time.time()
-        self.state = JobState.RUNNING
+        self.jobState = JobState.RUNNING
         self.iterator()
 
 
@@ -163,10 +163,10 @@ class EngineBase(object):
     # careful to check the job's state before continuing, making pause/resume
     # very simple
     def pause(self):
-        if self.state != JobState.RUNNING:
+        if self.jobState != JobState.RUNNING:
             raise Exception, "Not running"
         
-        self.state = JobState.PAUSED
+        self.jobState = JobState.PAUSED
         self._timeAtPause = time.time()
         
         log.debug("Pausing job %d" % self.jobId)
@@ -175,11 +175,11 @@ class EngineBase(object):
     # mark the job as running, and spin up new clients
     def resume(self):
         # only resume paused jobs
-        if self.state != JobState.PAUSED:
+        if self.jobState != JobState.PAUSED:
             raise Exception, "Not paused"
         
         self.pausedTime = self.pausedTime + (time.time() - self._timeAtPause)
-        self.state = JobState.RUNNING
+        self.jobState = JobState.RUNNING
         self.iterator()
         
         log.debug("Resuming job %d" % self.jobId)
@@ -187,10 +187,10 @@ class EngineBase(object):
     
     # stop the job and mark it as complete
     def stop(self):
-        if self.state == JobState.COMPLETE:
+        if self.jobState == JobState.COMPLETE:
             return
                 
-        self.state = JobState.COMPLETE
+        self.jobState = JobState.COMPLETE
         self.endTime = time.time()
         self._generateStats(force=True)
         
@@ -280,11 +280,15 @@ class EngineBase(object):
             self.errors["unknown"] = self.errors["unknown"] + 1
 
 
+    # return the job's state
+    def state(self):
+        return self.jobState
+
     # generate and fill in a JobResults object
     def results(self, short=False):        
         jobResults = JobResults()
         jobResults.job_id = self.jobId
-        jobResults.job_state = self.state
+        jobResults.job_state = self.jobState
         jobResults.job_nodes = 1
         jobResults.iterations_total = self.iterations
         jobResults.iterations_success = self.requestsCompleted

@@ -3,15 +3,32 @@
 from twisted.internet import reactor
 from twisted.web.resource import Resource
 from twisted.web import server
-from twisted.internet.defer import inlineCallbacks
+from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.task import LoopingCall
+from twisted.python import log
 
-from thundercloud.spec.job import JobSpec
+from thundercloud.spec.job import JobSpec, JobState
 from thundercloud.util.restApiClient import RestApiClient
 
 from server.basicWebServer import BasicWebServer
 
+
+import sys
+
 tc = "http://localhost:6001"
 requested_hits = 100
+
+@inlineCallbacks
+def pollJob(jobId):
+    print "Polling..."
+    request = RestApiClient.GET(tc + "/job/%d/state" % jobId)
+    yield request
+    
+    if int(request.result) == JobState.COMPLETE:
+        print "Done"
+        reactor.stop()
+    else:
+        returnValue(True)
 
 @inlineCallbacks
 def createJob():
@@ -43,8 +60,12 @@ def createJob():
     
     if request.result == True:
         print "Job started"
+  
+    task = LoopingCall(pollJob, jobId)
+    task.start(1)
 
 
+#log.startLogging(sys.stdout)
 reactor.listenTCP(9995, BasicWebServer)
 reactor.callWhenRunning(createJob)
 reactor.run()

@@ -173,6 +173,7 @@ class JobPerspective(object):
 
         deferredList = DeferredList(requests)
         yield deferredList
+        returnValue(deferredList.result)
     
     def start(self):
         return self._jobOp("startJob")
@@ -188,12 +189,13 @@ class JobPerspective(object):
     
     @inlineCallbacks
     def state(self):
-        results = self._jobOp("jobState")
-        yield results
+        request = self._jobOp("jobState")
+        yield request
 
         states = []
-        for (result, state) in results:
-            states.append(result)
+        for (result, state) in request.result:
+            states.append(int(json.loads(state)))
+            log.info("state is %s, %s" % (state, type(state)))
         returnValue(AggregateJobResults._aggregateState(states))
   
   

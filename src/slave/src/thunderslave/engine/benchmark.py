@@ -19,7 +19,7 @@ class BenchmarkEngine(EngineBase):
     # find out the number of clients needed at the current time, and add clients
     # until the max number of clients is reached
     def _loop(self):
-        if self.state == JobState.RUNNING:
+        if self.jobState == JobState.RUNNING:
             # calculates client function at time t
             clientFunctionResult = min(int(config.parameter("network", "clients.max")), abs(int(math.ceil(self.clientFunction(time.time())))))
             
@@ -55,7 +55,7 @@ class BenchmarkEngine(EngineBase):
         self.clients = self.clients - 1
         
         # just bail if the job isn't running anymore
-        if self.state != JobState.RUNNING:
+        if self.jobState != JobState.RUNNING:
             return
             
         # otherwise keep it going

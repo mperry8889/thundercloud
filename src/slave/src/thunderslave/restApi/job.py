@@ -70,10 +70,6 @@ class JobNode(LeafNode):
         Controller.stopJob(jobId)
         return True
     
-    # modify some properties of a running job
-    def modify(self, jobId, args):
-        pass
-    
     # status of a job in the system
     def state(self, jobId, args):
         return Controller.jobState(jobId)

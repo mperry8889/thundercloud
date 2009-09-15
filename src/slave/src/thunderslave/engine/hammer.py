@@ -26,7 +26,7 @@ class HammerEngine(EngineBase):
             self.stop()
             return
         
-        if self.state == JobState.RUNNING:
+        if self.jobState == JobState.RUNNING:
             numRequests = min(int(config.parameter("network", "clients.max")), abs(int(math.ceil(self.clientFunction(time.time())))))
             try:
                 timeBetween = 1.0/numRequests
