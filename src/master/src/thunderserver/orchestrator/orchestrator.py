@@ -1,8 +1,6 @@
-from thundercloud.spec.slave import SlaveSpec
 from thundercloud.spec.job import JobSpec
 
 from twisted.internet.defer import Deferred, DeferredList
-from twisted.internet.defer import deferredGenerator
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.defer import returnValue
 

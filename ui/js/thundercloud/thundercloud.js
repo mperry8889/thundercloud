@@ -8,12 +8,14 @@ tc.api.JobState = {
     "RUNNING": 1,
     "PAUSED": 2,
     "COMPLETE": 3,
+    "UNKNOWN": 9999,
 };
 tc.api.JobStateToText = {
 	0: "NEW",
 	1: "RUNNING",
 	2: "PAUSED",
 	3: "COMPLETE",
+	9999: "UNKNOWN",
 }
 tc.api.JobSpec = function() {
 	this.requests = {"":{}};

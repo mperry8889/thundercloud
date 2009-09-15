@@ -1,4 +1,4 @@
-import unittest
+# this is just a simple script to create and run a job
 
 from twisted.internet import reactor
 from twisted.web.resource import Resource
