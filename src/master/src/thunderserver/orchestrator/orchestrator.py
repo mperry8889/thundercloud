@@ -6,7 +6,7 @@ from twisted.internet.defer import returnValue
 
 from ..db import dbConnection as db
 from job import JobPerspective
-from slave import SlaveAllocator
+from slave import SlaveAllocator, SlaveAlreadyConnected
 
 import simplejson as json
 
@@ -33,8 +33,16 @@ class _Orchestrator(object):
     @inlineCallbacks
     def registerSlave(self, slaveSpec):
         log.debug("Connecting slave.  Spec: %s" % slaveSpec)
-        slaveId = SlaveAllocator.addSlave(slaveSpec)
-        yield slaveId
+        try:
+            slaveId = SlaveAllocator.addSlave(slaveSpec)
+            yield slaveId
+        except SlaveAlreadyConnected, ex:
+            log.warn("Reconnection from slave server at %s://%s:%s/%s" % (slaveSpec.scheme, slaveSpec.host, slaveSpec.port, slaveSpec.path))
+            
+            # XXX should do some job perspective synchronization
+            # and sanitizing here
+            slaveId = ex.slaveId
+            
         
         log.debug("Slave %d connected" % slaveId)
         returnValue(slaveId)

@@ -16,9 +16,6 @@ log = logging.getLogger("restApi.slave")
 # Handle requests sent to /slave
 class Slave(RootNode):
 
-    def GET(self, request):
-        return ""
-
     def postCallback(self, slaveId, request):
         self.putChild("%d" % slaveId, SlaveNode())
         self.writeJson(request, slaveId)

@@ -56,8 +56,8 @@ class SlaveStatus(object):
         self.inUse = False
 
 class SlaveAlreadyConnected(Exception):
-    pass
-
+    def __init__(self, slaveId=None):
+        self.slaveId = slaveId
 
 class _SlaveAllocator(object):
     def __init__(self):
@@ -70,9 +70,11 @@ class _SlaveAllocator(object):
 
     @inlineCallbacks
     def addSlave(self, slaveSpec):
-        for (connectedSlave, status) in self.slaves.itervalues():
-            if connectedSlave.slaveSpec.host == slaveSpec.host:
-                raise SlaveAlreadyConnected
+        for slaveId, (connectedSlave, status) in self.slaves.iteritems():
+            if connectedSlave.slaveSpec.host == slaveSpec.host and \
+               connectedSlave.slaveSpec.port == slaveSpec.port and \
+               connectedSlave.slaveSpec.path == slaveSpec.path:
+                raise SlaveAlreadyConnected(slaveId)
         
         slaveNo = self._getSlaveNo()
         slave = SlavePerspective(slaveSpec)
