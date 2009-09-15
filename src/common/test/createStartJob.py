@@ -8,20 +8,10 @@ from twisted.internet.defer import inlineCallbacks
 from thundercloud.spec.job import JobSpec
 from thundercloud.util.restApiClient import RestApiClient
 
+from server.basicWebServer import BasicWebServer
+
 tc = "http://localhost:6001"
-requested_hits = 50
-
-class BasicResource(Resource):
-    isLeaf = False
-    counter = 0
-    def render_GET(self, request):
-        self.counter += 1
-        print "received hit %d..." % self.counter
-        if self.counter == requested_hits:
-            print "quitting..."
-            reactor.callLater(1, reactor.stop)
-        return "1"
-
+requested_hits = 100
 
 @inlineCallbacks
 def createJob():
@@ -55,9 +45,6 @@ def createJob():
         print "Job started"
 
 
-    
-root = BasicResource()
-root.putChild("", BasicResource())
-reactor.listenTCP(9995, server.Site(root))
+reactor.listenTCP(9995, BasicWebServer)
 reactor.callWhenRunning(createJob)
 reactor.run()
