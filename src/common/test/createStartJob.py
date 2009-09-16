@@ -12,6 +12,7 @@ from thundercloud.util.restApiClient import RestApiClient
 
 from server.basicWebServer import BasicWebServer
 
+import simplejson as json
 
 import sys
 
@@ -24,10 +25,20 @@ def pollJob(jobId):
     request = RestApiClient.GET(tc + "/job/%d/state" % jobId)
     yield request
     
+    print request.result
     if int(request.result) == JobState.COMPLETE:
         print "Done"
         reactor.stop()
+    elif int(request.result) == JobState.ERROR:
+        print "Error!"
+        reactor.stop()
     else:
+        returnValue(True)
+        print "Getting status..."
+        request = RestApiClient.GET(tc + "/job/%d/results?short=true" % jobId)
+        yield request
+        print request.result
+        print "Done"
         returnValue(True)
 
 @inlineCallbacks
@@ -51,9 +62,14 @@ def createJob():
                                postdata = jobSpec.toJson())
     yield request
 
-    jobId = int(request.result)
-    print "Created job %d" % jobId
-    print "Starting job..."
+    jobId = json.loads(request.result)
+    if jobId != False:
+        jobId = int(jobId)
+        print "Created job %d" % jobId
+        print "Starting job..."
+    else:
+        print "Could not create job: %s" % request.result
+        reactor.stop()
     
     request = RestApiClient.POST(tc + "/job/%d/start" % jobId)
     yield request

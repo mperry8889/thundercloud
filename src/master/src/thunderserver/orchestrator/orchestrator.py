@@ -5,7 +5,7 @@ from twisted.internet.defer import inlineCallbacks
 from twisted.internet.defer import returnValue
 
 from ..db import dbConnection as db
-from job import JobPerspective
+from job import JobPerspective, JobHealthError
 from slave import SlaveAllocator, SlaveAlreadyConnected
 
 import simplejson as json
@@ -15,6 +15,8 @@ import datetime
 
 log = logging.getLogger("orchestrator")
 
+class NoSlavesAvailable(Exception):
+    pass
 
 # Handle the multitude of jobs and slaves in the system
 class _Orchestrator(object):
@@ -52,10 +54,10 @@ class _Orchestrator(object):
 
     # create a job perspective object locally, and create a job on
     # all remote servers.    
-    def createJobSlaveCallback(self, result, slave):
+    def _createJobSlaveCallback(self, result, slave):
         return result, slave
     
-    def createJobCallback(self, results, jobId, deferred):
+    def _createJobCallback(self, results, jobId, deferred):
         for (success, result) in results:
             if success == True:
                 (remoteJobId, slave) = result
@@ -70,6 +72,7 @@ class _Orchestrator(object):
         db.execute("INSERT INTO jobs (id, user, spec) VALUES (?, ?, ?)", (jobId, 0, self.jobs[jobId].jobSpec))
         deferred.callback(jobId)
     
+    @inlineCallbacks
     def createJob(self, jobSpec):
         jobNo = self._getJobNo()
         job = JobPerspective(jobNo, jobSpec)
@@ -79,9 +82,16 @@ class _Orchestrator(object):
         log.info("Creating job %d... connecting slave servers" % jobNo)
         
         # allocate a bunch of slaves here
-        slaves = SlaveAllocator.allocate(jobSpec)
+        request = SlaveAllocator.allocate(jobSpec)
+        yield request
+        
+        slaves = request.result
         log.debug("Using slaves: %s" % slaves)
         
+        if slaves == None or slaves == []:
+            log.error("No slaves available! Can't run job.")
+            raise NoSlavesAvailable
+
         # divide the client function to spread the load over all slaves in the set
         clientFunctionPerSlave = "(%s)/%s" % (jobSpec.clientFunction, len(slaves))
         modifiedJobSpec = JobSpec(jobSpec.toJson())
@@ -90,14 +100,13 @@ class _Orchestrator(object):
         slaveRequests = []
         for slave in slaves:
             request = slave.createJob(modifiedJobSpec)
-            request.addCallback(self.createJobSlaveCallback, slave)
+            request.addCallback(self._createJobSlaveCallback, slave)
             slaveRequests.append(request)
         
         deferredList = DeferredList(slaveRequests)
-        deferredList.addCallback(self.createJobCallback, jobNo, deferred)
-        
-        return deferred
-    
+        deferredList.addCallback(self._createJobCallback, jobNo, deferred)
+        yield deferredList
+        returnValue(jobNo)    
     
     def startJob(self, jobId):
         self._logToDb(jobId, "start")

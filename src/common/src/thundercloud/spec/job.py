@@ -11,6 +11,7 @@ class JobState(object):
     RUNNING = 1
     PAUSED = 2
     COMPLETE = 3
+    ERROR = 9998
     UNKNOWN = 9999
     
     @classmethod

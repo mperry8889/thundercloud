@@ -27,6 +27,9 @@ class Job(RootNode):
     def postCallback(self, jobId, request):
         self.putChild("%d" % jobId, JobNode())
         self.writeJson(request, jobId)
+    
+    def postErrback(self, error, request):
+        self.writeJson(request, False)
 
     # create a new job based on the given JSON job spec
     def POST(self, request):
@@ -37,6 +40,7 @@ class Job(RootNode):
         
         deferred = Orchestrator.createJob(jobSpecObj)
         deferred.addCallback(self.postCallback, request)
+        deferred.addErrback(self.postErrback, request)
         return NOT_DONE_YET
 
 # Handle requests for /job/n[/operation] URLs

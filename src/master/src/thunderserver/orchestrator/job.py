@@ -6,6 +6,9 @@ from twisted.internet.defer import Deferred, DeferredList
 from twisted.internet.defer import deferredGenerator
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.defer import returnValue
+from twisted.internet.error import ConnectionRefusedError
+
+from slave import SlaveAllocator
 
 import simplejson as json
 
@@ -153,26 +156,73 @@ class AggregateJobResults(JobResults):
         
 # Job perspective: local job ID corresponds to multiple remote job IDs on
 # multiple slave servers
+class JobHealthError(Exception):
+    pass
+
+class JobHealth(object):
+    OK = 0
+    ERROR = 1
+
 class JobPerspective(object):
     def __init__(self, jobId, jobSpec):
         self.jobId = jobId
         self.jobSpec = jobSpec
         self.mapping = {}
+        self.health = JobHealth.OK
     
     def addSlave(self, slave, remoteJobId):
         self.mapping[slave] = remoteJobId
     
     def removeSlave(self, slave):
         self.mapping.pop(slave)
+    
+    @inlineCallbacks
+    def handleSlaveError(self, slave, error):
+        # XXX should handle different errors differently
+        # for now we'll just assume the slave gets killed off
+        
+        log.error("Job health compromised: lost a slave server")
+        self.health = JobHealth.ERROR
+        
+        log.warn("Removing slave %s://%s:%d/%s" % (slave.slaveSpec.scheme, slave.slaveSpec.host, slave.slaveSpec.port, slave.slaveSpec.path))
+        self.removeSlave(slave)
+        SlaveAllocator.degrade(slave)
+
+        # we should probably mark the job state as unknown and cancel
+        # the whole thing, since it couldn't be completed as asked
+        yield self._jobOp("stopJob", ignoreHealth=True)
+        returnValue(True)
+   
+    # this is just a pass-through to the DeferredList callback
+    def _jobOpSlaveCallback(self, value):
+        return value
+    
+    # though here we want to intercept errors
+    def _jobOpSlaveErrback(self, error, slave):
+        self.handleSlaveError(slave, error)
+        return error
    
     @inlineCallbacks
-    def _jobOp(self, operation):        
+    def _jobOp(self, operation, *args, **kwargs):
+        try:
+            if kwargs["ignoreHealth"] == True:
+                pass
+            else:
+                raise            
+        except:
+            if self.health == JobHealth.ERROR:
+                returnValue(False)
+
         requests = []
         for slave, remoteId in self.mapping.iteritems():
-            requests.append(getattr(slave, "%s" % operation)(remoteId))
+            request = getattr(slave, "%s" % operation)(remoteId, *args)
+            request.addCallback(self._jobOpSlaveCallback)
+            request.addErrback(self._jobOpSlaveErrback, slave)
+            requests.append(request)
 
-        deferredList = DeferredList(requests)
+        deferredList = DeferredList(requests, consumeErrors=True)
         yield deferredList
+        
         returnValue(deferredList.result)
     
     def start(self):
@@ -189,26 +239,36 @@ class JobPerspective(object):
     
     @inlineCallbacks
     def state(self):
+        
+        # this line is repeated twice: once at the beginning for
+        # new calls to state(), and once after checking the DeferredList
+        # in case the health has suffered during the call
+        if self.health == JobHealth.ERROR:
+            returnValue(JobState.ERROR)
+            
         request = self._jobOp("jobState")
         yield request
 
+        # see above
+        if self.health == JobHealth.ERROR:
+            returnValue(JobState.ERROR)
+
         states = []
         for (result, state) in request.result:
-            states.append(int(json.loads(state)))
-            log.info("state is %s, %s" % (state, type(state)))
+            if result == True:
+                states.append(int(json.loads(state)))
         returnValue(AggregateJobResults._aggregateState(states))
-  
+        
   
     @inlineCallbacks
     def results(self, shortResults):
-        requests = []
-        for slave in self.mapping.keys():
-            requests.append(slave.jobResults(self.mapping[slave], shortResults))
-
-        deferredList = DeferredList(requests)
-        yield deferredList
+        request = self._jobOp("jobResults", shortResults)
+        yield request
         
-        results = deferredList.result
+        if self.health == JobHealth.ERROR:
+            returnValue(False)
+        
+        results = request.result
         aggregateResults = AggregateJobResults()
         
         # decode all json.  for speed's sake, try once as a list comprehension, but if one is
@@ -216,9 +276,10 @@ class JobPerspective(object):
         # rejecting failed responses
         decodedResults = []
         try:
-            decodedResults = [(status, JobResults(json.loads(result))) for (status, result) in results]
+            decodedResults = \
+                [(status, JobResults(json.loads(result))) for (status, result) in results]
         except:
-            log.debug("Could not decode results. results: %s" % results)
+            log.debug("Could not decode all results. results: %s" % results)
        
             for (status, result) in results:
                 if status == True:
@@ -236,7 +297,12 @@ class JobPerspective(object):
             try:
                 del(aggregateResults.results_byTime)
             except AttributeError:
-                pass     
+                pass
+        
+        # if the job is unhealthy, stop the whole thing, and overwrite whatever the
+        # merged state was
+        if self.health == JobHealth.ERROR:
+            aggregateResults.job_state = JobState.ERROR
         
         returnValue(aggregateResults)       
         

@@ -49,6 +49,9 @@ class SlavePerspective(object):
             return RestApiClient.GET(self.url("/job/%d/results?short=true" % jobId))
         else:
             return RestApiClient.GET(self.url("/job/%d/results" % jobId))
+    
+    def heartbeat(self):
+        return RestApiClient.GET(self.url("/status/heartbeat"))
 
 
 class SlaveStatus(object):
@@ -88,12 +91,36 @@ class _SlaveAllocator(object):
     def removeSlave(self, slaveId):
         self.slaves.pop(slaveId)
     
+    @inlineCallbacks
+    def checkHealth(self, slave):
+        request = slave.heartbeat()
+        yield request
+        
+        if request.result == False:
+            self.degrade(slave)
+            returnValue(False)
+        else:
+            returnValue(True)
+
+
+    def degrade(self, slave):
+        for slaveId, (slaveObj, status) in self.slaves.iteritems():
+            if slaveObj == slave:
+                self.removeSlave(slaveId)
+                break
+            
+    
+    @inlineCallbacks
     def allocate(self, jobSpec):
         slaves = []
         for (slave, status) in self.slaves.itervalues():
             status.inUse = True
-            slaves.append(slave)
-        return slaves
+            request = self.checkHealth(slave)
+            yield request
+            if request.result == True:
+                slaves.append(slave)
+
+        returnValue(slaves)
 
     def release(self, slaveList):
         pass
