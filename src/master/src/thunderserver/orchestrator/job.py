@@ -1,12 +1,6 @@
-from twisted.internet.defer import Deferred, DeferredList
-
 from thundercloud.spec.job import JobResults, JobState
 
-from twisted.internet.defer import Deferred, DeferredList
-from twisted.internet.defer import deferredGenerator
-from twisted.internet.defer import inlineCallbacks
-from twisted.internet.defer import returnValue
-from twisted.internet.error import ConnectionRefusedError
+from twisted.internet.defer import DeferredList, inlineCallbacks, returnValue
 
 from slave import SlaveAllocator
 

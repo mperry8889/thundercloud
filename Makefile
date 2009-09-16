@@ -16,6 +16,9 @@ run-slave:
 	cd src/slave/src && $(PYTHON) slave.py ../slave-sample.ini
 
 
+pythonpath:
+	@echo $(PYTHONPATH)
+
 clean:
 	find . -name \*.pyc -exec rm {} \;
 	find . -name \*.o -exec rm {} \;

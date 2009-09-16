@@ -1,10 +1,6 @@
 from ..db import dbConnection as db
 from thundercloud.util.restApiClient import RestApiClient
-from twisted.internet.defer import Deferred
-from twisted.internet import reactor
 
-from twisted.internet.defer import Deferred, DeferredList
-from twisted.internet.defer import deferredGenerator
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.defer import returnValue
 
