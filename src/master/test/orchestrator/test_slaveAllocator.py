@@ -3,13 +3,17 @@ from thundercloud.spec.slave import SlaveSpec
 
 from twisted.trial import unittest
 
+class SlaveAllocator(_SlaveAllocator):
+    def checkHealth(self):
+        return True
+
 class SingleSlave(unittest.TestCase):
 
     def setUp(self):
-        self.sa = _SlaveAllocator()
+        self.sa = SlaveAllocator()
 
 
 class MultiSlave(unittest.TestCase):
     
     def setUp(self):
-        self.sa = _SlaveAllocator()
+        self.sa = SlaveAllocator()

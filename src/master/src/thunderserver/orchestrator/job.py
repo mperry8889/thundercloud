@@ -101,10 +101,7 @@ def AggregateJobResults_aggregateResultsByTime(cls, statsList, statsInterval):
         if type(result[key]) == dict:
             for subkey in result[key].keys():
                 if type(result[key][subkey]) == float:
-                    print "Changing key %s, %s to %s" % (key, result[key][subkey], "%.3f" % result[key][subkey])
                     result[key][subkey] = "%.3f" % result[key][subkey]
-                else:
-                    print "Ignoring key %s, %s (%s)" % (key, result[key][subkey], type(result[key][subkey]))
 
     return result
 
