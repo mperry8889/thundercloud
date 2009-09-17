@@ -225,10 +225,10 @@ class EngineBase(object):
                     "iterations_total": self.iterations,
                     "iterations_success": self.requestsCompleted,
                     "iterations_fail": self.requestsFailed,
-                    "timeToConnect": self._averageTimeToConnect,
-                    "timeToFirstByte": self._averageTimeToFirstByte,
-                    "responseTime": self._averageResponseTime,
-                    "requestsPerSec": float(self.iterations - self.statisticsByTime[self._statsBookmark]["iterations_total"])/float(self.elapsedTime - self._statsBookmark),
+                    "timeToConnect": float("%.3f" % self._averageTimeToConnect),
+                    "timeToFirstByte": float("%.3f" % self._averageTimeToFirstByte),
+                    "responseTime": float("%.3f" % self._averageResponseTime),
+                    "requestsPerSec": float("%.3f" % (float(self.iterations - self.statisticsByTime[self._statsBookmark]["iterations_total"])/float(self.elapsedTime - self._statsBookmark))),
                     "throughput": 0,
                 }
                 
@@ -295,8 +295,8 @@ class EngineBase(object):
         jobResults.iterations_fail = self.requestsFailed
         jobResults.limits_transfer = self.transferLimit
         jobResults.limits_duration = self.duration
-        jobResults.time_elapsed = self.elapsedTime
-        jobResults.time_paused = self.pausedTime
+        jobResults.time_elapsed = "%.2f" % self.elapsedTime
+        jobResults.time_paused = "%.2f" % self.pausedTime
         jobResults.transfer_total = self.bytesTransferred
         jobResults.results_errors = self.errors      
 
