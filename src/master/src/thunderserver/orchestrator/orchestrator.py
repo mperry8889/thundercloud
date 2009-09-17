@@ -36,16 +36,16 @@ class _Orchestrator(object):
     def registerSlave(self, slaveSpec):
         log.debug("Connecting slave.  Spec: %s" % slaveSpec)
         try:
-            slaveId = SlaveAllocator.addSlave(slaveSpec)
-            yield slaveId
+            request = SlaveAllocator.addSlave(slaveSpec)
+            yield request
+            slaveId = request.result
         except SlaveAlreadyConnected, ex:
             log.warn("Reconnection from slave server at %s://%s:%s/%s" % (slaveSpec.scheme, slaveSpec.host, slaveSpec.port, slaveSpec.path))
             
             # XXX should do some job perspective synchronization
             # and sanitizing here
             slaveId = ex.slaveId
-            
-        
+
         log.debug("Slave %d connected" % slaveId)
         returnValue(slaveId)
         

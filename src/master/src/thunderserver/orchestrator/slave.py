@@ -4,6 +4,8 @@ from thundercloud.util.restApiClient import RestApiClient
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.defer import returnValue
 
+from twisted.internet.task import LoopingCall
+
 import logging
 
 log = logging.getLogger("orchestrator.slave")
@@ -58,6 +60,9 @@ class SlaveAlreadyConnected(Exception):
     def __init__(self, slaveId=None):
         self.slaveId = slaveId
 
+class SlaveConnectionError(Exception):
+    pass
+
 class _SlaveAllocator(object):
     def __init__(self):
         self.slaves = {}
@@ -69,7 +74,7 @@ class _SlaveAllocator(object):
 
     @inlineCallbacks
     def addSlave(self, slaveSpec):
-        for slaveId, (connectedSlave, status) in self.slaves.iteritems():
+        for slaveId, (connectedSlave, status, task) in self.slaves.iteritems():
             if connectedSlave.slaveSpec.host == slaveSpec.host and \
                connectedSlave.slaveSpec.port == slaveSpec.port and \
                connectedSlave.slaveSpec.path == slaveSpec.path:
@@ -78,13 +83,24 @@ class _SlaveAllocator(object):
         slaveNo = self._getSlaveNo()
         slave = SlavePerspective(slaveSpec)
         status = SlaveStatus()
-        self.slaves[slaveNo] = (slave, status)
 
-        # XXX there will be some handshaking or something going on here
+        # check that the slave is up and running
+        request = self.checkHealth(slave)
+        yield request
+
+        if request.result != True:
+            raise SlaveConnectionError
         
+        # set up a heartbeat call
+        task = LoopingCall(self.checkHealth, slave)
+        task.start(60, now=False)
+        
+        self.slaves[slaveNo] = (slave, status, task)
         returnValue(slaveNo)
     
     def removeSlave(self, slaveId):
+        slaveObj, status, task = self.slaves[slaveId]
+        task.stop()
         self.slaves.pop(slaveId)
     
     @inlineCallbacks
@@ -98,10 +114,10 @@ class _SlaveAllocator(object):
         else:
             returnValue(True)
 
-
     def degrade(self, slave):
-        for slaveId, (slaveObj, status) in self.slaves.iteritems():
+        for slaveId, (slaveObj, status, task) in self.slaves.iteritems():
             if slaveObj == slave:
+                task.stop()
                 self.removeSlave(slaveId)
                 break
             
@@ -109,7 +125,7 @@ class _SlaveAllocator(object):
     @inlineCallbacks
     def allocate(self, jobSpec):
         slaves = []
-        for (slave, status) in self.slaves.itervalues():
+        for (slave, status, task) in self.slaves.itervalues():
             status.inUse = True
             request = self.checkHealth(slave)
             yield request

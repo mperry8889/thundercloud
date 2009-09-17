@@ -71,7 +71,6 @@ class JobSpec(DataObject):
         "statsInterval": float("inf"),
         "userAgent": str("thundercloud client/%s" % constants.VERSION),
         "profile": JobProfile.HAMMER,
-        "state": JobState.NEW,
         "timeout": float("inf"),
     }                
 

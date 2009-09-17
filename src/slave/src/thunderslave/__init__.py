@@ -11,11 +11,16 @@ import socket
 
 from twisted.python import log as twistedLog
 
-
 @inlineCallbacks
 def startServer(port):
     logging.basicConfig(level=eval("logging.%s" % config.parameter("log", "level")))
     log = logging.getLogger("main")
+    twistedLog.startLogging(sys.stdout)
+    
+    # since master servers will ping back to the slave upon connection,
+    # start listening for HTTP requests before trying to connect up to the master
+    log.debug("Listening on port %s, starting reactor" % config.parameter("network", "port"))
+    reactor.listenTCP(config.parameter("network", "port", type=int), createRestApi())
        
     if config.parameter("misc", "standalone", type=bool) != True:
         # connect to master server in INI file
@@ -44,10 +49,6 @@ def startServer(port):
         slaveId = int(request.result)
         log.info("Connected to master.  This server is slave ID %d" % slaveId)
     
-    reactor.listenTCP(config.parameter("network", "port", type=int), createRestApi())
-    log.debug("Listening on port %s, starting reactor" % config.parameter("network", "port"))
-    #twistedLog.startLogging(sys.stderr)
-
 if __name__ == "__main__":
     try:
         config.readConfig(sys.argv[1])

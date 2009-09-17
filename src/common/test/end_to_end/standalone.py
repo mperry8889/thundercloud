@@ -1,6 +1,5 @@
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks
-from twisted.python import log
 
 from thundercloud.spec.job import JobSpec
 
@@ -9,6 +8,7 @@ from client.basicClient import BasicClient
 
 from server.thundercloudSubProcesses import createMasterSubProcess, createSlaveSubProcess
 
+from optparse import OptionParser
 from multiprocessing import Process
 import sys
 import time
@@ -23,10 +23,11 @@ def runClient():
         r = client.results()
         yield r
         print r.result
+        print "Length of result is %.2fKB" % (len(str(r.result))/1024)
         reactor.stop()
     
     print "Running client"
-    global duration
+    global options
 
     jobSpec = JobSpec()
     jobSpec.requests = {
@@ -36,47 +37,58 @@ def runClient():
             "cookies": {},
         },
     }
-    jobSpec.duration = duration
+    jobSpec.duration = options.duration
     jobSpec.transferLimit = 1024**3
-    jobSpec.profile = JobSpec.JobProfile.HAMMER
-    jobSpec.clientFunction = 100/jobSpec.duration
+    jobSpec.profile = options.profile
+    jobSpec.clientFunction = options.function
     jobSpec.statsInterval = 1
     jobSpec.timeout = 10
+    print jobSpec
     
     client = BasicClient("http://localhost:9996", jobSpec, callback=results, errback=reactor.stop)
-    r = client.create()
-    yield r
-    r = client.start()
-    yield r
-    r = client.poll()
-    yield r 
+    try:
+        r = client.create()
+        yield r
+        r = client.start()
+        yield r
+        r = client.poll()
+        yield r 
+    except:
+        reactor.stop()
     
 
 if __name__ == "__main__":
     sys.path.insert(0, os.environ["PYTHONPATH"])
     
-    if len(sys.argv) >= 2:
-        duration = int(sys.argv[1])
-    else:
-        duration = 5
-    
+    parser = OptionParser()
+    parser.add_option("-d", "--duration", type="int", dest="duration", default=5)
+    parser.add_option("-f", "--function", type="string", dest="function", default="10")
+    parser.add_option("-p", "--profile", type="int", dest="profile", default=0, help="0: hammer; 1: benchmark")
+    parser.add_option("-s", "--slaves", type="int", dest="slaves", default=1)
+    parser.add_option("-c", "--clients", type="int", dest="clients", default=1)
+    (options, args) = parser.parse_args()
+
     print "Starting master"  
     masterProcess = createMasterSubProcess(9996)
     time.sleep(5)
     
-    print "Starting slave"
-    slaveProcess = createSlaveSubProcess(9997, 9996)
-    time.sleep(5)
+    slaveProcesses = []
+    for i in range(0, options.slaves):
+        print "Starting slave %d" % i
+        slaveProcess = createSlaveSubProcess(9997 + i, 9996)
+        slaveProcesses.append(slaveProcess)
     
     signal.signal(signal.SIGINT, quit)
     signal.signal(signal.SIGTERM, quit)
     
+    time.sleep(5)
+    
     def quit(sig, frame):
         print "Received signal %s, quitting" % sig
         global masterProcess
-        global slaveProcess
+        global slaveProcesses
         
-        for process in [masterProcess, slaveProcess]:
+        for process in [masterProcess] + slaveProcesses:
             process.terminate()
         
         try:
@@ -94,7 +106,7 @@ if __name__ == "__main__":
     
         #sys.exit(1)
     
-    log.startLogging(sys.stdout)
+    #log.startLogging(sys.stdout)
     reactor.listenTCP(9995, BasicWebServer)
     reactor.callWhenRunning(runClient)
     reactor.run(installSignalHandlers=False)

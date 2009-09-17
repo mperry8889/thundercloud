@@ -4,6 +4,7 @@ import signal
 import os
 import sys
 import time
+import socket
 
 from thundercloud import config
 from multiprocessing import Process
@@ -36,7 +37,7 @@ def createSlaveSubProcess(port, masterPort):
         config._config.set("log", "level", "debug")
         config._config.add_section("master")
         config._config.set("master", "scheme", "http")
-        config._config.set("master", "host", "127.0.0.1")
+        config._config.set("master", "host", socket.gethostname())
         config._config.set("master", "port", "%s" % masterPort)
         config._config.set("master", "path", "/")
         config._config.add_section("misc")

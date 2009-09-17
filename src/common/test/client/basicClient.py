@@ -61,6 +61,10 @@ class BasicClient(object):
 
     @inlineCallbacks
     def results(self, shortResults=False):
-        request = RestApiClient.GET(self.url + "/job/%d/results?short=true" % self.jobId)
+        urlSuffix = ""
+        if shortResults == True:
+            urlSuffix += "?short=true"
+            
+        request = RestApiClient.GET(self.url + "/job/%d/results" % self.jobId + urlSuffix)
         yield request
         returnValue(JobResults(json.loads(request.result)))

@@ -13,6 +13,7 @@ from twisted.python import log as twistedLog
 def startServer(port):
     logging.basicConfig(level=eval("logging.%s" % config.parameter("log", "level")))
     log = logging.getLogger("main")
+    twistedLog.startLogging(sys.stdout)
     
     # add slaves in the INI file if they're around and add-able
     slaves = {}
@@ -44,7 +45,6 @@ def startServer(port):
     
     log.debug("Listening on port %s", port)
     reactor.listenTCP(port, createRestApi())
-    twistedLog.startLogging(sys.stderr)
 
 if __name__ == "__main__":
     try:
