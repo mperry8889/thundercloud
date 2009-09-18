@@ -1,6 +1,7 @@
 from ..db import dbConnection as db
 from thundercloud.util.restApiClient import RestApiClient
 from thundercloud.spec.slave import SlaveState
+from thundercloud import config
 
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.defer import returnValue
@@ -8,6 +9,7 @@ from twisted.internet.defer import returnValue
 from twisted.internet.task import LoopingCall
 
 import logging
+import copy
 
 log = logging.getLogger("orchestrator.slave")
 
@@ -52,6 +54,9 @@ class SlavePerspective(object):
     def heartbeat(self):
         return RestApiClient.GET(self.url("/status/heartbeat"))
 
+class InsufficientSlaveCapacity(Exception):
+    pass
+
 class SlaveNotFound(Exception):
     pass
 
@@ -65,6 +70,10 @@ class SlaveConnectionError(Exception):
 class _SlaveAllocator(object):
     def __init__(self):
         self.slaves = {}
+        try:
+            self.threshold = config.parameter("network", "clients.max.threshold", type=float)
+        except:
+            self.threshold = "1.25"
 
     def _getSlaveNo(self):
         slaveNo = db.execute("SELECT slaveNo FROM slaveno").fetchone()["slaveNo"]
@@ -77,26 +86,35 @@ class _SlaveAllocator(object):
                 return True
         return [i for i in self.slaves.itervalues() if f(i)]
     
-    def _getSlaveBySlaveSpec(self, slaveSpec):
+    def _getSlaveBySlaveSpec(self, slaveSpec, asTuple=False):
         def f((slave, status, task)):
             if slave.slaveSpec == slaveSpec:
                 return True
         result = [i for i in self.slaves.itervalues() if f(i)]
         # XXX
         assert len(result) == 1
-        return result[0]
+        if asTuple:
+            return result
+        else:
+            return result[0]
 
-    def _getSlaveByObject(self, slaveObj):
+    def _getSlaveByObject(self, slaveObj, asTuple=False):
         def f((slave, status, task)):
             if slave == slaveObj:
                 return True
         result = [i for i in self.slaves.itervalues() if f(i)]
         # XXX
         assert len(result) == 1
-        return result[0]
+        if asTuple:
+            return result
+        else:
+            return result[0]
 
     def _getSlaveById(self, slaveId):
         return self.slaves[slaveId]
+
+    def _changeSlaveState(self, slaveId, state):
+        pass
 
     @inlineCallbacks
     def addSlave(self, slaveSpec):
@@ -109,7 +127,7 @@ class _SlaveAllocator(object):
         slaveNo = self._getSlaveNo()
         slave = SlavePerspective(slaveSpec)
         status = SlaveState()
-        #status.state = SlaveState.IDLE
+        status.state = SlaveState.CONNECTED
 
         # check that the slave is up and running
         request = self.checkHealth(slave)
@@ -117,6 +135,8 @@ class _SlaveAllocator(object):
 
         if request.result != True:
             raise SlaveConnectionError
+        else:
+            status.state = SlaveState.IDLE
         
         # set up a heartbeat call
         task = LoopingCall(self.checkHealth, slave)
@@ -145,6 +165,18 @@ class _SlaveAllocator(object):
         (slaveObj, status, task) = self._getSlaveByObject(slave)
         task.stop()
             
+            
+            
+    def _addChunk(self, availableSlaves, capacity):
+        chunk = []
+        i = 0
+        for (slave, status, task) in availableSlaves:
+            i += slave.slaveSpec.maxRequestsPerSec
+            chunk.append((slave, status, task))
+            if i >= capacity:
+                break
+        return chunk
+        
     
     @inlineCallbacks
     def allocate(self, jobSpec):
@@ -163,17 +195,29 @@ class _SlaveAllocator(object):
         # if there's more idle capacity than there are requests, then figure out
         # a subset of idle hosts to use
         if idleCapacity >= maxClientsPerSec:
-            i = 0
-            for (slave, status, task) in idleSlaves:
-                i += slave.slaveSpec.maxRequestsPerSec
-                slaves.append((slave, status, task))
-                if i >= maxClientsPerSec:
-                    break
+            slaves += self._addChunk(idleSlaves, maxClientsPerSec)
         
-        # otherwise use all the idle capacity and then move on to already
-        # allocated slaves
         else:
-            slaves = idleCapacity
+            # if the job is requesting more than the total capacity of the system, then
+            # just fail it.  if someone requests 1 million hits/sec, it's probably 
+            # outrageous anyway.
+            totalCapacity = reduce(lambda x, y: x+y, [i.slaveSpec.maxRequestsPerSec for (i, j, k) in self.slaves.itervalues()])
+            if maxClientsPerSec > totalCapacity:
+                raise InsufficientSlaveCapacity
+            
+            # consume all the idle hosts and if any hosts are allocated but
+            # not yet used, take those
+            allocatedSlaves = sorted(self._getSlavesInState(SlaveState.ALLOCATED), lambda (i, j, k), (l, m, n): i.slaveSpec.maxRequestsPerSec - l.slaveSpec.maxRequestsPerSec)
+            allocatedCapacity = reduce(lambda x, y: x+y, [i.slaveSpec.maxRequestsPerSec for (i, j, k) in allocatedSlaves])
+
+            if allocatedCapacity + idleCapacity >= maxClientsPerSec:
+                slaves += self._addChunk(idleSlaves, maxClientsPerSec)
+                slaves += self._addChunk(allocatedSlaves, maxClientsPerSec)
+
+
+            # otherwise move in and just add more work to existing slaves            
+            else:
+                slaves += self._getSlavesInState(SlaveState.RUNNING)
 
 
         # for all the slaves being allocated, do a quick health check. if one fails then

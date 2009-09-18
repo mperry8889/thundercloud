@@ -8,7 +8,7 @@ import sys
 class BasicResource(Resource):
     isLeaf = True
     def render_GET(self, request):
-        return ""
+        return "1"
 
 
 root = BasicResource()

@@ -1,6 +1,8 @@
-from thunderserver.orchestrator.slave import _SlaveAllocator
+from thunderserver.orchestrator.slave import _SlaveAllocator, InsufficientSlaveCapacity
 from thundercloud.spec.slave import SlaveSpec, SlaveState
 from thundercloud.spec.job import JobSpec
+
+from thunderserver.db import dbConnection as db
 
 from twisted.internet import reactor
 from twisted.trial import unittest
@@ -37,6 +39,7 @@ class SlaveAllocatorTestMixin(object):
             slavesToRemove.append(slaveId)
         
         [self.sa.removeSlave(slaveId) for slaveId in slavesToRemove]
+        db.execute("UPDATE slaveno SET slaveNo = 1")
 
     def createJobSpec(self):
         jobSpec = JobSpec()
@@ -49,10 +52,14 @@ class SlaveAllocatorTestMixin(object):
         jobSpec.clientFunction = "100"
         return jobSpec
 
+    def checkAllocationLength(self, slaves, length):
+            self.assertNotEquals(slaves, [])
+            self.assertEquals(len(slaves), length)
+
 
 class SlaveAllocatorInternalMethods(SlaveAllocatorTestMixin, unittest.TestCase):
     def test_Filters(self):
-        """Test internal filters"""
+        """Internal slave getByX methods"""
         for (slaveId, (slave, status, task)) in self.sa.slaves.iteritems():
             self.assertEquals((slave, status, task), self.sa._getSlaveById(slaveId))
             self.assertEquals((slave, status, task), self.sa._getSlaveByObject(slave))
@@ -62,13 +69,15 @@ class SlaveAllocatorInternalMethods(SlaveAllocatorTestMixin, unittest.TestCase):
         return True
 
 
-class SlaveAllocatorLowerBounds(SlaveAllocatorTestMixin, unittest.TestCase): 
+class SlaveAllocatorBounds(SlaveAllocatorTestMixin, unittest.TestCase): 
+    """Allocation boundary checks.  Slave capacity threshold is disabled."""
+    
     def setUp(self):
         self.sa = TestSlaveAllocator()
         
-        # add 50 slaves, each can handle 1 request/sec
+        # add 10 slaves, each can handle 1 request/sec
         deferredList = []
-        for i in range(0, 50):
+        for i in range(0, 10):
             slaveSpec = SlaveSpec()
             slaveSpec.host = "localhost"
             slaveSpec.port = i
@@ -79,22 +88,72 @@ class SlaveAllocatorLowerBounds(SlaveAllocatorTestMixin, unittest.TestCase):
 
         return DeferredList(deferredList)
 
-    def test_SlaveAllocatorLowerBounds(self):
-        """Slave allocator lower bounds.
-        Each slave can do 1 request/sec, so each allocation requiring 1 <= i <= 50
-        requests/sec should allocate i slaves""
-        
-        def checkAllocationLength(slaves, length):
-                self.assertNotEquals(slaves, [])
-                self.assertEquals(len(slaves), length)
-        
+    def test_LowerBounds(self):
+        """Lower bounds of slave allocation: test for minimum amount of request/sec per slave"""
         deferredList = []
         
-        for i in range(1, 51):
+        for i in range(1, 11):
             jobSpec = self.createJobSpec()
             jobSpec.clientFunction = "%d" % i            
             deferred =  self.sa.allocate(jobSpec)
-            deferred.addCallback(checkAllocationLength, i)
+            deferred.addCallback(self.checkAllocationLength, i)
             deferredList.append(deferred)
             
         return DeferredList(deferredList)
+    
+    
+    def test_OverAllocation(self):
+        """Overallocate each slave.  Allocation should fail due to insufficient capacity"""
+        jobSpec = self.createJobSpec()
+        jobSpec.clientFunction = "%d" % 11
+        return self.failUnlessFailure(self.sa.allocate(jobSpec), InsufficientSlaveCapacity)
+
+
+class SlaveAllocatorSlaveStates(SlaveAllocatorTestMixin, unittest.TestCase):
+    """Allocation based on slave states"""
+    
+    def _updateSlaveStates(self, value):
+        print sorted(self.sa.slaves.keys())
+        for i in range(1, 6):
+            (slave, status, task) = self.sa._getSlaveById(i)
+            status.state = SlaveState.CONNECTED
+        
+        for j in range(6, 16):
+            (slave, status, task) = self.sa._getSlaveById(j)
+            status.state = SlaveState.IDLE
+
+        for k in range(16, 26):
+            (slave, status, task) = self.sa._getSlaveById(k)
+            status.state = SlaveState.RUNNING
+        
+        for l in range(26, 31):
+            (slave, status, task) = self.sa._getSlaveById(l)
+            status.state = SlaveState.DISCONNECTED    
+        return True                   
+        
+    def setUp(self):
+        self.sa = TestSlaveAllocator()
+        
+        # add 50 slaves, each can handle 1 request/sec.
+        # states are as follows:
+        # 5: connected, 10: idle, 10: running, 5: disconnected
+        deferreds = []
+        for i in range(0, 30):
+            slaveSpec = SlaveSpec()
+            slaveSpec.host = "localhost"
+            slaveSpec.port = i
+            slaveSpec.path = "/"
+            slaveSpec.maxRequestsPerSec = 1
+            deferred = self.sa.addSlave(slaveSpec)
+            deferreds.append(deferred)
+
+        deferredList = DeferredList(deferreds)
+        deferredList.addCallback(self._updateSlaveStates)
+        return deferredList
+
+    def test_Foo(self):
+        """Foo"""
+        return True
+    
+
+        
