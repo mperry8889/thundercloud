@@ -1,5 +1,6 @@
 from ..db import dbConnection as db
 from thundercloud.util.restApiClient import RestApiClient
+from thundercloud.spec.slave import SlaveState
 
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.defer import returnValue
@@ -51,10 +52,8 @@ class SlavePerspective(object):
     def heartbeat(self):
         return RestApiClient.GET(self.url("/status/heartbeat"))
 
-
-class SlaveStatus(object):
-    def __init__(self):
-        self.inUse = False
+class SlaveNotFound(Exception):
+    pass
 
 class SlaveAlreadyConnected(Exception):
     def __init__(self, slaveId=None):
@@ -72,6 +71,33 @@ class _SlaveAllocator(object):
         db.execute("UPDATE slaveno SET slaveNo = ?", (slaveNo + 1,))
         return slaveNo
 
+    def _getSlavesInState(self, state):
+        def f((slave, status, task)):
+            if status.state == state:
+                return True
+        return [i for i in self.slaves.itervalues() if f(i)]
+    
+    def _getSlaveBySlaveSpec(self, slaveSpec):
+        def f((slave, status, task)):
+            if slave.slaveSpec == slaveSpec:
+                return True
+        result = [i for i in self.slaves.itervalues() if f(i)]
+        # XXX
+        assert len(result) == 1
+        return result[0]
+
+    def _getSlaveByObject(self, slaveObj):
+        def f((slave, status, task)):
+            if slave == slaveObj:
+                return True
+        result = [i for i in self.slaves.itervalues() if f(i)]
+        # XXX
+        assert len(result) == 1
+        return result[0]
+
+    def _getSlaveById(self, slaveId):
+        return self.slaves[slaveId]
+
     @inlineCallbacks
     def addSlave(self, slaveSpec):
         for slaveId, (connectedSlave, status, task) in self.slaves.iteritems():
@@ -82,7 +108,8 @@ class _SlaveAllocator(object):
         
         slaveNo = self._getSlaveNo()
         slave = SlavePerspective(slaveSpec)
-        status = SlaveStatus()
+        status = SlaveState()
+        #status.state = SlaveState.IDLE
 
         # check that the slave is up and running
         request = self.checkHealth(slave)
@@ -99,7 +126,7 @@ class _SlaveAllocator(object):
         returnValue(slaveNo)
     
     def removeSlave(self, slaveId):
-        slaveObj, status, task = self.slaves[slaveId]
+        (slaveObj, status, task) = self.slaves[slaveId]
         task.stop()
         self.slaves.pop(slaveId)
     
@@ -115,27 +142,65 @@ class _SlaveAllocator(object):
             returnValue(True)
 
     def degrade(self, slave):
-        for slaveId, (slaveObj, status, task) in self.slaves.iteritems():
-            if slaveObj == slave:
-                task.stop()
-                self.removeSlave(slaveId)
-                break
+        (slaveObj, status, task) = self._getSlaveByObject(slave)
+        task.stop()
             
     
     @inlineCallbacks
     def allocate(self, jobSpec):
         slaves = []
-        for (slave, status, task) in self.slaves.itervalues():
-            status.inUse = True
-            request = self.checkHealth(slave)
-            yield request
-            if request.result == True:
-                slaves.append(slave)
+        
+        # this gets the maximum of the results of clientFunction(t), where t happens
+        # every 20% of the job duration.  this is to get a rough idea of what the max really
+        # will be, though it's really not accurate.
+        clientFunction = lambda t: eval(jobSpec.clientFunction)
+        maxClientsPerSec = max([clientFunction(t) for t in range(0, jobSpec.duration, int(.2*jobSpec.duration))])
+        
+        # first try to fit the job onto idle slaves
+        idleSlaves = sorted(self._getSlavesInState(SlaveState.IDLE), lambda (i, j, k), (l, m, n): i.slaveSpec.maxRequestsPerSec - l.slaveSpec.maxRequestsPerSec)
+        idleCapacity = reduce(lambda x, y: x+y, [i.slaveSpec.maxRequestsPerSec for (i, j, k) in idleSlaves])
+        
+        # if there's more idle capacity than there are requests, then figure out
+        # a subset of idle hosts to use
+        if idleCapacity >= maxClientsPerSec:
+            i = 0
+            for (slave, status, task) in idleSlaves:
+                i += slave.slaveSpec.maxRequestsPerSec
+                slaves.append((slave, status, task))
+                if i >= maxClientsPerSec:
+                    break
+        
+        # otherwise use all the idle capacity and then move on to already
+        # allocated slaves
+        else:
+            slaves = idleCapacity
 
-        returnValue(slaves)
+
+        # for all the slaves being allocated, do a quick health check. if one fails then
+        # retry the allocation recursively and return the result
+        for (slave, status, task) in slaves:
+            try:
+                request = self.checkHealth(slave)
+                yield request
+            except SlaveConnectionError:
+                returnValue(self.allocate(jobSpec))
+                
+            if request.result == True:
+                slave.state = SlaveState.ALLOCATED
+
+        returnValue([slave for (slave, status, task) in slaves])
 
     def release(self, slaveList):
-        pass
+        for slave in slaveList:
+            pass
+    
+    def markAsRunning(self, slave):
+        (slaveObj, status, task) = self._getSlaveByObject(slave)
+        status.increment()
+    
+    def markAsFinished(self, slave):
+        (slaveObj, status, task) = self._getSlaveByObject(slave)
+        status.decrement()        
     
 
 SlaveAllocator = _SlaveAllocator()

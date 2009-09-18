@@ -1,11 +1,33 @@
 from thundercloud.spec.dataobject import DataObject
 
-class SlaveState(object):
-    DISCONNECTED = 0
-    CONNECTED = 1
-    IDLE = 2
-    WORKING = 3
+import logging
+log = logging.getLogger("slaveInfo")
+
+
+class SlaveState(DataObject):
+    CONNECTED = 0
+    IDLE = 1
+    ALLOCATED = 2
+    RUNNING = 3
+    DISCONNECTED = 4
     UNKNOWN = 9999
+
+    _attributes = {
+        "state": IDLE,
+        "jobCount": 0,
+    }
+    
+    def jobCount(self):
+        return self.jobCount
+    
+    def increment(self):
+        self.jobCount += 1
+    
+    def decrement(self):
+        self.jobCount -= 1
+        if self.jobCount < 0:
+            log.error("Slave job count is < 0, this should not happen")
+    
 
 class SlaveSpec(DataObject):
     _attributes = {

@@ -70,7 +70,7 @@ if __name__ == "__main__":
 
     print "Starting master"  
     masterProcess = createMasterSubProcess(9996)
-    time.sleep(5)
+    time.sleep(1)
     
     slaveProcesses = []
     for i in range(0, options.slaves):
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, quit)
     signal.signal(signal.SIGTERM, quit)
     
-    time.sleep(5)
+    time.sleep(2)
     
     def quit(sig, frame):
         print "Received signal %s, quitting" % sig

@@ -10,8 +10,8 @@ class DataObject(object):
             setattr(self, key, self._attributes[key])
         if json is not None: self.slurp(json)
 
-    # representation: dictionary object
-    def __repr__(self):
+
+    def __rawRepr__(self):
         obj = {}
         for key in self._attributes.keys():
             try:
@@ -19,6 +19,9 @@ class DataObject(object):
             except AttributeError:
                 pass
         return obj
+
+    def __repr__(self):
+        return "%s" % self.__rawRepr__()
     
     # string representation: stringified JSON
     def __str__(self):
@@ -31,7 +34,7 @@ class DataObject(object):
 
     # json representation
     def toJson(self):
-        return jsonpickle.Pickler(unpicklable=True).flatten(self.__repr__())
+        return jsonpickle.Pickler(unpicklable=True).flatten(self.__rawRepr__())
     
     # conveniently import JSON
     def slurp(self, json):

@@ -32,7 +32,7 @@ def createSlaveSubProcess(port, masterPort):
         config._config.add_section("network")
         config._config.set("network", "port", "%s" % port)
         config._config.set("network", "authentication", "false")
-        config._config.set("network", "clients.max", "1000")
+        config._config.set("network", "clients.max", "10")
         config._config.add_section("log")
         config._config.set("log", "level", "debug")
         config._config.add_section("master")

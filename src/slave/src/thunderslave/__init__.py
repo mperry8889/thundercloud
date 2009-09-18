@@ -33,6 +33,7 @@ def startServer(port):
         slaveSpec.host = socket.gethostname()
         slaveSpec.port = config.parameter("network", "port", type=int)
         slaveSpec.path = ""
+        slaveSpec.maxRequestsPerSec = config.parameter("network", "clients.max", type=int)
         
         masterUrl = "%s://%s:%d/%s/slave" % (scheme, host, port, path)
         

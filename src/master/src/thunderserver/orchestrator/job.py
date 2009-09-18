@@ -3,6 +3,7 @@ from thundercloud.spec.job import JobResults, JobState
 from twisted.internet.defer import DeferredList, inlineCallbacks, returnValue
 
 from slave import SlaveAllocator
+from thundercloud.spec.slave import SlaveState
 
 import simplejson as json
 
@@ -101,7 +102,7 @@ def AggregateJobResults_aggregateResultsByTime(cls, statsList, statsInterval):
         if type(result[key]) == dict:
             for subkey in result[key].keys():
                 if type(result[key][subkey]) == float:
-                    result[key][subkey] = "%.3f" % result[key][subkey]
+                    result[key][subkey] = "%.4f" % result[key][subkey]
 
     return result
 
@@ -227,8 +228,16 @@ class JobPerspective(object):
         
         returnValue(deferredList.result)
     
+    @inlineCallbacks
     def start(self):
-        return self._jobOp("startJob")
+        request = self._jobOp("startJob")
+        yield request
+        
+        if request.result is not False:
+            for slave in self.mapping.iterkeys():
+                SlaveAllocator.markAsRunning(slave)
+        
+        returnValue(request.result)
 
     def pause(self):
         return self._jobOp("pauseJob")
