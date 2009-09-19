@@ -1,6 +1,7 @@
 from thundercloud.spec.job import JobResults, JobState
 
 from twisted.internet.defer import DeferredList, inlineCallbacks, returnValue
+from twisted.internet.task import LoopingCall
 
 from slave import SlaveAllocator
 from thundercloud.spec.slave import SlaveState
@@ -172,6 +173,10 @@ class JobPerspective(object):
         self.jobSpec = jobSpec
         self.mapping = {}
         self.health = JobHealth.OK
+        self.task = LoopingCall(self.state)
+        
+        self._started = False
+        self._finished = False
     
     def addSlave(self, slave, remoteJobId):
         self.mapping[slave] = remoteJobId
@@ -196,6 +201,20 @@ class JobPerspective(object):
         yield self._jobOp("stopJob", ignoreHealth=True)
         returnValue(True)
    
+    def _jobIsStarted(self):
+        if self._started == False:
+            log.debug("Starting job %d" % self.jobId)
+            for slave in self.mapping.iterkeys():
+                SlaveAllocator.markAsRunning(slave)
+            self.task.start(120)
+            self._started = True
+
+    def _jobIsFinished(self):
+        if self._finished == False:
+            log.debug("Finishing job %d" % self.jobId)
+            self.task.stop()
+            self._finished = True
+
     # this is just a pass-through to the DeferredList callback
     def _jobOpSlaveCallback(self, value):
         return value
@@ -231,12 +250,8 @@ class JobPerspective(object):
     @inlineCallbacks
     def start(self):
         request = self._jobOp("startJob")
-        yield request
-        
-        if request.result is not False:
-            for slave in self.mapping.iterkeys():
-                SlaveAllocator.markAsRunning(slave)
-        
+        yield request        
+        self._jobIsStarted()
         returnValue(request.result)
 
     def pause(self):
@@ -268,7 +283,12 @@ class JobPerspective(object):
         for (result, state) in request.result:
             if result == True:
                 states.append(int(json.loads(state)))
-        returnValue(AggregateJobResults._aggregateState(states))
+        
+        jobState = AggregateJobResults._aggregateState(states)
+        if jobState == JobState.COMPLETE:
+            self._jobIsFinished()
+            
+        returnValue(jobState)
         
   
     @inlineCallbacks
@@ -314,6 +334,10 @@ class JobPerspective(object):
         # merged state was
         if self.health == JobHealth.ERROR:
             aggregateResults.job_state = JobState.ERROR
+        
+        # if the job is done, cancel the timer
+        if aggregateResults.job_state == JobState.COMPLETE:
+            self._jobIsFinished()
         
         returnValue(aggregateResults)       
         
