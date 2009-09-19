@@ -201,7 +201,7 @@ class _SlaveAllocator(object):
             # if the job is requesting more than the total capacity of the system, then
             # just fail it.  if someone requests 1 million hits/sec, it's probably 
             # outrageous anyway.
-            totalCapacity = reduce(lambda x, y: x+y, [i.slaveSpec.maxRequestsPerSec for (i, j, k) in self.slaves.itervalues()])
+            totalCapacity = reduce(lambda x, y: x+y, [i.slaveSpec.maxRequestsPerSec for (i, j, k) in self._getSlavesInState(SlaveState.IDLE) + self._getSlavesInState(SlaveState.ALLOCATED) + self._getSlavesInState(SlaveState.RUNNING)])
             if maxClientsPerSec > totalCapacity:
                 raise InsufficientSlaveCapacity
             
@@ -217,8 +217,12 @@ class _SlaveAllocator(object):
 
             # otherwise move in and just add more work to existing slaves            
             else:
-                slaves += self._getSlavesInState(SlaveState.RUNNING)
-
+                runningSlaves = sorted(self._getSlavesInState(SlaveState.RUNNING), lambda (i, j, k), (l, m, n): i.slaveSpec.maxRequestsPerSec - l.slaveSpec.maxRequestsPerSec)
+                
+                slaves += self._addChunk(idleSlaves, maxClientsPerSec)
+                slaves += self._addChunk(allocatedSlaves, maxClientsPerSec)
+                slaves += self._addChunk(runningSlaves, maxClientsPerSec)                
+    
 
         # for all the slaves being allocated, do a quick health check. if one fails then
         # retry the allocation recursively and return the result

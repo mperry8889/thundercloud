@@ -53,8 +53,17 @@ class SlaveAllocatorTestMixin(object):
         return jobSpec
 
     def checkAllocationLength(self, slaves, length):
-            self.assertNotEquals(slaves, [])
-            self.assertEquals(len(slaves), length)
+        self.assertNotEquals(slaves, [])
+        self.assertEquals(len(slaves), length)
+        return slaves
+    
+    def checkAllocationType(self, slaves, allocationType):
+        if type(allocationType) != list:
+            allocationType = [allocationType]
+        
+        for slave in slaves:
+            self.failUnlessIn(slave.state, allocationType)
+        return slaves
 
 
 class SlaveAllocatorInternalMethods(SlaveAllocatorTestMixin, unittest.TestCase):
@@ -100,43 +109,31 @@ class SlaveAllocatorBounds(SlaveAllocatorTestMixin, unittest.TestCase):
             deferredList.append(deferred)
             
         return DeferredList(deferredList)
-    
-    
-    def test_OverAllocation(self):
-        """Overallocate each slave.  Allocation should fail due to insufficient capacity"""
-        jobSpec = self.createJobSpec()
-        jobSpec.clientFunction = "%d" % 11
-        return self.failUnlessFailure(self.sa.allocate(jobSpec), InsufficientSlaveCapacity)
 
 
 class SlaveAllocatorSlaveStates(SlaveAllocatorTestMixin, unittest.TestCase):
     """Allocation based on slave states"""
     
     def _updateSlaveStates(self, value):
-        print sorted(self.sa.slaves.keys())
-        for i in range(1, 6):
+        for i in range(1, 31):
             (slave, status, task) = self.sa._getSlaveById(i)
-            status.state = SlaveState.CONNECTED
-        
-        for j in range(6, 16):
-            (slave, status, task) = self.sa._getSlaveById(j)
-            status.state = SlaveState.IDLE
-
-        for k in range(16, 26):
-            (slave, status, task) = self.sa._getSlaveById(k)
-            status.state = SlaveState.RUNNING
-        
-        for l in range(26, 31):
-            (slave, status, task) = self.sa._getSlaveById(l)
-            status.state = SlaveState.DISCONNECTED    
-        return True                   
-        
+            if 1 <= i < 6:
+                status.state = SlaveState.CONNECTED
+            elif 6 <= i < 11:
+                status.state = SlaveState.IDLE
+            elif 11 <= i < 16:
+                status.state = SlaveState.ALLOCATED            
+            elif 16 <= i < 26:
+                status.state = SlaveState.RUNNING
+            elif 26 <= i < 31:
+                status.state = SlaveState.DISCONNECTED    
+ 
     def setUp(self):
         self.sa = TestSlaveAllocator()
         
         # add 50 slaves, each can handle 1 request/sec.
         # states are as follows:
-        # 5: connected, 10: idle, 10: running, 5: disconnected
+        # 5: connected, 5: idle, 5: allocated, 10: running, 5: disconnected
         deferreds = []
         for i in range(0, 30):
             slaveSpec = SlaveSpec()
@@ -151,9 +148,37 @@ class SlaveAllocatorSlaveStates(SlaveAllocatorTestMixin, unittest.TestCase):
         deferredList.addCallback(self._updateSlaveStates)
         return deferredList
 
-    def test_Foo(self):
-        """Foo"""
-        return True
+    def test_Idle(self):
+        """Submit a job such that only the idle hosts will be allocated"""
+        jobSpec = self.createJobSpec()
+        jobSpec.clientFunction = "5"
+        deferred = self.sa.allocate(jobSpec)
+        deferred.addCallback(self.checkAllocationLength, 5)
+        return deferred
     
+    def test_IdlePlusAllocated(self):
+        """Submit a job such that idle and previously allocated hosts will be allocated"""
+        jobSpec = self.createJobSpec()
+        jobSpec.clientFunction = "10"
+        deferred = self.sa.allocate(jobSpec)
+        deferred.addCallback(self.checkAllocationLength, 10)
+        return deferred
+
+    def test_IdlePlusAllocatedPlusRunning(self):
+        """Submit a job that will take all idle, allocated, and running hosts"""
+        jobSpec = self.createJobSpec()
+        jobSpec.clientFunction = "20"
+        deferred = self.sa.allocate(jobSpec)
+        deferred.addCallback(self.checkAllocationLength, 20)
+        return deferred
+
+    def test_TooManyRequests(self):
+        """Submit a job that wants more requests than the system can handle"""
+        jobSpec = self.createJobSpec()
+        jobSpec.clientFunction = "21"
+        return self.failUnlessFailure(self.sa.allocate(jobSpec), InsufficientSlaveCapacity)
+        
+        
+
 
         
