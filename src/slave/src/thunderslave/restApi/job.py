@@ -15,6 +15,9 @@ log = logging.getLogger("restApi.job")
 # Handle requests sent to /job
 class Job(RootNode):    
 
+    def GET(self, request):
+        return ""
+
     # create a new job based on the given JSON job spec
     def POST(self, request):
         request.content.seek(0, 0)

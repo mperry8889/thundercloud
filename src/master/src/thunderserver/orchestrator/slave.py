@@ -163,9 +163,7 @@ class _SlaveAllocator(object):
 
     def degrade(self, slave):
         (slaveObj, status, task) = self._getSlaveByObject(slave)
-        task.stop()
-            
-            
+        task.stop()            
             
     def _addChunk(self, availableSlaves, capacity):
         chunk = []

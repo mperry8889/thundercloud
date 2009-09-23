@@ -26,6 +26,7 @@ class DBChecker(object):
     def __init__(self, dbHandle):
         self.db = dbHandle
     
+    # this needs to be implemented by subclasses
     def getUserAndPassword(self, username):
         raise NotImplementedException
     

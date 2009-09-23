@@ -1,5 +1,3 @@
-# this is a crappy webserver, which returns a variety of error codes at random
-
 from twisted.internet import reactor
 from twisted.web.resource import Resource
 from twisted.web import server
@@ -11,8 +9,7 @@ import sys
 
 random.seed()
 
-class CrappyResource(Resource):
-    
+class NonRedirectingNode(Resource):
     httpCodes = {
         100: "Continue",
         102: "Processing",
@@ -24,14 +21,6 @@ class CrappyResource(Resource):
         205: "Reset Content",
         206: "Partial Content",
         207: "Multi-Status",
-        #300: "Multiple Choices",
-        #301: "Moved Permanently",
-        #302: "Found",
-        #303: "See Other",
-        #304: "Not Modified",
-        #305: "Use Proxy",
-        #306: "Switch Proxy",
-        #307: "Temporary Redirect",
         400: "Bad Request",
         401: "Unauthorized",
         402: "Payment Required",
@@ -65,38 +54,30 @@ class CrappyResource(Resource):
         505: "HTTP Version Not Supported",
         506: "Variant Also Negotiates",
         507: "Insufficient Storage",
-        #509: "Bandwidth Limit Exceeded",
+        509: "Bandwidth Limit Exceeded",
         510: "Not Extended",
     }
     
-    def render(self, request):
-        rand = random.randint(1, 100)
-        
-        # 35% chance of getting one of the codes above
-        if rand >= 1 and rand < 35:
-            key = random.choice(self.httpCodes.keys())
-            log.msg("Sending HTTP %d %s" % (key, self.httpCodes[key]))
-            request.setResponseCode(key, self.httpCodes[key])
-            return self.httpCodes[key]
-        
-        # 10% chance of some kind of HTTP 300-level game
-        #elif rand >= 35 and rand < 45:
-        #    pass 
-        
-        # 5% chance of a timeout
-        elif rand >= 45 and rand < 50:
-            log.msg("Timing out request")
-            return server.NOT_DONE_YET
-        
-        # 50% chance of returning a HTTP 200
-        else:
-            log.msg("Sending HTTP 200")
-            return "1"
+    def render(self):
+        pass
 
 
-root = CrappyResource()
-root.putChild("", CrappyResource())
-RandomErrorWebServer = server.Site(root)
+class RedirectingNode(Resource):
+    httpCodes = {
+        300: "Multiple Choices",
+        301: "Moved Permanently",
+        302: "Found",
+        303: "See Other",
+        304: "Not Modified",
+        305: "Use Proxy",
+        306: "Switch Proxy",
+        307: "Temporary Redirect",
+    }
+    
+    def render(self):
+        pass
+
+
 
 if __name__ == "__main__":
     log.startLogging(sys.stdout)
