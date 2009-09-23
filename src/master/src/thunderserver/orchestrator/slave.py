@@ -54,6 +54,9 @@ class SlavePerspective(object):
     def heartbeat(self):
         return RestApiClient.GET(self.url("/status/heartbeat"))
 
+class NoSlavesAvailable(Exception):
+    pass
+
 class InsufficientSlaveCapacity(Exception):
     pass
 
@@ -179,6 +182,11 @@ class _SlaveAllocator(object):
     @inlineCallbacks
     def allocate(self, jobSpec):
         slaves = []
+        
+        # check if any slaves are even connected
+        if self.slaves == {}:
+            log.critical("No slaves available in the system.  This is not good!")
+            raise NoSlavesAvailable
         
         # this gets the maximum of the results of clientFunction(t), where t happens
         # every 20% of the job duration.  this is to get a rough idea of what the max really

@@ -20,7 +20,7 @@ class SlaveDBChecker(DBChecker):
     implements(IDBChecker)
     
     def getUserAndPassword(self, username):
-        results = self.db.execute("SELECT username, password FROM users WHERE username = ?", (username,)).fetchone()
+        results = self.db.execute("SELECT username, password FROM users WHERE username = ? AND deleted = 'f'", (username,)).fetchone()
         if results is None:
             raise UserNotFound
         else:

@@ -1,4 +1,4 @@
-from thunderserver.orchestrator.slave import _SlaveAllocator, InsufficientSlaveCapacity
+from thunderserver.orchestrator.slave import _SlaveAllocator, InsufficientSlaveCapacity, NoSlavesAvailable
 from thundercloud.spec.slave import SlaveSpec, SlaveState
 from thundercloud.spec.job import JobSpec
 
@@ -65,7 +65,7 @@ class SlaveAllocatorTestMixin(object):
         return slaves
 
 
-class SlaveAllocatorInternalMethods(SlaveAllocatorTestMixin, unittest.TestCase):
+class InternalMethods(SlaveAllocatorTestMixin, unittest.TestCase):
     def test_Filters(self):
         """Internal slave getByX methods"""
         for (slaveId, (slave, status, task)) in self.sa.slaves.iteritems():
@@ -77,10 +77,10 @@ class SlaveAllocatorInternalMethods(SlaveAllocatorTestMixin, unittest.TestCase):
         return True
 
 
-class SlaveAllocatorBounds(SlaveAllocatorTestMixin, unittest.TestCase): 
+class Bounds(SlaveAllocatorTestMixin, unittest.TestCase): 
     """Allocation boundary checks."""
     def setUp(self):
-        return super(SlaveAllocatorBounds, self).setUp(slaves=10, maxRequestsPerSec=1)
+        return super(Bounds, self).setUp(slaves=10, maxRequestsPerSec=1)
 
     def test_LowerBounds(self):
         """Lower bounds of slave allocation: test for minimum amount of request/sec per slave"""
@@ -96,7 +96,7 @@ class SlaveAllocatorBounds(SlaveAllocatorTestMixin, unittest.TestCase):
         return DeferredList(deferredList)
 
 
-class SlaveAllocatorSlaveStates(SlaveAllocatorTestMixin, unittest.TestCase):
+class SlaveStates(SlaveAllocatorTestMixin, unittest.TestCase):
     """Allocation based on slave states"""
     def _updateSlaveStates(self, value):
         for i in range(1, 31):
@@ -113,7 +113,7 @@ class SlaveAllocatorSlaveStates(SlaveAllocatorTestMixin, unittest.TestCase):
                 status.state = SlaveState.DISCONNECTED    
  
     def setUp(self):
-        deferredList = super(SlaveAllocatorSlaveStates, self).setUp(slaves=30, maxRequestsPerSec=1)
+        deferredList = super(SlaveStates, self).setUp(slaves=30, maxRequestsPerSec=1)
         deferredList.addCallback(self._updateSlaveStates)
         return deferredList
 
@@ -147,6 +147,19 @@ class SlaveAllocatorSlaveStates(SlaveAllocatorTestMixin, unittest.TestCase):
         jobSpec.clientFunction = "21"
         return self.failUnlessFailure(self.sa.allocate(jobSpec), InsufficientSlaveCapacity)
 
-#class SlaveAllocatorRunningCount(SlaveAllocatorTestMixin, unittest.TestCase):
+class NoSlaves(SlaveAllocatorTestMixin, unittest.TestCase):
+    
+    def setUp(self):
+        self.sa = TestSlaveAllocator()
+    
+    def test_noSlavesAvailable(self):
+        """Allocate a job when no slaves are connected"""
+        jobSpec = self.createJobSpec()
+        jobSpec.clientFunction = "20"
+        self.failUnlessFailure(self.sa.allocate(jobSpec), NoSlavesAvailable)
+        
+        
+
+#class RunningCount(SlaveAllocatorTestMixin, unittest.TestCase):
 #    """ """
         

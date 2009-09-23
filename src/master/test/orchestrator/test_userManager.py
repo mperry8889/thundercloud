@@ -13,8 +13,7 @@ class UserManagerTestMixin(object):
         pass
     
     def tearDown(self):
-        pass
-        #db.execute("DELETE FROM users WHERE username <> 'SLAVE'")
+        db.execute("DELETE FROM users WHERE username <> 'SLAVE'")
     
 
 class LifeCycle(UserManagerTestMixin, unittest.TestCase):
@@ -61,7 +60,6 @@ class LifeCycle(UserManagerTestMixin, unittest.TestCase):
         deferred.addCallback(self._verifyUser, userSpec)
         yield deferred
         yield self.failUnlessFailure(UserManager.create(userSpec), UserAlreadyExists)
-        returnValue(None)
 
     @inlineCallbacks
     def test_delete(self):
@@ -75,11 +73,35 @@ class LifeCycle(UserManagerTestMixin, unittest.TestCase):
         deferred2 = UserManager.delete(userSpec.username)
         deferred2.addCallback(self._verifyDeleted, userId)
         yield deferred2
-        returnValue(None)
     
     def test_deleteInvalid(self):
         """Delete an invalid user"""
         return self.failUnlessFailure(UserManager.delete("aasdfasdfasdfsadfsfd"), NoSuchUser)
 
+    @inlineCallbacks
+    def test_getDeleted(self):
+        """Get a deleted user"""
+        userSpec = self._createUserSpec("test_getDeleted", "foo")
+        deferred = UserManager.create(userSpec)
+        deferred.addCallback(self._verifyUser, userSpec)
+        yield deferred   
+          
+        userId = deferred.result
+        deferred2 = UserManager.delete(userSpec.username)
+        deferred2.addCallback(self._verifyDeleted, userId)
+        yield deferred2
+        yield self.failUnlessFailure(UserManager.get(userSpec.username), NoSuchUser)
+    
+    @inlineCallbacks
+    def test_get(self):
+        """Get a user"""
+        userSpec = self._createUserSpec("test_get", "foo")
+        deferred = UserManager.create(userSpec)
+        deferred.addCallback(self._verifyUser, userSpec)
+        yield deferred   
         
+        deferred2 = UserManager.get("test_get") 
+        yield deferred2
+        userObj = deferred2.result
+        yield self.assertEquals(userObj.userSpec.username, "test_get")
         

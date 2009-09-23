@@ -7,7 +7,12 @@ from thundercloud.util.restApiClient import RestApiClient
 
 import simplejson as json
 
+from optparse import OptionParser
 import sys
+import time
+import signal
+import os
+
 
 class BasicClient(object):
     def __init__(self, url, jobSpec, callback=None, errback=None):
@@ -68,3 +73,62 @@ class BasicClient(object):
         request = RestApiClient.GET(self.url + "/job/%d/results" % self.jobId + urlSuffix)
         yield request
         returnValue(JobResults(json.loads(request.result)))
+
+@inlineCallbacks
+def runClient(options):
+    
+    @inlineCallbacks
+    def results():
+        r = client.results()
+        yield r
+        print r.result
+        print "Length of result is %.2fKB" % (len(str(r.result))/1024)
+        reactor.stop()
+    
+    print "Running client"
+
+    jobSpec = JobSpec()
+    jobSpec.requests = {
+        "http://localhost:9995/": {
+            "method": "GET",
+            "postdata": None,
+            "cookies": {},
+        },
+    }
+    jobSpec.duration = options.duration
+    jobSpec.transferLimit = 1024**3
+    jobSpec.profile = options.profile
+    jobSpec.clientFunction = options.function
+    jobSpec.statsInterval = 1
+    jobSpec.timeout = 10
+    print jobSpec
+    
+    client = BasicClient(options.url, jobSpec, callback=results, errback=reactor.stop)
+    try:
+        r = client.create()
+        yield r
+        r = client.start()
+        yield r
+        r = client.poll()
+        yield r 
+    except:
+        reactor.stop()
+
+
+if __name__ == "__main__":
+    sys.path.insert(0, os.environ["PYTHONPATH"])
+    
+    parser = OptionParser()
+    parser.add_option("-u", "--url", type="string", dest="url", default="http://localhost:8080/api")
+    parser.add_option("-d", "--duration", type="int", dest="duration", default=5)
+    parser.add_option("-f", "--function", type="string", dest="function", default="10")
+    parser.add_option("-p", "--profile", type="int", dest="profile", default=0, help="0: hammer; 1: benchmark")
+    parser.add_option("-s", "--slaves", type="int", dest="slaves", default=1)
+    parser.add_option("-c", "--clients", type="int", dest="clients", default=1)
+    (options, args) = parser.parse_args()
+
+    
+    #log.startLogging(sys.stdout)
+    reactor.callWhenRunning(runClient, options)
+    reactor.run()
+   

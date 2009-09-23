@@ -4,6 +4,8 @@ import jsonpickle
 import simplejson as json
 import logging
 
+from thundercloud import config
+
 from twisted.internet.defer import Deferred, DeferredList
 from twisted.internet.defer import deferredGenerator
 from twisted.internet.defer import inlineCallbacks
@@ -21,9 +23,6 @@ log = logging.getLogger("restApi.job")
 # Handle requests sent to /job
 class Job(RootNode):
     
-    def GET(self, request):
-        return ""
-
     def postCallback(self, jobId, request):
         self.putChild("%d" % jobId, JobNode())
         self.writeJson(request, jobId)
@@ -38,7 +37,8 @@ class Job(RootNode):
         if not jobSpecObj.validate():
             raise Http400, "Invalid request"
         
-        deferred = Orchestrator.createJob(jobSpecObj)
+        log.debug("Creating job, user: %s" % request.getUser())
+        deferred = Orchestrator.createJob("foo", jobSpecObj) # XXX getUser
         deferred.addCallback(self.postCallback, request)
         deferred.addErrback(self.postErrback, request)
         return NOT_DONE_YET

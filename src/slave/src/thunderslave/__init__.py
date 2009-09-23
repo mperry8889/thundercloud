@@ -15,7 +15,7 @@ from twisted.python import log as twistedLog
 def startServer(port):
     logging.basicConfig(level=eval("logging.%s" % config.parameter("log", "level")))
     log = logging.getLogger("main")
-    twistedLog.startLogging(sys.stdout)
+    twistedLog.startLogging(sys.stderr)
     
     # since master servers will ping back to the slave upon connection,
     # start listening for HTTP requests before trying to connect up to the master

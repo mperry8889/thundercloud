@@ -4,7 +4,7 @@ from twisted.internet.defer import inlineCallbacks
 from thundercloud.spec.job import JobSpec
 
 from server.basicWebServer import BasicWebServer
-from client.basicClient import BasicClient
+from client.basicClient import BasicClient, runClient
 
 from server.thundercloudSubProcesses import createMasterSubProcess, createSlaveSubProcess
 
@@ -14,48 +14,6 @@ import sys
 import time
 import signal
 import os
-
-@inlineCallbacks
-def runClient():
-    
-    @inlineCallbacks
-    def results():
-        r = client.results()
-        yield r
-        print r.result
-        print "Length of result is %.2fKB" % (len(str(r.result))/1024)
-        reactor.stop()
-    
-    print "Running client"
-    global options
-
-    jobSpec = JobSpec()
-    jobSpec.requests = {
-        "http://localhost:9995/": {
-            "method": "GET",
-            "postdata": None,
-            "cookies": {},
-        },
-    }
-    jobSpec.duration = options.duration
-    jobSpec.transferLimit = 1024**3
-    jobSpec.profile = options.profile
-    jobSpec.clientFunction = options.function
-    jobSpec.statsInterval = 1
-    jobSpec.timeout = 10
-    print jobSpec
-    
-    client = BasicClient("http://localhost:9996", jobSpec, callback=results, errback=reactor.stop)
-    try:
-        r = client.create()
-        yield r
-        r = client.start()
-        yield r
-        r = client.poll()
-        yield r 
-    except:
-        reactor.stop()
-    
 
 if __name__ == "__main__":
     sys.path.insert(0, os.environ["PYTHONPATH"])
@@ -67,6 +25,7 @@ if __name__ == "__main__":
     parser.add_option("-s", "--slaves", type="int", dest="slaves", default=1)
     parser.add_option("-c", "--clients", type="int", dest="clients", default=1)
     (options, args) = parser.parse_args()
+    options.url = "http://localhost:9996"
 
     print "Starting master"  
     masterProcess = createMasterSubProcess(9996)
@@ -108,7 +67,7 @@ if __name__ == "__main__":
     
     #log.startLogging(sys.stdout)
     reactor.listenTCP(9995, BasicWebServer)
-    reactor.callWhenRunning(runClient)
+    reactor.callWhenRunning(runClient, options)
     reactor.run(installSignalHandlers=False)
     quit(signal.SIGINT, None)
     

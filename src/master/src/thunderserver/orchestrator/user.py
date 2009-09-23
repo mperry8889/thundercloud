@@ -23,9 +23,12 @@ class WeakPassword(Exception):
 class InvalidPassword(Exception):
     pass
 
+
 class UserPerspective(object):
-    def __init__(self, userSpec):
+    def __init__(self, userId, userSpec):
+        self.userId = userId
         self.userSpec = userSpec
+
 
 
 class _UserManager(object):
@@ -34,7 +37,7 @@ class _UserManager(object):
     
     def _checkUser(self, username):
         # check if user exists
-        rows = db.execute("SELECT username FROM users WHERE username = ?", (username,)).fetchall()
+        rows = db.execute("SELECT username FROM users WHERE username = ? AND deleted = 'f'", (username,)).fetchall()
         d = Deferred()
         
         if len(rows) < 1:
@@ -54,7 +57,9 @@ class _UserManager(object):
         
         # XXX fix salt, perhaps even the double-query
         db.execute("INSERT INTO users (username, password, userspec) VALUES (?, ?, ?)", (userSpec.username, crypt.crypt(userSpec.password, "ab"), userSpec))
-        userId = int(db.execute("SELECT id FROM users WHERE username = ?", (userSpec.username,)).fetchall()[0]["id"])
+        userId = int(db.execute("SELECT id FROM users WHERE username = ? AND deleted = 'f'", (userSpec.username,)).fetchall()[0]["id"])
+
+        log.info("Creating user %s. User ID is %d" % (userSpec.username, userId))
 
         returnValue(userId)
     
@@ -65,24 +70,28 @@ class _UserManager(object):
         if request.result is False:
             raise NoSuchUser
 
-        db.execute("UPDATE users SET deleted = 't' WHERE username = ?", (username,))
+        db.execute("UPDATE users SET deleted = 't' WHERE username = ? AND deleted = 'f'", (username,))
 
         returnValue(True)
 
 
+    @inlineCallbacks
     def get(self, username):
-        rows = db.execute("SELECT userSpec FROM users WHERE username = ?", (username,)).fetchall()
+        rows = db.execute("SELECT id, userSpec FROM users WHERE username = ? AND deleted = 'f'", (username,)).fetchall()
         if len(rows) < 1:
             raise NoSuchUser
         assert len(rows) == 1
         
         row = rows[0]
         userSpec = row["userspec"]
-        userObj = _User(userSpec)
+        userId = row["id"]
+        userObj = UserPerspective(userId, userSpec)
         #userObj.validate()
-        
+
         d = Deferred()
-        reactor.callLater(0, d.callback, userObj)
-        return d
- 
+        reactor.callLater(0, d.callback, None)
+        yield d
+        
+        returnValue(userObj)
+
 UserManager = _UserManager()
