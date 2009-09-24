@@ -28,6 +28,7 @@ if __name__ == "__main__":
     parser.add_option("--password", type="string", dest="password", default=None)
     (options, args) = parser.parse_args()
     options.url = "http://localhost:9996"
+    options.target = "http://localhost:9995"
 
     print "Starting master"  
     masterProcess = createMasterSubProcess(9996)

@@ -15,7 +15,6 @@ def createMasterSubProcess(port):
         import thunderserver
         config._config.add_section("network")
         config._config.set("network", "port", "%s" % port)
-        config._config.set("network", "authentication", "false")
         config._config.add_section("log")
         config._config.set("log", "level", "debug")
         config._config.add_section("slave")
