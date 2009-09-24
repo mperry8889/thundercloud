@@ -86,7 +86,7 @@ def AggregateJobResults_aggregateResultsByTime(cls, statsList, statsInterval):
                 if i - statsInterval <= float(k) < i + statsInterval:
                     distance = (statsInterval - abs(float(k) - i))
                     weight = distance / statsInterval
-                    for v in ["iterations_total", "iterations_success", "iterations_fail", "requestsPerSec"]:
+                    for v in ["iterations_total", "iterations_success", "iterations_fail", "requestsPerSec", "bytesTransferred", "throughput"]:
                         try:
                             result[i][v] += stat[k][v] * weight
                         except KeyError:
@@ -98,6 +98,12 @@ def AggregateJobResults_aggregateResultsByTime(cls, statsList, statsInterval):
                             result[i][u] += stat[k][u]
                         except KeyError:
                             result[i][u] = 0
+                    
+                    for d in ["errors"]:
+                        try:
+                            result[i][d] = _mergeDict(result[i][d], stat[k][d], lambda l, r: l+r)
+                        except:
+                            result[i][d] = stat[k][d]
                         
 
     # go through and change float values to reduced precision values

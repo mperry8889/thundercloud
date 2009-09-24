@@ -228,7 +228,9 @@ class EngineBase(object):
                     "timeToFirstByte": self._averageTimeToFirstByte,
                     "responseTime": self._averageResponseTime,
                     "requestsPerSec": float(self.iterations - self.statisticsByTime[self._statsBookmark]["iterations_total"])/float(self.elapsedTime - self._statsBookmark),
-                    "throughput": 0,
+                    "errors": self.errors,
+                    "bytesTransferred": self.bytesTransferred,
+                    "throughput": float(self.bytesTransferred - self.statisticsByTime[self._statsBookmark]["bytesTransferred"])/float(self.elapsedTime - self._statsBookmark),
                 }
                 
                 # if it's been less than 1 second since the last stats

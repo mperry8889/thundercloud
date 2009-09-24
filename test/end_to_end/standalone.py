@@ -54,7 +54,7 @@ if __name__ == "__main__":
             process.terminate()
         
         try:
-            reactor.stop()
+            reactor.crash()
         except:
             pass
             

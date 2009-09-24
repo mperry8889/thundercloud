@@ -146,6 +146,12 @@ class JobResults(DataObject):
                 "responseTime": 0,
                 "requestsPerSec": 0,
                 "throughput": 0,
+                "bytesTransferred": 0,
+                "errors": {
+                    400: 0,
+                    401: 0,
+                    500: 0,
+                },
             },
         },
     }
