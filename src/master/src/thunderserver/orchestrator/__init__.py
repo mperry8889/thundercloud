@@ -1,5 +1,2 @@
-from orchestrator import _Orchestrator, NoSlavesAvailable
-
+from orchestrator import _Orchestrator
 Orchestrator = _Orchestrator()
-
-__all__ = [Orchestrator, NoSlavesAvailable]

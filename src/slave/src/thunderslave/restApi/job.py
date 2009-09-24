@@ -5,10 +5,10 @@ import logging
 
 from nodes import RootNode
 from nodes import LeafNode
-from nodes import Http400, Http404
+from nodes import Http400
 
 from ..controller import Controller
-from thundercloud.spec.job import IJob, JobSpec, JobResults
+from thundercloud.spec.job import IJob, JobSpec
 
 log = logging.getLogger("restApi.job")
 

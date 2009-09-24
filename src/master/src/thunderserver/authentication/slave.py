@@ -3,7 +3,7 @@ from zope.interface import implements
 from twisted.web.resource import IResource
 from twisted.cred.portal import IRealm
 
-from thundercloud.auth.dbchecker import DBChecker, IDBChecker, UserNotFound
+from thundercloud.authentication.dbchecker import DBChecker, IDBChecker, UserNotFound
     
     
 class SlaveDBChecker(DBChecker):

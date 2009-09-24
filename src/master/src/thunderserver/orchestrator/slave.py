@@ -1,7 +1,6 @@
 from ..db import dbConnection as db
 from thundercloud.util.restApiClient import RestApiClient
 from thundercloud.spec.slave import SlaveState
-from thundercloud import config
 
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.defer import returnValue
@@ -9,7 +8,6 @@ from twisted.internet.defer import returnValue
 from twisted.internet.task import LoopingCall
 
 import logging
-import copy
 
 log = logging.getLogger("orchestrator.slave")
 

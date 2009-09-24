@@ -1,17 +1,9 @@
 from zope.interface import Interface, implements
 from twisted.web.server import NOT_DONE_YET
-import jsonpickle
 import simplejson as json
 import logging
 
-from thundercloud import config
-
-from twisted.internet.defer import Deferred, DeferredList
-from twisted.internet.defer import deferredGenerator
-from twisted.internet.defer import inlineCallbacks
-from twisted.internet.defer import returnValue
-
-from twisted.web import server, resource, guard
+from twisted.web import guard
 from twisted.web.resource import IResource
 from twisted.cred.portal import IRealm, Portal
 
@@ -21,13 +13,15 @@ from ..db import dbConnection as db
 
 from nodes import RootNode
 from nodes import LeafNode
-from nodes import Http400, Http404
+from nodes import Http400
 
 from ..orchestrator import Orchestrator
-from thundercloud.spec.job import IJob, JobSpec, JobResults
+from thundercloud.spec.job import IJob, JobSpec
 
 log = logging.getLogger("restApi.job")
 
+
+# HTTP authentication realm for /job.  All users can access this
 class JobRealm(object):
     implements(IRealm)
 
@@ -36,6 +30,8 @@ class JobRealm(object):
             return IResource, Job, lambda: None
         raise NotImplementedError()
 
+# HTTP authentication realm for /job/n.  Only the user who created the job
+# can access this -- that way, user 1 can't manipulate user 2's jobs, and so forth.
 class JobNodeRealm(object):
     implements(IRealm)
  
@@ -44,7 +40,10 @@ class JobNodeRealm(object):
             return IResource, JobNode(), lambda: None
         raise NotImplementedError()
 
-# Handle requests sent to /job
+
+# Handle requests sent to /job.  JobRealm should always hand out the same instance, so
+# this is more-or-less a singleton.  Otherwise every new job would be added as a child to
+# a new instance of Job(), and in turn none of them could be accessed properly.
 class _Job(RootNode):
     def postCallback(self, jobId, request):
         jobNodeWrapper = guard.HTTPAuthSessionWrapper(Portal(JobNodeRealm(), [JobNodeDBChecker(db, jobId)]), [guard.BasicCredentialFactory("thundercloud job #%d" % jobId)])
@@ -67,7 +66,6 @@ class _Job(RootNode):
         deferred.addCallback(self.postCallback, request)
         deferred.addErrback(self.postErrback, request)
         return NOT_DONE_YET
-    
 Job = _Job()
 
 # Handle requests for /job/n[/operation] URLs
@@ -134,29 +132,22 @@ class JobNode(LeafNode):
         self.writeJson(request, value)
         
     def state(self, jobId, request):
-        short = None
-        try:
-            if request.args.has_key("short"):
-                short = json.loads(request.args["short"][0])
-        except AttributeError:
-            pass
         deferred = Orchestrator.jobState(jobId)
         deferred.addCallback(self.stateCallback, request)
         return NOT_DONE_YET
     
-    # get a job's statistics
-    
+    # get a job's results
     def resultsCallback(self, value, request):
         self.writeJson(request, value.toJson())
         
     def results(self, jobId, request):
-        short = None
+        shortResults = None
         try:
             if request.args.has_key("short"):
-                short = json.loads(request.args["short"][0])
+                shortResults = json.loads(request.args["short"][0])
         except AttributeError:
             pass      
         
-        deferred = Orchestrator.jobResults(jobId, short)
+        deferred = Orchestrator.jobResults(jobId, shortResults)
         deferred.addCallback(self.resultsCallback, request)
         return NOT_DONE_YET
