@@ -73,10 +73,6 @@ class SlaveConnectionError(Exception):
 class _SlaveAllocator(object):
     def __init__(self):
         self.slaves = {}
-        try:
-            self.threshold = config.parameter("network", "clients.max.threshold", type=float)
-        except:
-            self.threshold = "1.25"
 
     def _getSlaveNo(self):
         slaveNo = db.execute("SELECT slaveNo FROM slaveno").fetchone()["slaveNo"]

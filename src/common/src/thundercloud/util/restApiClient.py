@@ -18,7 +18,6 @@ def _RestApiClient__request(cls, url, method, postdata=None, cookies={}, timeout
         postdata = json.dumps(postdata)
 
     if credentials is not None:
-        log.debug("adding creds")
         cred = "%s:%s" % (credentials[0], credentials[1])
         extraHeaders["Authorization"] = "Basic " + base64.encodestring(cred).replace('\012','')
 
@@ -48,11 +47,11 @@ def _RestApiClient__request(cls, url, method, postdata=None, cookies={}, timeout
     return factory
 
 def _RestApiClient_POST(cls, url, postdata=None, cookies={}, timeout=None, credentials=None):
-    request = cls._request(url, "POST", postdata, cookies, timeout, credentials)
+    request = cls._request(url, "POST", postdata=postdata, cookies=cookies, timeout=timeout, credentials=credentials)
     return request.deferred
 
 def _RestApiClient_GET(cls, url, timeout=None, credentials=None):
-    request = cls._request(url, "GET", credentials)
+    request = cls._request(url, "GET", timeout=timeout, credentials=credentials)
     return request.deferred
 
 

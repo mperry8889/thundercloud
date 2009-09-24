@@ -4,16 +4,6 @@ from twisted.web.resource import IResource
 from twisted.cred.portal import IRealm
 
 from thundercloud.auth.dbchecker import DBChecker, IDBChecker, UserNotFound
-
-from ..restApi.slave import Slave
-
-class SlaveRealm(object):
-    implements(IRealm)
-
-    def requestAvatar(self, avatarId, mind, *interfaces):
-        if IResource in interfaces:
-            return IResource, Slave(), lambda: None
-        raise NotImplementedError()
     
     
 class SlaveDBChecker(DBChecker):

@@ -14,9 +14,9 @@ def dbInit():
                                       username TEXT UNIQUE NOT NULL,
                                       password TEXT NOT NULL,
                                       deleted BOOLEAN DEFAULT 'f',
-                                      userspec userSpec)""")
+                                      spec userSpec)""")
     
-    _c.execute("INSERT INTO users (id, username, password) VALUES (0, \"SLAVE\", ?)", (crypt.crypt("slave", "sl"),))
+    _c.execute("INSERT INTO users (id, username, password) VALUES (0, \"slave\", ?)", (crypt.crypt("slave", "sl"),))
     
     _c.execute("""CREATE TABLE jobs (id INTEGER PRIMARY KEY,
                                      user INTEGER NOT NULL,

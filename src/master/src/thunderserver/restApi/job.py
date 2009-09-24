@@ -11,6 +11,14 @@ from twisted.internet.defer import deferredGenerator
 from twisted.internet.defer import inlineCallbacks
 from twisted.internet.defer import returnValue
 
+from twisted.web import server, resource, guard
+from twisted.web.resource import IResource
+from twisted.cred.portal import IRealm, Portal
+
+from thunderserver.authentication.job import JobNodeDBChecker
+
+from ..db import dbConnection as db
+
 from nodes import RootNode
 from nodes import LeafNode
 from nodes import Http400, Http404
@@ -20,14 +28,31 @@ from thundercloud.spec.job import IJob, JobSpec, JobResults
 
 log = logging.getLogger("restApi.job")
 
+class JobRealm(object):
+    implements(IRealm)
+
+    def requestAvatar(self, avatarId, mind, *interfaces):
+        if IResource in interfaces:
+            return IResource, Job, lambda: None
+        raise NotImplementedError()
+
+class JobNodeRealm(object):
+    implements(IRealm)
+ 
+    def requestAvatar(self, avatarId, mind, *interfaces):
+        if IResource in interfaces:
+            return IResource, JobNode(), lambda: None
+        raise NotImplementedError()
+
 # Handle requests sent to /job
-class Job(RootNode):
-    
+class _Job(RootNode):
     def postCallback(self, jobId, request):
-        self.putChild("%d" % jobId, JobNode())
+        jobNodeWrapper = guard.HTTPAuthSessionWrapper(Portal(JobNodeRealm(), [JobNodeDBChecker(db, jobId)]), [guard.BasicCredentialFactory("thundercloud job #%d" % jobId)])
+        self.putChild("%d" % jobId, jobNodeWrapper)
         self.writeJson(request, jobId)
     
     def postErrback(self, error, request):
+        log.debug("Job POST failed: %s" % error)
         self.writeJson(request, False)
 
     # create a new job based on the given JSON job spec
@@ -38,10 +63,12 @@ class Job(RootNode):
             raise Http400, "Invalid request"
         
         log.debug("Creating job, user: %s" % request.getUser())
-        deferred = Orchestrator.createJob("foo", jobSpecObj) # XXX getUser
+        deferred = Orchestrator.createJob(request.getUser(), jobSpecObj)
         deferred.addCallback(self.postCallback, request)
         deferred.addErrback(self.postErrback, request)
         return NOT_DONE_YET
+    
+Job = _Job()
 
 # Handle requests for /job/n[/operation] URLs
 class JobNode(LeafNode):

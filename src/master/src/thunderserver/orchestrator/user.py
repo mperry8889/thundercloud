@@ -56,7 +56,7 @@ class _UserManager(object):
             raise UserAlreadyExists
         
         # XXX fix salt, perhaps even the double-query
-        db.execute("INSERT INTO users (username, password, userspec) VALUES (?, ?, ?)", (userSpec.username, crypt.crypt(userSpec.password, "ab"), userSpec))
+        db.execute("INSERT INTO users (username, password, spec) VALUES (?, ?, ?)", (userSpec.username, crypt.crypt(userSpec.password, "ab"), userSpec))
         userId = int(db.execute("SELECT id FROM users WHERE username = ? AND deleted = 'f'", (userSpec.username,)).fetchall()[0]["id"])
 
         log.info("Creating user %s. User ID is %d" % (userSpec.username, userId))
@@ -77,13 +77,13 @@ class _UserManager(object):
 
     @inlineCallbacks
     def get(self, username):
-        rows = db.execute("SELECT id, userSpec FROM users WHERE username = ? AND deleted = 'f'", (username,)).fetchall()
+        rows = db.execute("SELECT id, spec FROM users WHERE username = ? AND deleted = 'f'", (username,)).fetchall()
         if len(rows) < 1:
             raise NoSuchUser
         assert len(rows) == 1
         
         row = rows[0]
-        userSpec = row["userspec"]
+        userSpec = row["spec"]
         userId = row["id"]
         userObj = UserPerspective(userId, userSpec)
         #userObj.validate()

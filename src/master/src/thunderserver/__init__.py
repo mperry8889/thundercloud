@@ -55,6 +55,11 @@ def startServer(port):
     userSpec.username = "foo"
     userSpec.password = "foo"
     yield UserManager.create(userSpec)
+    
+    userSpec2 = UserSpec()
+    userSpec2.username = "bar"
+    userSpec2.password = "bar"
+    yield UserManager.create(userSpec2)
 
     
 

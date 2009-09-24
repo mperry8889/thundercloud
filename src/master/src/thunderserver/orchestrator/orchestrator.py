@@ -79,20 +79,11 @@ class _Orchestrator(object):
         job = JobPerspective(jobNo, jobSpec)
         self.jobs[jobNo] = job
         
-        
-        request = UserManager.get(username)
-        yield request
-        user = request.result
-        log.debug("user perspective: %s" % user)
-        
-        
-        deferred = Deferred()
-        
+        user = yield UserManager.get(username)
         log.debug("Creating job %d for user %s... connecting slave servers" % (jobNo, user.userSpec.username))
         
         # allocate a bunch of slaves here
         slaves = yield SlaveAllocator.allocate(jobSpec)
-
         log.debug("Using slaves: %s" % slaves)
         
         # divide the client function to spread the load over all slaves in the set
@@ -102,6 +93,7 @@ class _Orchestrator(object):
         modifiedJobSpec.clientFunction = clientFunctionPerSlave
         modifiedJobSpec.transferLimit = transferLimitPerSlave
         
+        deferred = Deferred()
         slaveRequests = []
         for slave in slaves:
             request = slave.createJob(modifiedJobSpec)

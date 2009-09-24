@@ -15,17 +15,23 @@ import os
 
 
 class BasicClient(object):
-    def __init__(self, url, jobSpec, callback=None, errback=None):
+    def __init__(self, url, jobSpec, username=None, password=None, callback=None, errback=None):
         self.url = url
         self.jobSpec = jobSpec
         self.task = None
         self.callback = callback
         self.errback = errback
+        
+        if username is None and password is None:
+            self.credentials = None
+        else:
+            self.credentials = (username, password)
     
     @inlineCallbacks
     def create(self):
         request = RestApiClient.POST(self.url + "/job",
-                                     postdata = self.jobSpec.toJson())
+                                     postdata=self.jobSpec.toJson(),
+                                     credentials=self.credentials)
         yield request
 
         print request.result
@@ -39,7 +45,8 @@ class BasicClient(object):
     
     @inlineCallbacks
     def start(self):
-        request = RestApiClient.POST(self.url + "/job/%d/start" % self.jobId)
+        request = RestApiClient.POST(self.url + "/job/%d/start" % self.jobId,
+                                     credentials=self.credentials)
         yield request        
         returnValue(request.result)
     
@@ -50,8 +57,9 @@ class BasicClient(object):
             self.task = LoopingCall(self.poll)
             self.task.start(wait)
 
-        else:                
-            request = RestApiClient.GET(self.url + "/job/%d/state" % self.jobId)
+        else:          
+            request = RestApiClient.GET(self.url + "/job/%d/state" % self.jobId,
+                                        credentials=self.credentials)
             yield request
             
             if int(request.result) == JobState.COMPLETE:
@@ -70,7 +78,8 @@ class BasicClient(object):
         if shortResults == True:
             urlSuffix += "?short=true"
             
-        request = RestApiClient.GET(self.url + "/job/%d/results" % self.jobId + urlSuffix)
+        request = RestApiClient.GET(self.url + "/job/%d/results" % self.jobId + urlSuffix,
+                                    credentials=self.credentials)
         yield request
         returnValue(JobResults(json.loads(request.result)))
 
@@ -89,7 +98,7 @@ def runClient(options):
 
     jobSpec = JobSpec()
     jobSpec.requests = {
-        "http://localhost:9995/": {
+        options.target: {
             "method": "GET",
             "postdata": None,
             "cookies": {},
@@ -103,7 +112,12 @@ def runClient(options):
     jobSpec.timeout = 10
     print jobSpec
     
-    client = BasicClient(options.url, jobSpec, callback=results, errback=reactor.stop)
+    client = BasicClient(options.url, 
+                         jobSpec, 
+                         username=options.username, 
+                         password=options.password, 
+                         callback=results, 
+                         errback=reactor.stop)
     try:
         r = client.create()
         yield r
@@ -125,6 +139,9 @@ if __name__ == "__main__":
     parser.add_option("-p", "--profile", type="int", dest="profile", default=0, help="0: hammer; 1: benchmark")
     parser.add_option("-s", "--slaves", type="int", dest="slaves", default=1)
     parser.add_option("-c", "--clients", type="int", dest="clients", default=1)
+    parser.add_option("-t", "--target", type="string", dest="target", default="http://localhost:8080/api")
+    parser.add_option("--username", type="string", dest="username", default=None)
+    parser.add_option("--password", type="string", dest="password", default=None)
     (options, args) = parser.parse_args()
 
     

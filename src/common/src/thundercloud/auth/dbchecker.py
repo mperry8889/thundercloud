@@ -30,19 +30,16 @@ class DBChecker(object):
     def getUserAndPassword(self, username):
         raise NotImplementedException
     
-    def _passwordCallback(self, matched, username):
-        if matched:
-            return username
-        else:
-            return failure.Failure(error.UnauthorizedLogin())
-
-    
     def requestAvatarId(self, creds):
         log.debug("Authenticating user %s" % creds.username)
         try:
             (username, dbPassword) = self.getUserAndPassword(creds.username)
-            deferred = defer.maybeDeferred(lambda p: crypt.crypt(p, dbPassword) == dbPassword, creds.password)
-            deferred.addCallback(self._passwordCallback, str(creds.username))
-                
-        except UserNotFound:
+        except:
+            return defer.fail(error.UnauthorizedLogin())
+
+        if crypt.crypt(creds.password, dbPassword) == dbPassword:
+            log.debug("User authenticated")
+            return defer.succeed(creds.username)
+        else:
+            log.debug("User authentication failed")
             return defer.fail(error.UnauthorizedLogin())

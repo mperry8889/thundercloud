@@ -40,7 +40,7 @@ def startServer(port):
         log.info("Connecting to master: %s" % masterUrl)
         
         try:
-            request = RestApiClient.POST(str(masterUrl), slaveSpec.toJson(), timeout=10, credentials=("foo", "foo"))
+            request = RestApiClient.POST(str(masterUrl), slaveSpec.toJson(), timeout=10, credentials=("slave", "slave"))
             yield request
         except:
             log.error("Could not connect to master.  Exiting")

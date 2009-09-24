@@ -24,6 +24,8 @@ if __name__ == "__main__":
     parser.add_option("-p", "--profile", type="int", dest="profile", default=0, help="0: hammer; 1: benchmark")
     parser.add_option("-s", "--slaves", type="int", dest="slaves", default=1)
     parser.add_option("-c", "--clients", type="int", dest="clients", default=1)
+    parser.add_option("--username", type="string", dest="username", default=None)
+    parser.add_option("--password", type="string", dest="password", default=None)
     (options, args) = parser.parse_args()
     options.url = "http://localhost:9996"
 
