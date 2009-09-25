@@ -103,7 +103,7 @@ class Calculations(AggregateJobResultsTestMixin, unittest.TestCase):
         self.aggregateResults.aggregate(jobResults, 1, True)
         self.assertEquals(self.aggregateResults.add, 30)       
     
-    def test_averaging(self):
+    def test_average(self):
         """Check field averaging in job results"""
         jobResults = [
             TestJobResults({ "average": 0 }),
@@ -112,4 +112,13 @@ class Calculations(AggregateJobResultsTestMixin, unittest.TestCase):
         ]
         self.aggregateResults.aggregate(jobResults, 1, True)
         self.assertEquals(self.aggregateResults.average, 10.0)
-        
+    
+    def test_manual(self):
+        """Check that manually aggregated fields are skipped"""
+        jobResults = [
+            TestJobResults({ "manual": 5 }),
+            TestJobResults({ "manual": 10 }),
+            TestJobResults({ "manual": 20 }),
+        ]
+        self.aggregateResults.aggregate(jobResults, 1, True)
+        self.assertEquals(self.aggregateResults.manual, self.aggregateResults._attributes["manual"])

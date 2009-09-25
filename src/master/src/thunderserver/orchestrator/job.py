@@ -4,10 +4,6 @@ from twisted.internet.defer import DeferredList, inlineCallbacks, returnValue
 from twisted.internet.task import LoopingCall
 
 from slave import SlaveAllocator
-from user import UserManager, UserPerspective
-from thundercloud.spec.slave import SlaveState
-
-from thundercloud import config
 
 import simplejson as json
 
