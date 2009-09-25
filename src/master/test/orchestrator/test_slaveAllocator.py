@@ -102,11 +102,11 @@ class Bounds(SlaveAllocatorTestMixin, unittest.TestCase):
         for i in range(1, 11):
             jobSpec = self.createJobSpec()
             jobSpec.clientFunction = "%d" % i            
-            deferred =  self.sa.allocate(jobSpec)
+            deferred = self.sa.allocate(jobSpec)
             deferred.addCallback(self.checkAllocationLength, i)
             deferredList.append(deferred)
             
-        return DeferredList(deferredList)   
+        return DeferredList(deferredList)
 
 
 class Allocations(SlaveAllocatorTestMixin, unittest.TestCase):
@@ -198,3 +198,15 @@ class LifeCycle(SlaveAllocatorTestMixin, unittest.TestCase):
             self.sa.markAsFinished(slave)
             self.assertEquals(status.jobCount, 0)
             self.assertEquals(status.state, SlaveState.IDLE)
+
+
+class Regression(SlaveAllocatorTestMixin, unittest.TestCase):
+    
+    @inlineCallbacks
+    def test_39(self):
+        """Test for #39, reduce() parameter error"""
+        jobSpec = self.createJobSpec()
+        jobSpec.clientFunction = "5"
+        jobSpec.duration = 1
+        slaves = yield self.sa.allocate(jobSpec)
+        self.assertEquals(len(slaves) > 0, True)

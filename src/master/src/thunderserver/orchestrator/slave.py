@@ -10,6 +10,7 @@ from twisted.internet.task import LoopingCall
 
 import logging
 import copy
+import math
 
 log = logging.getLogger("orchestrator.slave")
 
@@ -162,7 +163,8 @@ class _SlaveAllocator(object):
 
     def degrade(self, slave):
         (slaveObj, status, task) = self._getSlaveByObject(slave)
-        task.stop()            
+        self._updateSlaveState(slaveObj, SlaveState.DISCONNECTED)
+        task.stop()
             
     def _addChunk(self, availableSlaves, capacity):
         chunk = []
@@ -183,11 +185,11 @@ class _SlaveAllocator(object):
     #    * slave disconnection
     def _updateSlaveState(self, slave, newState):
         (slaveObj, status, task) = self._getSlaveByObject(slave)
-        if status.jobCount == 0:
-            status.state = newState
         
-        elif status.jobCount >= 1 and newState != SlaveState.DISCONNECTED:
+        if status.jobCount >= 1 and newState != SlaveState.DISCONNECTED:
             status.state = SlaveState.RUNNING
+        else:
+            status.state = newState
         
     
     @inlineCallbacks
@@ -203,7 +205,7 @@ class _SlaveAllocator(object):
         # every 20% of the job duration.  this is to get a rough idea of what the max really
         # will be, though it's really not accurate.
         clientFunction = lambda t: eval(jobSpec.clientFunction)
-        maxClientsPerSec = max([clientFunction(t) for t in range(0, jobSpec.duration, int(.2*jobSpec.duration))])
+        maxClientsPerSec = max([clientFunction(t) for t in range(0, jobSpec.duration, int(math.ceil(.2*jobSpec.duration)))])
         
         # first try to fit the job onto idle slaves
         idleSlaves = sorted(self._getSlavesInState(SlaveState.IDLE), lambda (i, j, k), (l, m, n): i.slaveSpec.maxRequestsPerSec - l.slaveSpec.maxRequestsPerSec)
