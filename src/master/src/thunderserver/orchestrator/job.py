@@ -215,6 +215,8 @@ class JobPerspective(object):
     def _jobIsFinished(self):
         if self._finished == False:
             log.debug("Finishing job %d" % self.jobId)
+            for slave in self.mapping.iterkeys():
+                SlaveAllocator.markAsFinished(slave)
             self.task.stop()
             self._finished = True
 

@@ -91,24 +91,24 @@ class _SlaveAllocator(object):
         # XXX
         assert len(result) == 1
         if asTuple:
-            return result
-        else:
             return result[0]
+        else:
+            return result[0][0]
 
-    def _getSlaveByObject(self, slaveObj, asTuple=False):
+    def _getSlaveByObject(self, slaveObj):
         def f((slave, status, task)):
             if slave == slaveObj:
                 return True
         result = [i for i in self.slaves.itervalues() if f(i)]
         # XXX
         assert len(result) == 1
-        if asTuple:
-            return result
-        else:
-            return result[0]
+        return result[0]
 
-    def _getSlaveById(self, slaveId):
-        return self.slaves[slaveId]
+    def _getSlaveById(self, slaveId, asTuple=False):
+        if asTuple:
+            return self.slaves[slaveId]
+        else:
+            return self.slaves[slaveId][0]
 
     def _changeSlaveState(self, slaveId, state):
         pass
@@ -171,6 +171,21 @@ class _SlaveAllocator(object):
             if i >= capacity:
                 break
         return chunk
+
+    # decision rules for updating slave state.
+    # in general:
+    #    * if job count is 0, accept the new state.
+    #    * if job count is >= 1, then "RUNNING" is the current state
+    #
+    # known exceptions:
+    #    * slave disconnection
+    def _updateSlaveState(self, slave, newState):
+        (slaveObj, status, task) = self._getSlaveByObject(slave)
+        if status.jobCount == 0:
+            status.state = newState
+        
+        elif status.jobCount >= 1 and newState != SlaveState.DISCONNECTED:
+            status.state = SlaveState.RUNNING
         
     
     @inlineCallbacks
@@ -228,27 +243,22 @@ class _SlaveAllocator(object):
         # retry the allocation recursively and return the result
         for (slave, status, task) in slaves:
             try:
-                request = self.checkHealth(slave)
-                yield request
+                health = yield self.checkHealth(slave)
+                if health is True:
+                    self._updateSlaveState(slave, SlaveState.ALLOCATED)
             except SlaveConnectionError:
                 returnValue(self.allocate(jobSpec))
-                
-            if request.result == True:
-                slave.state = SlaveState.ALLOCATED
 
         returnValue([slave for (slave, status, task) in slaves])
-
-    def release(self, slaveList):
-        for slave in slaveList:
-            pass
     
     def markAsRunning(self, slave):
         (slaveObj, status, task) = self._getSlaveByObject(slave)
         status.increment()
+        self._updateSlaveState(slaveObj, SlaveState.RUNNING)
     
     def markAsFinished(self, slave):
         (slaveObj, status, task) = self._getSlaveByObject(slave)
         status.decrement()        
-    
+        self._updateSlaveState(slaveObj, SlaveState.IDLE)    
 
 SlaveAllocator = _SlaveAllocator()

@@ -12,25 +12,25 @@ class AggregateJobResultsTestMixin(object):
     def tearDown(self):
         pass
 
-class Basic(AggregateJobResultsTestMixin, unittest.TestCase):
-            
-    def test_singleShortResult(self):
-        """Test a single short result, no merge necessary"""
-    
-    def test_singleLongResult(self):
-        """Test a single long result, no merge necessary"""
-    
-    def test_mergeMultipleShortResults(self):
-        """Merge 3 short results"""
-    
-    def test_mergeMultipleLongResults(self):
-        """Merge 3 long results"""
-    
-    def test_mergeSlaveDropoff(self):
-        """Merge results with a slave drop-off, leading to a lack of status from a slave during some time period"""
-    
-    def test_mergeMixedElapsedTime(self):
-        """Check that wildly varying elapsed times are handled correctly"""
+#class Basic(AggregateJobResultsTestMixin, unittest.TestCase):
+#            
+#    def test_singleShortResult(self):
+#        """Test a single short result, no merge necessary"""
+#    
+#    def test_singleLongResult(self):
+#        """Test a single long result, no merge necessary"""
+#    
+#    def test_mergeMultipleShortResults(self):
+#        """Merge 3 short results"""
+#    
+#    def test_mergeMultipleLongResults(self):
+#        """Merge 3 long results"""
+#    
+#    def test_mergeSlaveDropoff(self):
+#        """Merge results with a slave drop-off, leading to a lack of status from a slave during some time period"""
+#    
+#    def test_mergeMixedElapsedTime(self):
+#        """Check that wildly varying elapsed times are handled correctly"""
 
 class JobStates(AggregateJobResultsTestMixin, unittest.TestCase):
     

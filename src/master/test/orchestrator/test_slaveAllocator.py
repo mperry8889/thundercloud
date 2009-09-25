@@ -69,12 +69,25 @@ class InternalMethods(SlaveAllocatorTestMixin, unittest.TestCase):
     def test_Filters(self):
         """Internal slave getByX methods"""
         for (slaveId, (slave, status, task)) in self.sa.slaves.iteritems():
-            self.assertEquals((slave, status, task), self.sa._getSlaveById(slaveId))
+            self.assertEquals((slave, status, task), self.sa._getSlaveById(slaveId, asTuple=True))
             self.assertEquals((slave, status, task), self.sa._getSlaveByObject(slave))
-            self.assertEquals((slave, status, task), self.sa._getSlaveBySlaveSpec(slave.slaveSpec))
+            self.assertEquals((slave, status, task), self.sa._getSlaveBySlaveSpec(slave.slaveSpec, asTuple=True))
+            self.assertEquals(slave, self.sa._getSlaveById(slaveId))
+            self.assertEquals(slave, self.sa._getSlaveBySlaveSpec(slave.slaveSpec))
         
-        self.assertEquals(self.sa.slaves.values(), self.sa._getSlavesInState(SlaveState.IDLE))        
-        return True
+        self.assertEquals(self.sa.slaves.values(), self.sa._getSlavesInState(SlaveState.IDLE))
+
+
+class NoSlaves(SlaveAllocatorTestMixin, unittest.TestCase):
+    
+    def setUp(self):
+        self.sa = TestSlaveAllocator()
+    
+    def test_noSlavesAvailable(self):
+        """Allocate a job when no slaves are connected"""
+        jobSpec = self.createJobSpec()
+        jobSpec.clientFunction = "20"
+        self.failUnlessFailure(self.sa.allocate(jobSpec), NoSlavesAvailable)
 
 
 class Bounds(SlaveAllocatorTestMixin, unittest.TestCase): 
@@ -93,14 +106,14 @@ class Bounds(SlaveAllocatorTestMixin, unittest.TestCase):
             deferred.addCallback(self.checkAllocationLength, i)
             deferredList.append(deferred)
             
-        return DeferredList(deferredList)
+        return DeferredList(deferredList)   
 
 
-class SlaveStates(SlaveAllocatorTestMixin, unittest.TestCase):
+class Allocations(SlaveAllocatorTestMixin, unittest.TestCase):
     """Allocation based on slave states"""
     def _updateSlaveStates(self, value):
         for i in range(1, 31):
-            (slave, status, task) = self.sa._getSlaveById(i)
+            (slave, status, task) = self.sa._getSlaveById(i, asTuple=True)
             if 1 <= i < 6:
                 status.state = SlaveState.CONNECTED
             elif 6 <= i < 11:
@@ -113,7 +126,7 @@ class SlaveStates(SlaveAllocatorTestMixin, unittest.TestCase):
                 status.state = SlaveState.DISCONNECTED    
  
     def setUp(self):
-        deferredList = super(SlaveStates, self).setUp(slaves=30, maxRequestsPerSec=1)
+        deferredList = super(Allocations, self).setUp(slaves=30, maxRequestsPerSec=1)
         deferredList.addCallback(self._updateSlaveStates)
         return deferredList
 
@@ -147,19 +160,41 @@ class SlaveStates(SlaveAllocatorTestMixin, unittest.TestCase):
         jobSpec.clientFunction = "21"
         return self.failUnlessFailure(self.sa.allocate(jobSpec), InsufficientSlaveCapacity)
 
-class NoSlaves(SlaveAllocatorTestMixin, unittest.TestCase):
-    
-    def setUp(self):
-        self.sa = TestSlaveAllocator()
-    
-    def test_noSlavesAvailable(self):
-        """Allocate a job when no slaves are connected"""
-        jobSpec = self.createJobSpec()
-        jobSpec.clientFunction = "20"
-        self.failUnlessFailure(self.sa.allocate(jobSpec), NoSlavesAvailable)
-        
-        
 
-#class RunningCount(SlaveAllocatorTestMixin, unittest.TestCase):
-#    """ """
-        
+class LifeCycle(SlaveAllocatorTestMixin, unittest.TestCase):
+    """Tests for consistency during a slave's lifetime"""
+    def _updateSlaveStates(self, value):
+        for i in range(1, 31):
+            (slave, status, task) = self.sa._getSlaveById(i, asTuple=True)
+            if 1 <= i < 6:
+                status.state = SlaveState.CONNECTED
+            elif 6 <= i < 11:
+                status.state = SlaveState.IDLE
+            elif 11 <= i < 16:
+                status.state = SlaveState.ALLOCATED            
+            elif 16 <= i < 26:
+                status.state = SlaveState.RUNNING
+            elif 26 <= i < 31:
+                status.state = SlaveState.DISCONNECTED    
+ 
+    def setUp(self):
+        deferredList = super(LifeCycle, self).setUp(slaves=30, maxRequestsPerSec=1)
+        deferredList.addCallback(self._updateSlaveStates)
+        return deferredList
+    
+    @inlineCallbacks
+    def test_status(self):
+        """Verify basic markAsRunning/markAsFinished functionality"""
+        jobSpec = self.createJobSpec()
+        jobSpec.clientFunction = "5"
+        slaves = yield self.sa.allocate(jobSpec)
+        for slave in slaves:
+            (sl, status, task) = self.sa._getSlaveByObject(slave)
+            self.assertEquals(status.jobCount, 0)
+            self.assertEquals(status.state, SlaveState.ALLOCATED)
+            self.sa.markAsRunning(slave)
+            self.assertEquals(status.jobCount, 1)
+            self.assertEquals(status.state, SlaveState.RUNNING)
+            self.sa.markAsFinished(slave)
+            self.assertEquals(status.jobCount, 0)
+            self.assertEquals(status.state, SlaveState.IDLE)
