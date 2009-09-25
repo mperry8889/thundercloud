@@ -1,12 +1,18 @@
 from thunderserver.orchestrator.job import AggregateJobResults
-from thundercloud.spec.job import JobState
+from thundercloud.spec.job import JobState, JobResults
+from thundercloud.spec.dataobject import DataObject
 
 from twisted.trial import unittest
 
-class AJR(unittest.TestCase):
-    
+
+class AggregateJobResultsTestMixin(object):
     def setUp(self):
         self.aggregateResults = AggregateJobResults()
+    
+    def tearDown(self):
+        pass
+
+class Basic(AggregateJobResultsTestMixin, unittest.TestCase):
             
     def test_singleShortResult(self):
         """Test a single short result, no merge necessary"""
@@ -20,21 +26,27 @@ class AJR(unittest.TestCase):
     def test_mergeMultipleLongResults(self):
         """Merge 3 long results"""
     
-    def test_mergeMixedStates(self):
-        """Merge several results with mixed status codes"""
+    def test_mergeSlaveDropoff(self):
+        """Merge results with a slave drop-off, leading to a lack of status from a slave during some time period"""
     
-        # if all states are the same, the aggregate should obviously
-        # be the same
+    def test_mergeMixedElapsedTime(self):
+        """Check that wildly varying elapsed times are handled correctly"""
+
+class JobStates(AggregateJobResultsTestMixin, unittest.TestCase):
+    
+    def test_same(self):
+        """Merge results with the same state, for all states"""
         for jobState in JobState._all():
             self.assertEquals(
                 AggregateJobResults._aggregateState([
                     jobState,
                     jobState,
                 ]),
-                jobState            
-            )
-    
-        # if any slave is still running, the whole job is still running
+                jobState
+            )            
+            
+    def test_running(self):
+        """Check that a job with any slave in the "running" state is marked as running"""
         self.assertEquals(
             AggregateJobResults._aggregateState([
                 JobState.NEW,
@@ -43,8 +55,9 @@ class AJR(unittest.TestCase):
             ]),
             JobState.RUNNING
         )
-
-        # if one state is unknown, the whole job is unknown
+    
+    def test_unknown(self):
+        """Check that a job with any slave in "unknown" state is unknown"""
         self.assertEquals(
             AggregateJobResults._aggregateState([
                 JobState.NEW,
@@ -53,12 +66,50 @@ class AJR(unittest.TestCase):
                 JobState.UNKNOWN,
             ]),
             JobState.UNKNOWN
-        )        
+        )     
 
+
+class TestJobResults(DataObject):
+    _attributes = {
+        "job_state": JobState.RUNNING,
+        "manual": 0,
+        "add": 0,
+        "average": 0,        
+    }
+
+class TestAggregateCalculations(AggregateJobResults):
+    _attributes = {
+        "job_state": JobState.RUNNING,
+        "manual": 0,
+        "add": 0,
+        "average": 0,
+    }
+    _manuallyAggregate = ["manual"]
+    _aggregateByAdding = ["add"]
+    _aggregateByAveraging = ["average"]
+
+
+class Calculations(AggregateJobResultsTestMixin, unittest.TestCase):
+    def setUp(self):
+        self.aggregateResults = TestAggregateCalculations()
     
-    def test_mergeSlaveDropoff(self):
-        """Merge results with a slave drop-off, leading to a lack of status from a slave during some time period"""
+    def test_add(self):
+        """Check field adding in job results"""
+        jobResults = [
+            TestJobResults({ "add": 0 }),
+            TestJobResults({ "add": 10 }),
+            TestJobResults({ "add": 20 }),
+        ]
+        self.aggregateResults.aggregate(jobResults, 1, True)
+        self.assertEquals(self.aggregateResults.add, 30)       
     
-    def test_mergeMixedElapsedTime(self):
-        """Check that wildly varying elapsed times are handled correctly"""
-    
+    def test_averaging(self):
+        """Check field averaging in job results"""
+        jobResults = [
+            TestJobResults({ "average": 0 }),
+            TestJobResults({ "average": 10 }),
+            TestJobResults({ "average": 20 }),
+        ]
+        self.aggregateResults.aggregate(jobResults, 1, True)
+        self.assertEquals(self.aggregateResults.average, 10.0)
+        

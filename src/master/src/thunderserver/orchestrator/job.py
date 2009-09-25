@@ -137,10 +137,11 @@ class AggregateJobResults(JobResults):
                 continue
         
             # XXX
-            if attr in self._aggregateByAveraging:
-                setattr(self, attr, getattr(jobResults[0], attr))
+            elif attr in self._aggregateByAveraging:
+                average = float(reduce(lambda x, y: x+y, [getattr(jobResult, attr) for jobResult in jobResults]) / len(jobResults))
+                setattr(self, attr, average)
         
-            if attr in self._aggregateByAdding:           
+            elif attr in self._aggregateByAdding:           
                 for jobResult in jobResults:
                     # if we're using a default value and the job result has something
                     # legit, just use it
@@ -155,9 +156,6 @@ class AggregateJobResults(JobResults):
                         setattr(self, attr, getattr(self, attr) + getattr(jobResult, attr))
                     elif type(getattr(self, attr)) == float:
                         setattr(self, attr, getattr(self, attr) + getattr(jobResult, attr))
-        
-        # elapsed time
-        self.time_elapsed = jobResults[0].time_elapsed
         
         # aggregate the job state separately    
         self.job_state = AggregateJobResults._aggregateState([jobResult.job_state for jobResult in jobResults])
