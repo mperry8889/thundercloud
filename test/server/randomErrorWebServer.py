@@ -1,13 +1,11 @@
 from twisted.internet import reactor
+from twisted.python import log
 from twisted.web.resource import Resource
 from twisted.web import server
 
-from twisted.python import log
-
-import random
 import sys
+import optparse
 
-random.seed()
 
 class NonRedirectingNode(Resource):
     httpCodes = {
@@ -58,8 +56,13 @@ class NonRedirectingNode(Resource):
         510: "Not Extended",
     }
     
-    def render(self):
-        pass
+    def render_GET(self, request):
+        responseCode = int(request.prepath[-1])
+        request.setResponseCode(responseCode, self.httpCodes[responseCode])
+        return "<html><body>%s</body></html>" % self.httpCodes[responseCode]
+    
+    render_POST = render_GET
+    render_HEAD = render_GET
 
 
 class RedirectingNode(Resource):
@@ -74,12 +77,38 @@ class RedirectingNode(Resource):
         307: "Temporary Redirect",
     }
     
-    def render(self):
-        pass
+    def render_GET(self, request):
+        responseCode = int(request.prepath[-1])
+        request.setResponseCode(responseCode, self.httpCodes[responseCode])
+        
+        try:
+            request.setHeader("Location", request.args["location"])
+        except:
+            request.setHeader("Location", "/200")
+        
+        request.finish()
+    
+    render_POST = render_GET
+    render_HEAD = render_GET
 
 
 
 if __name__ == "__main__":
-    log.startLogging(sys.stdout)
-    reactor.listenTCP(9995, RandomErrorWebServer)
+    log.startLogging(sys.stderr)
+    
+    parser = optparse.OptionParser()
+    parser.add_option("-p", "--port", type="int", dest="port", default=8080)
+    (options, args) = parser.parse_args()
+    
+    root = Resource()
+    nonRedirectingNode = NonRedirectingNode()
+    for code in NonRedirectingNode.httpCodes.iterkeys():
+        root.putChild("%s" % code, nonRedirectingNode)
+
+    redirectingNode = RedirectingNode()
+    for code in RedirectingNode.httpCodes.iterkeys():
+        root.putChild("%s" % code, redirectingNode)
+    
+    site = server.Site(root)
+    reactor.listenTCP(options.port, site)
     reactor.run()
