@@ -48,4 +48,11 @@ class SlaveSpec(DataObject):
     }
 
     def validate(self):
-        return True
+        if self.scheme not in ["http", "https"]:
+            return False
+        
+        if type(self.maxRequestsPerSec) != int or self.maxRequestsPerSec < 0:
+            return False
+        
+        if type(self.port) != int:
+            return False
