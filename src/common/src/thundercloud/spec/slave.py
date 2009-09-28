@@ -25,8 +25,10 @@ class SlaveState(DataObject):
     
     def decrement(self):
         self.jobCount -= 1
-        if self.jobCount < 0:
-            log.error("Slave job count is < 0, this should not happen")
+        # XXX
+        assert self.jobCount >= 0
+        #if self.jobCount < 0:
+        #    log.error("Slave job count is < 0, this should not happen")
     
 
 class SlaveSpec(DataObject):
@@ -56,3 +58,5 @@ class SlaveSpec(DataObject):
         
         if type(self.port) != int:
             return False
+        
+        return True

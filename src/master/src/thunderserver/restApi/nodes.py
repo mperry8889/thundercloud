@@ -59,10 +59,10 @@ class Node(Resource):
         pass
     
     def GET(self, request):
-        return None
+        raise NotImplementedError
     
     def POST(self, request):
-        return None
+        raise NotImplementedError
     
     def writeJson(self, request, data):
         request.write(json.dumps(data))

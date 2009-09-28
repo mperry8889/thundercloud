@@ -1,4 +1,6 @@
 export PWD := $(shell pwd)
+export BUILD := $(PWD)/build
+
 export PYTHONPATH := $(PWD)/test:$(PWD)/src/common/src:$(PWD)/src/common/test:$(PWD)/src/master/src:$(PWD)/src/master/test:$(PWD)/src/slave/src
 export PYTHON=/opt/local/bin/python2.6
 export TRIAL=/opt/local/bin/trial-2.6
@@ -13,7 +15,8 @@ run-slave:
 	cd src/slave/src && $(PYTHON) slave.py ../slave-sample.ini
 
 unit-test:
-	$(TRIAL) --logfile $(PWD)/build/unit-test.log --coverage `find src -name test_\*py`
+	$(TRIAL) --logfile $(BUILD)/unit-test.log --coverage `find src -name test_\*py`
+	mv $(PWD)/_trial_temp/coverage $(BUILD)/coverage
 
 test: unit-test
 

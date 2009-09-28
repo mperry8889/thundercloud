@@ -22,11 +22,11 @@ class SlaveRealm(object):
 
     def requestAvatar(self, avatarId, mind, *interfaces):
         if IResource in interfaces:
-            return IResource, Slave(), lambda: None
+            return IResource, Slave, lambda: None
         raise NotImplementedError()
 
 # Handle requests sent to /slave
-class Slave(RootNode):
+class _Slave(RootNode):
 
     def postCallback(self, slaveId, request):
         self.putChild("%d" % slaveId, SlaveNode())
@@ -38,9 +38,11 @@ class Slave(RootNode):
 
     # create a new job based on the given JSON job spec
     def POST(self, request):
+        log.debug("Accepting slave connection request")
         request.content.seek(0, 0)
         slaveSpecObj = SlaveSpec(json.loads(request.content.read()))
         if not slaveSpecObj.validate():
+            log.error("INVALID SLAVE SPEC!")
             raise Http400, "Invalid request"
         
         deferred = Orchestrator.registerSlave(slaveSpecObj)
@@ -48,8 +50,8 @@ class Slave(RootNode):
         deferred.addErrback(self.postErrback, request)
         return NOT_DONE_YET
 
+Slave = _Slave()
+
 class SlaveNode(LeafNode):
     pass
 
-def RemoveStaleNode(slaveId):
-    pass
