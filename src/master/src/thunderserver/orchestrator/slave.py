@@ -84,7 +84,12 @@ class _SlaveAllocator(object):
         def f((slave, status, task)):
             if status.state == state:
                 return True
-        return [i for i in self.slaves.itervalues() if f(i)]
+        result = [i for i in self.slaves.itervalues() if f(i)]
+        
+        if len(result) == 0:
+            raise SlaveNotFound
+        
+        return result
     
     def _getSlaveBySlaveSpec(self, slaveSpec, asTuple=False):
         def f((slave, status, task)):
@@ -92,7 +97,10 @@ class _SlaveAllocator(object):
                 return True
         result = [i for i in self.slaves.itervalues() if f(i)]
         # XXX
-        assert len(result) == 1
+        assert len(result) <= 1
+        if len(result) == 0:
+            raise SlaveNotFound
+        
         if asTuple:
             return result[0]
         else:
@@ -104,27 +112,43 @@ class _SlaveAllocator(object):
                 return True
         result = [i for i in self.slaves.itervalues() if f(i)]
         # XXX
-        assert len(result) == 1
+        assert len(result) <= 1
+        if len(result) == 0:
+            raise SlaveNotFound
+        
         return result[0]
 
     def _getSlaveById(self, slaveId, asTuple=False):
-        if asTuple:
-            return self.slaves[slaveId]
-        else:
-            return self.slaves[slaveId][0]
+        try:
+            if asTuple:
+                return self.slaves[slaveId]
+            else:
+                return self.slaves[slaveId][0]
+        except KeyError:
+            raise SlaveNotFound
+    
+    def _getSlaveIdByObject(self, slaveObj):
+        for slaveId, (slave, status, task) in self.slaves.iteritems():
+            if slave == slaveObj:
+                return slaveId
+        raise SlaveNotFound
 
     def _changeSlaveState(self, slaveId, state):
         pass
 
     @inlineCallbacks
     def addSlave(self, slaveSpec):
-        for slaveId, (connectedSlave, status, task) in self.slaves.iteritems():
-            if connectedSlave.slaveSpec.host == slaveSpec.host and \
-               connectedSlave.slaveSpec.port == slaveSpec.port and \
-               connectedSlave.slaveSpec.path == slaveSpec.path:
-                raise SlaveAlreadyConnected(slaveId)
         
-        slaveNo = self._getSlaveNo()
+        # try to catch a slave reconnection; else assign a new slave ID
+        try:
+            (connectedSlave, connectedSlaveStatus, connectedSlaveTask) = self._getSlaveBySlaveSpec(slaveSpec, asTuple=True)
+            slaveId = self._getSlaveIdByObject(connectedSlave)
+            log.warn("Slave %d (%s://%s:%d/%s) reconnecting.  Resetting slave state!" % (slaveId, connectedSlave.slaveSpec.scheme, connectedSlave.slaveSpec.host, connectedSlave.slaveSpec.port, connectedSlave.slaveSpec.path))    
+        except SlaveNotFound:
+            slaveNo = self._getSlaveNo()
+        else:
+            slaveNo = slaveId    
+        
         slave = SlavePerspective(slaveSpec)
         status = SlaveState()
         status.state = SlaveState.CONNECTED
@@ -145,10 +169,6 @@ class _SlaveAllocator(object):
         self.slaves[slaveNo] = (slave, status, task)
         returnValue(slaveNo)
     
-    def removeSlave(self, slaveId):
-        (slaveObj, status, task) = self.slaves[slaveId]
-        task.stop()
-        self.slaves.pop(slaveId)
     
     @inlineCallbacks
     def checkHealth(self, slave):

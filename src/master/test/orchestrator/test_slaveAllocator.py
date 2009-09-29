@@ -1,4 +1,4 @@
-from thunderserver.orchestrator.slave import _SlaveAllocator, InsufficientSlaveCapacity, NoSlavesAvailable
+from thunderserver.orchestrator.slave import _SlaveAllocator, InsufficientSlaveCapacity, NoSlavesAvailable, SlaveNotFound
 from thundercloud.spec.slave import SlaveSpec, SlaveState
 from thundercloud.spec.job import JobSpec
 
@@ -22,23 +22,27 @@ class SlaveAllocatorTestMixin(object):
     
         deferredList = []
         for i in range(0, slaves):
-            slaveSpec = SlaveSpec()
-            slaveSpec.host = "localhost"
-            slaveSpec.port = i
-            slaveSpec.path = "/"
-            slaveSpec.maxRequestsPerSec = maxRequestsPerSec
+            slaveSpec = self.createSlaveSpec(port=i, maxRequestsPerSec=maxRequestsPerSec)
             deferred = self.sa.addSlave(slaveSpec)
             deferredList.append(deferred)
 
         return DeferredList(deferredList)    
 
     def tearDown(self):
-        slavesToRemove = []
         for slaveId, (slave, status, task) in self.sa.slaves.iteritems():
-            slavesToRemove.append(slaveId)
-        
-        [self.sa.removeSlave(slaveId) for slaveId in slavesToRemove]
+            try:
+                task.stop()
+            except AssertionError:
+                pass
         db.execute("UPDATE slaveno SET slaveNo = 1")
+
+    def createSlaveSpec(self, port=0, maxRequestsPerSec=10):
+        slaveSpec = SlaveSpec()
+        slaveSpec.host = "localhost"
+        slaveSpec.port = port
+        slaveSpec.path = "/"
+        slaveSpec.maxRequestsPerSec = maxRequestsPerSec
+        return slaveSpec       
 
     def createJobSpec(self):
         jobSpec = JobSpec()
@@ -74,8 +78,11 @@ class InternalMethods(SlaveAllocatorTestMixin, unittest.TestCase):
             self.assertEquals((slave, status, task), self.sa._getSlaveBySlaveSpec(slave.slaveSpec, asTuple=True))
             self.assertEquals(slave, self.sa._getSlaveById(slaveId))
             self.assertEquals(slave, self.sa._getSlaveBySlaveSpec(slave.slaveSpec))
-        
+                
         self.assertEquals(self.sa.slaves.values(), self.sa._getSlavesInState(SlaveState.IDLE))
+        self.failUnlessRaises(SlaveNotFound, self.sa._getSlaveById, -1)
+        self.failUnlessRaises(SlaveNotFound, self.sa._getSlaveByObject, None)
+        self.failUnlessRaises(SlaveNotFound, self.sa._getSlaveBySlaveSpec, None)
 
 
 class NoSlaves(SlaveAllocatorTestMixin, unittest.TestCase):
@@ -199,6 +206,29 @@ class LifeCycle(SlaveAllocatorTestMixin, unittest.TestCase):
             self.assertEquals(status.jobCount, 0)
             self.assertEquals(status.state, SlaveState.IDLE)
 
+
+class Reconnect(SlaveAllocatorTestMixin, unittest.TestCase):               
+    def test_degrade(self):
+        """Gracefully degrade slaves"""
+        for (slaveId, (slave, status, task)) in self.sa.slaves.iteritems():
+            self.sa.degrade(slave)
+        
+        # all slaves should be disconnected
+        self.assertEquals(len(self.sa.slaves), len(self.sa._getSlavesInState(SlaveState.DISCONNECTED)))
+    
+    @inlineCallbacks
+    def test_reconnect(self):
+        """Reconnect degraded slaves"""
+        for (slaveId, (slave, status, task)) in self.sa.slaves.iteritems():
+            self.sa.degrade(slave)
+        
+        for (slaveId, (slave, status, task)) in self.sa.slaves.iteritems():
+            yield self.sa.addSlave(slave.slaveSpec)
+
+        # all slaves should be idle
+        self.assertEquals(len(self.sa.slaves), len(self.sa._getSlavesInState(SlaveState.IDLE)))
+                
+        
 
 class Regression(SlaveAllocatorTestMixin, unittest.TestCase):
     
