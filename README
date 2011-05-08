@@ -1,0 +1,5 @@
+Thundercloud was a distributed stress-testing and reporting tool I wrote.
+
+Its goal was to stress test cloud servers with real-world traffic of varying latency, bandwidth, etc.  It plotted a requests/sec served graph after each test run.
+
+It's written in Python with Twisted.  It could use some improvement (daemonization, better user segmentation, etc) but worked overall.
